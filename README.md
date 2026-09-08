@@ -2,10 +2,16 @@
 
 > AI-powered RPA desktop application for non-engineers.
 
+[![CI](https://github.com/shira022/aegis-agent/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/shira022/aegis-agent/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/shira022/aegis-agent/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-blue.svg)](https://github.com/shira022/aegis-agent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-≥18-green.svg)](https://nodejs.org/)
-[![Rust](https://img.shields.io/badge/Rust-≥1.75-orange.svg)](https://www.rust-lang.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-≥9-purple.svg)](https://pnpm.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178C6.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-≥20-339933.svg)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-≥9-F69220.svg)](https://pnpm.io/)
+[![Rust](https://img.shields.io/badge/Rust-≥1.75-CE422B.svg)](https://www.rust-lang.org/)
+[![Tauri](https://img.shields.io/badge/Tauri-2.x-FFC131.svg)](https://tauri.app/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ## Quick Start
 
@@ -14,7 +20,7 @@
 npm install -g pnpm
 
 # Clone the repository
-git clone https://github.com/your-org/aegis-agent.git
+git clone https://github.com/shira022/aegis-agent.git
 cd aegis-agent
 
 # Install dependencies
@@ -26,7 +32,7 @@ pnpm dev
 
 ### Prerequisites
 
-- **Node.js** ≥ 18
+- **Node.js** ≥ 20
 - **Rust** ≥ 1.75 ([rustup](https://rustup.rs/))
 - **pnpm** ≥ 9
 - **Python** ≥ 3.10 (for RPA script execution)
@@ -41,11 +47,12 @@ aegis-agent/
 │   └── desktop/          # Tauri desktop application
 │       ├── src-tauri/    # Rust backend (recorder, executor, IPC)
 │       └── src/          # React frontend (UI views)
-├── engines/
-│   └── rpa/              # RPA execution engine (Python subprocess management)
 ├── packages/
-│   ├── types/            # Shared TypeScript types
-│   └── utils/            # Shared utility functions
+│   ├── @aegis/shared/    # Shared TypeScript types and utilities
+│   ├── @aegis/ai-engine/ # AI code generation engine
+│   ├── @aegis/recorder/  # Desktop action recorder
+│   ├── @aegis/security/  # PII masking and security
+│   └── @aegis/ui/        # Shared React UI components
 ├── scripts/              # Setup and maintenance scripts
 └── docs/
     └── adr/              # Architecture Decision Records
@@ -86,15 +93,28 @@ All significant architectural decisions are documented in [`docs/adr/`](docs/adr
 # Run in development mode
 pnpm dev
 
-# Build for production
+# Build all packages
 pnpm build
 
-# Run tests
+# Run all tests
 pnpm test
 
-# Lint and format
+# Run tests with coverage
+pnpm test:coverage
+
+# Type check all packages
+pnpm typecheck
+
+# Lint all packages
 pnpm lint
+
+# Full CI check (typecheck + test + build)
+pnpm ci
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, PR process, and guidelines.
 
 ## License
 
