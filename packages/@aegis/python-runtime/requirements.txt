@@ -1,0 +1,8 @@
+# Aegis Python Runtime — Runtime Dependencies
+# These are needed by generated scripts at execution time.
+
+# Browser automation
+playwright>=1.40.0
+
+# Desktop automation
+pyautogui>=0.9.54
