@@ -7,7 +7,6 @@ import type {
   ApprovedProgram,
   ApprovalAuditLog,
   ExceptionHandler,
-  ApprovalState,
 } from './types.js';
 
 // ─── ApprovalManager ───────────────────────────────────────────────

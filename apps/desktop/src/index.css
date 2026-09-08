@@ -1,12 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   --color-bg: #0a0a0b;
@@ -32,51 +26,4 @@ body {
 
 #root {
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.app {
-  text-align: center;
-}
-
-.app h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.app p {
-  color: var(--color-text-muted);
-  margin-bottom: 2rem;
-}
-
-.counter {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.counter button {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: background 150ms, border-color 150ms;
-}
-
-.counter button:hover {
-  background: var(--color-border);
-  border-color: var(--color-primary);
-}
-
-.counter span {
-  font-size: 1.125rem;
-  font-variant-numeric: tabular-nums;
-  min-width: 6rem;
 }

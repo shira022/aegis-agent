@@ -91,6 +91,12 @@ echo ""
 echo -e "${YELLOW}🧪 Running tests...${NC}"
 for pkg in "${CHANGED_PACKAGES[@]}"; do
   if [ -f "$pkg/package.json" ] && grep -q '"test"' "$pkg/package.json"; then
+    # Skip packages with no test files
+    TEST_FILES=$(find "$pkg" -name "*.test.*" -o -name "*.spec.*" 2>/dev/null | grep -v node_modules | head -1)
+    if [ -z "$TEST_FILES" ]; then
+      echo "  ⏭ Skipping $pkg (no test files)"
+      continue
+    fi
     echo "  Testing $pkg..."
     if ! (cd "$pkg" && npx vitest run 2>&1); then
       echo -e "  ${RED}✗ Tests failed in $pkg${NC}"

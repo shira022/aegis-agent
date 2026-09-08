@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aegis/approval": "workspace:*",
     "@aegis/shared": "workspace:*",
     "@aegis/ui": "workspace:*",
     "@tauri-apps/api": "^2.0.0",
