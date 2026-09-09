@@ -74,7 +74,7 @@ describe('AiEngine.generateCode', () => {
         ],
         warnings: [],
       }),
-      usage: { promptTokens: 100, completionTokens: 50 },
+      usage: { inputTokens: 100, outputTokens: 50 },
     });
 
     const engine = new AiEngine(sampleConfig);
@@ -90,7 +90,7 @@ describe('AiEngine.generateCode', () => {
   it('handles non-JSON response gracefully', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: 'def hello(): print("hi")',
-      usage: { promptTokens: 5, completionTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5 },
     });
 
     const engine = new AiEngine(sampleConfig);
@@ -118,7 +118,7 @@ describe('AiEngine.generateExceptions', () => {
       text: JSON.stringify([
         { condition: 'ElementNotFound', action: 'retry with alt selector', code: 'pass', riskLevel: 'low' },
       ]),
-      usage: { promptTokens: 5, completionTokens: 10 },
+      usage: { inputTokens: 5, outputTokens: 10 },
     });
 
     const engine = new AiEngine(sampleConfig);
@@ -132,7 +132,7 @@ describe('AiEngine.generateExceptions', () => {
   it('returns empty array on invalid JSON', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: 'not json at all',
-      usage: { promptTokens: 5, completionTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5 },
     });
 
     const engine = new AiEngine(sampleConfig);
@@ -147,7 +147,7 @@ describe('AiEngine.suggestHealing', () => {
   it('returns a healing suggestion string', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: 'Use WebDriverWait with explicit wait',
-      usage: { promptTokens: 5, completionTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5 },
     });
 
     const engine = new AiEngine(sampleConfig);
