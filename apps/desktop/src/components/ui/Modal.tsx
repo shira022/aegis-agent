@@ -38,7 +38,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-neutral-100">{title}</h2>
           <button
-            aria-label="閉じる"
+            aria-label="Close"
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-200 text-xl"
           >

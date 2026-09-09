@@ -17,18 +17,18 @@ const stepIcons: Record<string, string> = {
 };
 
 function formatDescription(step: OperationStep): string {
-  const text = step.target?.text ?? '操作';
+  const text = step.target?.text ?? 'action';
   switch (step.type) {
     case 'click':
-      return `${text}をクリック`;
+      return `Click ${text}`;
     case 'type':
       return text;
     case 'navigate':
-      return `ページ移動${step.target?.selector ? `: ${step.target.selector}` : ''}`;
+      return `Navigate${step.target?.selector ? `: ${step.target.selector}` : ''}`;
     case 'wait':
-      return '待機';
+      return 'Wait';
     case 'screenshot':
-      return 'スクリーンショット';
+      return 'Take screenshot';
     default:
       return text;
   }
@@ -52,15 +52,15 @@ export function TimelineView({ steps, mode: _mode, onToggleMode }: TimelineViewP
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-100">操作フロー</h2>
+        <h2 className="text-lg font-semibold text-neutral-100">Action Flow</h2>
         <Button variant="ghost" size="sm" onClick={onToggleMode}>
-          フローチャート
+          Flowchart
         </Button>
       </div>
 
       {steps.length === 0 ? (
         <div className="text-center py-8 text-neutral-400">
-          操作が記録されていません
+          No actions recorded
         </div>
       ) : (
         <div className="relative space-y-0">
@@ -80,7 +80,7 @@ export function TimelineView({ steps, mode: _mode, onToggleMode }: TimelineViewP
                   <button
                     onClick={() => toggleExpand(i)}
                     className="hover:scale-110 transition-transform"
-                    title="詳細を表示"
+                    title="Show details"
                   >
                     {stepIcons[step.type]}
                   </button>
@@ -100,12 +100,12 @@ export function TimelineView({ steps, mode: _mode, onToggleMode }: TimelineViewP
                   {expanded.has(i) && step.target && (
                     <div className="mt-2 p-2 rounded bg-neutral-800 text-xs text-neutral-400 space-y-1">
                       {step.target.selector && (
-                        <p><span className="text-neutral-500">セレクタ:</span> {step.target.selector}</p>
+                        <p><span className="text-neutral-500">Selector:</span> {step.target.selector}</p>
                       )}
                       {step.target.text && (
-                        <p><span className="text-neutral-500">テキスト:</span> {step.target.text}</p>
+                        <p><span className="text-neutral-500">Text:</span> {step.target.text}</p>
                       )}
-                      <p><span className="text-neutral-500">タイプ:</span> {step.type}</p>
+                      <p><span className="text-neutral-500">Type:</span> {step.type}</p>
                     </div>
                   )}
                 </div>

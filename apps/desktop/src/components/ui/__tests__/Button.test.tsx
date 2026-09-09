@@ -4,21 +4,21 @@ import { Button } from '../Button';
 
 describe('Button', () => {
   it('renders children text', () => {
-    render(<Button onClick={vi.fn()}>クリック</Button>);
-    expect(screen.getByText('クリック')).toBeInTheDocument();
+    render(<Button onClick={vi.fn()}>Click</Button>);
+    expect(screen.getByText('Click')).toBeInTheDocument();
   });
 
   it('calls onClick when clicked', () => {
     const onClick = vi.fn();
-    render(<Button onClick={onClick}>実行</Button>);
-    fireEvent.click(screen.getByText('実行'));
+    render(<Button onClick={onClick}>Run</Button>);
+    fireEvent.click(screen.getByText('Run'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('does not call onClick when disabled', () => {
     const onClick = vi.fn();
-    render(<Button onClick={onClick} disabled>無効</Button>);
-    fireEvent.click(screen.getByText('無効'));
+    render(<Button onClick={onClick} disabled>Disabled</Button>);
+    fireEvent.click(screen.getByText('Disabled'));
     expect(onClick).not.toHaveBeenCalled();
   });
 
@@ -29,26 +29,26 @@ describe('Button', () => {
   });
 
   it('renders with danger variant', () => {
-    render(<Button onClick={vi.fn()} variant="danger">削除</Button>);
+    render(<Button onClick={vi.fn()} variant="danger">Delete</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-red-600');
   });
 
   it('renders with ghost variant', () => {
-    render(<Button onClick={vi.fn()} variant="ghost">キャンセル</Button>);
+    render(<Button onClick={vi.fn()} variant="ghost">Cancel</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-transparent');
   });
 
   it('renders with sm size', () => {
-    render(<Button onClick={vi.fn()} size="sm">小</Button>);
+    render(<Button onClick={vi.fn()} size="sm">Small</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('px-3');
     expect(btn.className).toContain('text-xs');
   });
 
   it('renders with lg size', () => {
-    render(<Button onClick={vi.fn()} size="lg">大</Button>);
+    render(<Button onClick={vi.fn()} size="lg">Large</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('px-6');
     expect(btn.className).toContain('text-base');
