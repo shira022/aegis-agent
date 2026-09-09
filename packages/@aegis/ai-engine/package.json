@@ -10,7 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aegis/shared": "workspace:*"
+    "@aegis/shared": "workspace:*",
+    "ai": "^6.0.278",
+    "@ai-sdk/openai": "^3.0.110",
+    "@ai-sdk/anthropic": "^3.0.110",
+    "@ai-sdk/google": "^3.0.110",
+    "@ai-sdk/amazon-bedrock": "^3.0.110"
   },
   "devDependencies": {
     "typescript": "^5.8.0",
