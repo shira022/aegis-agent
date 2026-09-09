@@ -49,7 +49,7 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
           <p className="text-xs text-neutral-500 mb-1">Last Run</p>
           <p className="text-sm text-neutral-200">
             {lastRun
-              ? lastRun.toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+              ? lastRun.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—'}
           </p>
         </Card>
@@ -82,7 +82,7 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
                     <span className="text-neutral-300">{log.steps.length} step(s)</span>
                   </div>
                   <time className="text-xs text-neutral-500">
-                    {new Date(log.recordedAt).toLocaleString('ja-JP')}
+                    {new Date(log.recordedAt).toLocaleString('en-US')}
                   </time>
                 </div>
               </Card>

@@ -90,7 +90,7 @@ export function TimelineView({ steps, mode: _mode, onToggleMode }: TimelineViewP
                     {formatDescription(step)}
                   </p>
                   <time className="text-xs text-neutral-500">
-                    {new Date(step.timestamp).toLocaleTimeString('ja-JP', {
+                    {new Date(step.timestamp).toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
