@@ -27,21 +27,21 @@ const statusVariant: Record<string, 'default' | 'success' | 'danger' | 'warning'
 };
 
 const statusLabel: Record<string, string> = {
-  idle: '待機中',
-  running: '実行中',
-  completed: '完了',
-  failed: '失敗',
-  paused: '一時停止',
+  idle: 'Idle',
+  running: 'Running',
+  completed: 'Completed',
+  failed: 'Failed',
+  paused: 'Paused',
 };
 
 export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-100">タスク一覧</h2>
+        <h2 className="text-lg font-semibold text-neutral-100">Task List</h2>
         <Card className="text-center py-8">
-          <p className="text-neutral-400 mb-3">タスクがありません</p>
-          <Button variant="primary" size="sm">最初のタスクを作成</Button>
+          <p className="text-neutral-400 mb-3">No tasks yet</p>
+          <Button variant="primary" size="sm">Create first task</Button>
         </Card>
       </div>
     );
@@ -49,7 +49,7 @@ export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-neutral-100">タスク一覧</h2>
+      <h2 className="text-lg font-semibold text-neutral-100">Task List</h2>
       {tasks.map((task) => (
         <Card key={task.id}>
           <div className="flex items-center justify-between">
@@ -60,19 +60,19 @@ export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
                 <p className="text-xs text-neutral-500">
                   <Badge variant={statusVariant[task.status]}>{statusLabel[task.status]}</Badge>
                   {' · '}
-                  <time>{new Date(task.updatedAt).toLocaleString('ja-JP')}</time>
+                  <time>{new Date(task.updatedAt).toLocaleString('en-US')}</time>
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="primary" size="sm" onClick={() => onRun(task.id)}>
-                実行
+                Run
               </Button>
               <Button variant="ghost" size="sm" onClick={() => onEdit(task.id)}>
-                編集
+                Edit
               </Button>
               <Button variant="danger" size="sm" onClick={() => onDelete(task.id)}>
-                削除
+                Delete
               </Button>
             </div>
           </div>

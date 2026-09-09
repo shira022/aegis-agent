@@ -1,64 +1,61 @@
-# セキュリティカテゴリ
+# Security Category
 
-> パッケージ: `@aegis/security`
-> コアフロー: クロスカッティング（全フローに適用）
+> Package: `@aegis/security`
+> Core Flow: Cross-cutting (applies to all flows)
 
-## 概要
+## Overview
 
-PII（個人識別情報）マスキング、APIキー管理、サンドボックス実行、
-承認必須ガードなど、セキュリティに関する全機能を管理するカテゴリです。
+Manages all security-related functionality including PII (Personally Identifiable Information) masking, API key management, sandboxed execution, and human-approval guards.
 
-**核心思想**: データはすべてローカルに保存し、外部送信されるデータは
-PIIマスキング済みであること。APIキーはOSキーチェーンで管理し、
-コード実行は必ず人間の承認が必要であること。
+**Core idea**: All data is stored locally; any externally transmitted data must be PII-masked. API keys are managed via the OS keychain, and all code execution requires human approval.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| SEC-01 | PII自動検出・マスキング | Must |
-| SEC-02 | APIキーのOSキーチェーン管理 | Must |
-| SEC-03 | コード実行のサンドボックス化 | Must |
-| SEC-04 | 承認必須ガード（未承認コード実行防止） | Must |
-| SEC-05 | カスタムPIIパターン対応 | Should |
-| SEC-06 | ログの安全検証 | Must |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| SEC-01 | Automatic PII detection & masking | Must |
+| SEC-02 | OS Keychain-based API key management | Must |
+| SEC-03 | Sandboxed code execution | Must |
+| SEC-04 | Human-approval guard (prevent unapproved code execution) | Must |
+| SEC-05 | Custom PII pattern support | Should |
+| SEC-06 | Safe log verification | Must |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| SEC-NF01 | PII検出精度 | 95%以上 |
-| SEC-NF02 | マスキング処理速度 | < 100ms/1000行 |
-| SEC-NF03 | キーチェーン暗号化 | AES-256 |
-| SEC-NF04 | サンドボックス隔離度 | プロセスレベル |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| SEC-NF01 | PII detection accuracy | ≥ 95% |
+| SEC-NF02 | Masking processing speed | < 100ms / 1,000 lines |
+| SEC-NF03 | Keychain encryption | AES-256 |
+| SEC-NF04 | Sandbox isolation level | Process-level |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`PIIMasker`**: PIIの検出・マスキング
-- **`LogSanitizer`**: 操作ログのPIIサニタイズ
-- **`PIIValidator`**: テキスト/ログのPII検証
-- **`ApiKeyManager`**: APIキーのOSキーチェーン管理
+- **`PIIMasker`**: PII detection & masking
+- **`LogSanitizer`**: PII sanitization of operation logs
+- **`PIIValidator`**: PII validation of text/logs
+- **`ApiKeyManager`**: OS Keychain-based API key management
 
-### PII検出パターン
+### PII Detection Patterns
 
-| カテゴリ | 検出パターン | 重要度 |
-|---------|------------|--------|
-| `email` | メールアドレス | High |
-| `credit_card` | クレジットカード番号 | High |
-| `ssn` | US社会保障番号 | High |
-| `my_number` | 日本マイナンバー（12桁） | High |
-| `password` | パスワードフィールド | High |
-| `phone` | 電話番号 | High |
-| `bank_account` | 銀行口座番号 | High |
+| Category | Detection Pattern | Severity |
+|----------|-------------------|----------|
+| `email` | Email addresses | High |
+| `credit_card` | Credit card numbers | High |
+| `ssn` | US Social Security Number | High |
+| `my_number` | Japanese My Number (12-digit) | High |
+| `password` | Password fields | High |
+| `phone` | Phone numbers | High |
+| `bank_account` | Bank account numbers | High |
 | `ip_address` | IPv4/IPv6 | Medium |
-| `name` | 日本語氏名パターン | Medium |
-| `address` | 〒郵便番号 | Medium |
+| `name` | Japanese name patterns | Medium |
+| `address` | Postal code (〒) | Medium |
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 interface PIIDetection {
@@ -77,26 +74,26 @@ interface SanitizedLog extends OperationLog {
 }
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `PIIMasker` | ✅ 完成 | masker.ts |
-| `LogSanitizer` | ✅ 完成 | sanitizer.ts |
-| `PIIValidator` | ✅ 完成 | validator.ts |
-| `ApiKeyManager` | ✅ 完成 | OSキーチェーン連携 |
-| `Sandbox` | ✅ 完成 | プロセス分離 |
-| `ApprovalGuard` | ✅ 完成 | 承認必須ガード |
-| `pii-patterns.ts` | ✅ 完成 | 11カテゴリ対応 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `PIIMasker` | ✅ Complete | masker.ts |
+| `LogSanitizer` | ✅ Complete | sanitizer.ts |
+| `PIIValidator` | ✅ Complete | validator.ts |
+| `ApiKeyManager` | ✅ Complete | OS Keychain integration |
+| `Sandbox` | ✅ Complete | Process isolation |
+| `ApprovalGuard` | ✅ Complete | Human-approval guard |
+| `pii-patterns.ts` | ✅ Complete | 11 category support |
 
-### 未実装
+### Not Yet Implemented
 
-- カスタムPIIパターンのUI設定
-- セキュリティ監査ログ
-- リモートSSH接続のセキュリティ
+- UI settings for custom PII patterns
+- Security audit logging
+- Remote SSH connection security
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/masking.test.ts` | PIIMasker, LogSanitizer, PIIValidator |

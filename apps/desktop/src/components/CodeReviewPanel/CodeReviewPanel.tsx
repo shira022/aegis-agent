@@ -10,10 +10,10 @@ interface CodeReviewPanelProps {
 }
 
 const riskLabels: Record<string, string> = {
-  low: '低リスク',
-  medium: '中リスク',
-  high: '高リスク',
-  critical: '危険',
+  low: 'Low Risk',
+  medium: 'Medium Risk',
+  high: 'High Risk',
+  critical: 'Critical',
 };
 
 const riskVariant: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
@@ -29,7 +29,7 @@ export function CodeReviewPanel({ request, onApprove, onReject }: CodeReviewPane
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-100">コードレビュー</h2>
+        <h2 className="text-lg font-semibold text-neutral-100">Code Review</h2>
         <Badge variant={riskVariant[request.riskLevel]}>{riskLabels[request.riskLevel]}</Badge>
       </div>
 
@@ -57,7 +57,7 @@ export function CodeReviewPanel({ request, onApprove, onReject }: CodeReviewPane
 
       {/* Safety checks */}
       {request.safetyChecks.length > 0 && (
-        <Card title="安全チェック">
+        <Card title="Safety Check">
           <div className="space-y-2">
             {request.safetyChecks.map((check) => (
               <div key={check.id} className="flex items-center justify-between text-sm">
@@ -74,7 +74,7 @@ export function CodeReviewPanel({ request, onApprove, onReject }: CodeReviewPane
 
       {/* Exception handlers */}
       {request.exceptionHandlers.length > 0 && (
-        <Card title="例外ハンドラー">
+        <Card title="Exception Handler">
           <div className="space-y-2">
             {request.exceptionHandlers.map((handler, i) => (
               <div key={i} className="text-sm">
@@ -94,10 +94,10 @@ export function CodeReviewPanel({ request, onApprove, onReject }: CodeReviewPane
       {/* Action buttons */}
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={() => onApprove(request.id)}>
-          承認
+          Approve
         </Button>
         <Button variant="danger" onClick={() => onReject(request.id, '')}>
-          却下
+          Reject
         </Button>
       </div>
     </div>

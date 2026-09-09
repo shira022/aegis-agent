@@ -27,7 +27,7 @@ export function Toast({ message, type, onDismiss }: ToastProps) {
         <span>{message}</span>
       </div>
       <button
-        aria-label="閉じる"
+        aria-label="Close"
         onClick={onDismiss}
         className="ml-4 text-current opacity-60 hover:opacity-100"
       >

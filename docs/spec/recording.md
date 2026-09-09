@@ -1,49 +1,46 @@
-# 録画・操作記録カテゴリ
+# Recording & Operation Logging Category
 
-> パッケージ: `@aegis/recorder`
-> コアフロー: ①見せる（学習）
+> Package: `@aegis/recorder`
+> Core Flow: ①Show (Learn)
 
-## 概要
+## Overview
 
-ユーザーのPC操作（ブラウザ・デスクトップアプリ）を軽量JSONメタデータとして記録し、
-後工程のAIコード生成に必要な操作ログを構築するカテゴリです。
+Records the user's PC operations (browser & desktop apps) as lightweight JSON metadata, building the operation logs needed for downstream AI code generation.
 
-**核心思想**: ボタンのテキスト、ラベル、HTML構造、スクリーンショットを
-「�わしいメタデータ」として保持し、AIが安全なPlaywrightコードを生成できる
-十分な文脈を提供します。
+**Core idea**: Button text, labels, HTML structure, and screenshots are kept as "rich metadata" providing sufficient context for AI to generate safe Playwright code.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| REC-01 | ブラウザ操作の記録（クリック、入力、スクロール、ナビゲーション） | Must |
-| REC-02 | デスクトップアプリ操作の記録（Tauri IPC経由） | Must |
-| REC-03 | CSSセレクタ・XPathの自動解決 | Must |
-| REC-04 | スクリーンショットの自動キャプチャ | Should |
-| REC-05 | 操作セッションの一時停止/再開 | Should |
-| REC-06 | 操作ログのエクスポート（@aegis/shared形式） | Must |
-| REC-07 | 感情データのフィルタリング | Must |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| REC-01 | Browser operation recording (click, input, scroll, navigation) | Must |
+| REC-02 | Desktop app operation recording (via Tauri IPC) | Must |
+| REC-03 | Automatic CSS selector / XPath resolution | Must |
+| REC-04 | Automatic screenshot capture | Should |
+| REC-05 | Operation session pause / resume | Should |
+| REC-06 | Operation log export (@aegis/shared format) | Must |
+| REC-07 | Sensitive data filtering | Must |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| REC-NF01 | 記録時のCPU使用率 | < 5% |
-| REC-NF02 | メタデータ保存サイズ | < 1MB/セッション |
-| REC-NF03 | スクリーンショット圧縮品質 | 80% JPEG |
-| REC-NF04 | セレクタ解決レスポンス | < 100ms |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| REC-NF01 | CPU usage during recording | < 5% |
+| REC-NF02 | Metadata storage size | < 1MB/session |
+| REC-NF03 | Screenshot compression quality | 80% JPEG |
+| REC-NF04 | Selector resolution response time | < 100ms |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`OperationLogger`**: 記録操作の追跡とエクスポート
-- **`SelectorResolver`**: CSSセレクタ/XPathの自動解決
-- **`ScreenshotManager`**: スクリーンショットのキャプチャ管理
+- **`OperationLogger`**: Tracks and exports recorded operations
+- **`SelectorResolver`**: Automatic CSS selector / XPath resolution
+- **`ScreenshotManager`**: Screenshot capture management
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 type ActionType = 'click' | 'type' | 'scroll' | 'navigate' | 'wait'
@@ -59,36 +56,36 @@ interface RecordedAction {
 }
 ```
 
-### Tauriコマンド
+### Tauri Commands
 
-- `start_recording(name?)` → セッション開始
-- `stop_recording()` → セッション停止
-- `pause_recording()` / `resume_recording()` → 一時停止/再開
-- `get_recording_state()` → 現在状態取得
-- `take_screenshot(region?)` → スクリーンショット
+- `start_recording(name?)` → Start session
+- `stop_recording()` → Stop session
+- `pause_recording()` / `resume_recording()` → Pause / resume
+- `get_recording_state()` → Get current state
+- `take_screenshot(region?)` → Take screenshot
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `OperationLogger` | ✅ 完成 | logAction, exportLog, filterSensitiveData |
-| `SelectorResolver` | ✅ 完成 | CSS/XPath/テキストベース解決 |
-| `ScreenshotManager` | ✅ 完成 | キャプチャ・圧縮 |
-| `tauri-commands.ts` | ✅ 完成 | Tauri IPCブリッジ |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `OperationLogger` | ✅ Complete | logAction, exportLog, filterSensitiveData |
+| `SelectorResolver` | ✅ Complete | CSS/XPath/text-based resolution |
+| `ScreenshotManager` | ✅ Complete | Capture & compression |
+| `tauri-commands.ts` | ✅ Complete | Tauri IPC bridge |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- デスクトップ操作のネイティブ記録（現状はブラウザ中心）
-- マウス追跡・ジェスチャー記録
-- 複数モニター対応
+- Native desktop operation recording (currently browser-focused)
+- Mouse tracking & gesture recording
+- Multi-monitor support
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/selector-resolver.test.ts` | SelectorResolver |
 | `__tests__/operation-logger.test.ts` | OperationLogger |
 | `__tests__/screenshot-manager.test.ts` | ScreenshotManager |
-| `__tests__/tauri-commands.test.ts` | Tauriコマンド |
-| `__tests__/recorder-integration.test.ts` | 統合テスト |
+| `__tests__/tauri-commands.test.ts` | Tauri commands |
+| `__tests__/recorder-integration.test.ts` | Integration tests |

@@ -114,18 +114,18 @@ describe('CodeDisplay', () => {
       steps.forEach((s, i) => expect(s.order).toBe(i + 1));
     });
 
-    it('should use Japanese descriptions', () => {
+    it('should use English descriptions', () => {
       const log: OperationLog = {
         id: 'log-4',
         taskId: 'task-4',
         steps: [
-          { type: 'click', target: { text: 'ログイン' }, timestamp: '2024-01-01' },
+          { type: 'click', target: { text: 'Login' }, timestamp: '2024-01-01' },
         ],
         recordedAt: '2024-01-01',
         source: 'browser',
       };
       const steps = generateFlowchart(log);
-      expect(steps[0].description).toMatch(/[\u3000-\u9FFF]/); // Contains Japanese characters
+      expect(steps[0].description).toContain('Click element');
     });
   });
 });

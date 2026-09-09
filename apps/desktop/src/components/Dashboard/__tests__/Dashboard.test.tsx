@@ -24,7 +24,7 @@ describe('Dashboard', () => {
   // ── Rendering ──────────────────────────────────────────────────────
   it('renders the dashboard title', () => {
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('ダッシュボード')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
   // ── Stats cards ────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ describe('Dashboard', () => {
       makeTask({ id: '2', name: 'B' }),
     ];
     render(<Dashboard tasks={tasks} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('タスク数')).toBeInTheDocument();
+    expect(screen.getByText('Tasks')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe('Dashboard', () => {
       makeTask({ id: '2', name: 'B', status: 'failed' }),
     ];
     render(<Dashboard tasks={tasks} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('成功率')).toBeInTheDocument();
+    expect(screen.getByText('Success Rate')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe('Dashboard', () => {
 
   it('shows "—" for success rate when no tasks', () => {
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    const successRateLabel = screen.getByText('成功率');
+    const successRateLabel = screen.getByText('Success Rate');
     const card = successRateLabel.closest('div')!;
     expect(within(card).getByText('—')).toBeInTheDocument();
   });
@@ -73,38 +73,38 @@ describe('Dashboard', () => {
   it('displays last run time', () => {
     const tasks = [makeTask({ id: '1', name: 'A', updatedAt: '2025-06-15T10:30:00Z' })];
     render(<Dashboard tasks={tasks} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('最終実行')).toBeInTheDocument();
+    expect(screen.getByText('Last Run')).toBeInTheDocument();
   });
 
   // ── Quick action buttons ───────────────────────────────────────────
   it('shows new task button', () => {
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /新規タスク/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /New Task/ })).toBeInTheDocument();
   });
 
   it('shows run all button', () => {
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /すべて実行/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Run All/ })).toBeInTheDocument();
   });
 
   it('calls onNewTask when new task button clicked', () => {
     const onNewTask = vi.fn();
     render(<Dashboard tasks={[]} recentActivity={[]} onNewTask={onNewTask} onRunAll={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /新規タスク/ }));
+    fireEvent.click(screen.getByRole('button', { name: /New Task/ }));
     expect(onNewTask).toHaveBeenCalledTimes(1);
   });
 
   it('calls onRunAll when run all button clicked', () => {
     const onRunAll = vi.fn();
     render(<Dashboard tasks={[]} recentActivity={[]} onNewTask={vi.fn()} onRunAll={onRunAll} />);
-    fireEvent.click(screen.getByRole('button', { name: /すべて実行/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Run All/ }));
     expect(onRunAll).toHaveBeenCalledTimes(1);
   });
 
   // ── Recent activity ────────────────────────────────────────────────
   it('shows empty activity message when no recent activity', () => {
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('最近のアクティビティはありません')).toBeInTheDocument();
+    expect(screen.getByText('No recent activity')).toBeInTheDocument();
   });
 
   it('shows recent activity count', () => {
@@ -118,7 +118,7 @@ describe('Dashboard', () => {
         {...defaultProps}
       />,
     );
-    expect(screen.getByText('最近のアクティビティ')).toBeInTheDocument();
+    expect(screen.getByText('Recent Activity')).toBeInTheDocument();
   });
 
   // ── Stats with running tasks ───────────────────────────────────────
@@ -128,7 +128,7 @@ describe('Dashboard', () => {
       makeTask({ id: '2', name: 'B', status: 'running' }),
     ];
     render(<Dashboard tasks={tasks} recentActivity={[]} {...defaultProps} />);
-    const runningLabel = screen.getByText('実行中');
+    const runningLabel = screen.getByText('Running');
     const container = runningLabel.parentElement!;
     expect(within(container).getByText('2')).toBeInTheDocument();
   });

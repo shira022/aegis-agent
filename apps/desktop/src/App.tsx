@@ -10,17 +10,17 @@ import { Toast } from './components/ui/Toast';
 type View = 'dashboard' | 'tasks' | 'timeline' | 'review';
 
 const navItems: { id: View; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'ダッシュボード', icon: '📊' },
-  { id: 'tasks', label: 'タスク', icon: '📋' },
-  { id: 'timeline', label: '操作フロー', icon: '🔗' },
-  { id: 'review', label: 'コードレビュー', icon: '🔍' },
+  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'tasks', label: 'Tasks', icon: '📋' },
+  { id: 'timeline', label: 'Action Flow', icon: '🔗' },
+  { id: 'review', label: 'Code Review', icon: '🔍' },
 ];
 
 // Sample data for demonstration
 const sampleTasks: Task[] = [
   {
     id: 'task-1',
-    name: 'ログインテスト',
+    name: 'Login Test',
     status: 'completed',
     scriptPath: '/scripts/login.ts',
     createdAt: '2025-06-01T00:00:00Z',
@@ -28,7 +28,7 @@ const sampleTasks: Task[] = [
   },
   {
     id: 'task-2',
-    name: 'ダッシュボード確認',
+    name: 'Dashboard Check',
     status: 'running',
     scriptPath: '/scripts/dashboard.ts',
     createdAt: '2025-06-10T00:00:00Z',
@@ -36,7 +36,7 @@ const sampleTasks: Task[] = [
   },
   {
     id: 'task-3',
-    name: 'レポート生成',
+    name: 'Report Generation',
     status: 'idle',
     scriptPath: '/scripts/report.ts',
     createdAt: '2025-06-12T00:00:00Z',
@@ -46,7 +46,7 @@ const sampleTasks: Task[] = [
 
 const sampleSteps: OperationStep[] = [
   { type: 'navigate', timestamp: '2025-06-15T01:00:00Z', target: { selector: 'https://example.com' } },
-  { type: 'click', timestamp: '2025-06-15T01:00:05Z', target: { selector: '#login-btn', text: 'ログイン' } },
+  { type: 'click', timestamp: '2025-06-15T01:00:05Z', target: { selector: '#login-btn', text: 'Login' } },
   { type: 'type', timestamp: '2025-06-15T01:00:10Z', target: { selector: '#email', text: 'user@example.com' } },
   { type: 'wait', timestamp: '2025-06-15T01:00:15Z', target: {} },
   { type: 'screenshot', timestamp: '2025-06-15T01:00:20Z', target: {} },
@@ -58,13 +58,13 @@ const sampleApprovalRequest: ApprovalRequest = {
   code: `def main():
     print("hello world")
     return True`,
-  explanation: 'ログイン処理の初期実装',
+  explanation: 'Initial login implementation',
   exceptionHandlers: [
-    { condition: 'ElementNotFound', action: 'リトライ', code: 'retry(3)', riskLevel: 'low' },
+    { condition: 'ElementNotFound', action: 'Retry', code: 'retry(3)', riskLevel: 'low' },
   ],
   safetyChecks: [
-    { id: '1', name: 'ファイルアクセス', passed: true, message: 'OK' },
-    { id: '2', name: 'ネットワーク', passed: true, message: '許可済み' },
+    { id: '1', name: 'File Access', passed: true, message: 'OK' },
+    { id: '2', name: 'Network', passed: true, message: 'Allowed' },
   ],
   createdAt: Date.now(),
   riskLevel: 'low',
@@ -119,7 +119,7 @@ export default function App() {
         <nav className="w-56 border-r border-neutral-800 bg-neutral-900 p-4">
           <div className="mb-8">
             <h1 className="text-lg font-bold text-indigo-400">🛡️ Aegis Agent</h1>
-            <p className="text-xs text-neutral-500 mt-1">ワークフロー自動化</p>
+            <p className="text-xs text-neutral-500 mt-1">Workflow Automation</p>
           </div>
 
           <div className="space-y-1">
@@ -146,17 +146,17 @@ export default function App() {
             <Dashboard
               tasks={tasks}
               recentActivity={sampleActivity}
-              onNewTask={() => showToast('新規タスク画面（準備中）', 'info')}
-              onRunAll={() => showToast('すべてのタスクを実行します', 'success')}
+              onNewTask={() => showToast('New Task screen (coming soon)', 'info')}
+              onRunAll={() => showToast('Running all tasks', 'success')}
             />
           )}
 
           {view === 'tasks' && (
             <TaskList
               tasks={tasks}
-              onRun={(id) => showToast(`タスク ${id} を実行中`, 'success')}
-              onEdit={(id) => showToast(`タスク ${id} を編集`, 'info')}
-              onDelete={(id) => showToast(`タスク ${id} を削除しました`, 'error')}
+              onRun={(id) => showToast(`Running task ${id}`, 'success')}
+              onEdit={(id) => showToast(`Edit task ${id}`, 'info')}
+              onDelete={(id) => showToast(`Deleted task ${id}`, 'error')}
             />
           )}
 
@@ -173,8 +173,8 @@ export default function App() {
           {view === 'review' && (
             <CodeReviewPanel
               request={approvalRequest}
-              onApprove={(id) => showToast(`承認しました: ${id}`, 'success')}
-              onReject={(id, reason) => showToast(`却下しました: ${id} ${reason}`, 'error')}
+              onApprove={(id) => showToast(`Approved: ${id}`, 'success')}
+              onReject={(id, reason) => showToast(`Rejected: ${id} ${reason}`, 'error')}
             />
           )}
         </main>

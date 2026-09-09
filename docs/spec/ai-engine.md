@@ -1,49 +1,47 @@
-# AIエンジンカテゴリ
+# AI Engine Category
 
-> パッケージ: `@aegis/ai-engine`
-> コアフロー: ②確認する（承認）の核となる部分
+> Package: `@aegis/ai-engine`
+> Core Flow: ②Review (Approve) — the core component
 
-## 概要
+## Overview
 
-操作ログからAIが**決定論的**なPythonスクリプトと事前例外ハンドラを生成するエンジンです。
+An engine that takes operation logs and generates **deterministic** Python scripts with pre-defined exception handlers.
 
-**核心思想**: AI幻覚を防止するため、プロンプト設計とバリデーションの2段階で
-安全性を担保します。生成されるコードは常に`if __name__ == "__main__"`ブロックで
-囲まれ、ユーザーの承認後にのみロック（読み取り専用）されます。
+**Core idea**: To prevent AI hallucinations, safety is ensured through a two-stage approach: prompt design and validation. Generated code is always wrapped in an `if __name__ == "__main__"` block and locked (read-only) only after user approval.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| AI-01 | 操作ログ→Pythonスクリプト変換 | Must |
-| AI-02 | Playwright/Seleniumコード生成 | Must |
-| AI-03 | 例外ハンドラの自動注入 | Must |
-| AI-04 | 入力バリデーション（危険なパターン検出） | Must |
-| AI-05 | コードバリデーション（構文・構造チェック） | Must |
-| AI-06 | プロンプトテンプレート管理 | Must |
-| AI-07 | 複数AIプロバイダー対応 | Should |
-| AI-08 | 例外予測パターンの学習 | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| AI-01 | Operation log → Python script conversion | Must |
+| AI-02 | Playwright/Selenium code generation | Must |
+| AI-03 | Automatic exception handler injection | Must |
+| AI-04 | Input validation (dangerous pattern detection) | Must |
+| AI-05 | Code validation (syntax & structure checks) | Must |
+| AI-06 | Prompt template management | Must |
+| AI-07 | Multiple AI provider support | Should |
+| AI-08 | Exception prediction pattern learning | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| AI-NF01 | コード生成レスポンス | < 30秒 |
-| AI-NF02 | 生成コードの構文有効性 | 100% |
-| AI-NF03 | プロンプト管理の一貫性 | バージョニング対応 |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| AI-NF01 | Code generation response time | < 30 seconds |
+| AI-NF02 | Generated code syntax validity | 100% |
+| AI-NF03 | Prompt management consistency | Versioning support |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`CodeGenerator`**: 操作ログからPythonコードを生成
-- **`PromptBuilder`**: AIへのプロンプトを構築
-- **`InputValidator`**: ユーザー入力の危険パターン検出
-- **`CodeValidator`**: 生成コードの構文・構造検証
+- **`CodeGenerator`**: Generates Python code from operation logs
+- **`PromptBuilder`**: Constructs prompts for the AI
+- **`InputValidator`**: Detects dangerous patterns in user input
+- **`CodeValidator`**: Validates syntax and structure of generated code
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 interface AiEngineResult {
@@ -60,33 +58,33 @@ interface ValidationIssue {
 }
 ```
 
-### プロンプト設計
+### Prompt Design
 
-- **役割定義**: "あなたはRPA自動化コードの専門家です"
-- **制約ルール**: 危険な関数（eval, exec, os.system）の禁止
-- **出力形式**: JSONスキーマに準拠したコード生成
-- **例外テンプレート**: タイムアウト、ネットワークエラー、要素未検出
+- **Role definition**: "You are an expert in RPA automation code"
+- **Constraint rules**: Prohibition of dangerous functions (eval, exec, os.system)
+- **Output format**: Code generation conforming to a JSON schema
+- **Exception templates**: Timeout, network error, element not found
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `CodeGenerator` | ✅ 完成 | Playwright/Selenium対応 |
-| `PromptBuilder` | ✅ 完成 | プロンプトテンプレート管理 |
-| `InputValidator` | ✅ 完成 | 危険パターン検出 |
-| `CodeValidator` | ✅ 完成 | 構文・構造検証 |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `CodeGenerator` | ✅ Complete | Playwright/Selenium support |
+| `PromptBuilder` | ✅ Complete | Prompt template management |
+| `InputValidator` | ✅ Complete | Dangerous pattern detection |
+| `CodeValidator` | ✅ Complete | Syntax & structure validation |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- 複数プロバイダー切り替え（現在は単一プロバイダー）
-- 例外パターンの機械学習
-- コード品質スコアリング
+- Multi-provider switching (currently single provider only)
+- Machine learning for exception patterns
+- Code quality scoring
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/generator.test.ts` | CodeGenerator |
 | `__tests__/prompt-builder.test.ts` | PromptBuilder |
 | `__tests__/validators.test.ts` | InputValidator/CodeValidator |

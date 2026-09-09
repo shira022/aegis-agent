@@ -161,26 +161,26 @@ describe('SafetyAnalyzer', () => {
   });
 
   describe('generateHumanReadableReport', () => {
-    it('should generate Japanese report with passed checks', () => {
+    it('should generate report with passed checks', () => {
       const checks = [
-        { id: 'a', name: 'テスト', passed: true, message: '問題なし' },
+        { id: 'a', name: 'Test', passed: true, message: 'No issues' },
       ];
       const report = generateHumanReadableReport(checks);
-      expect(report).toContain('テスト');
-      expect(report).toContain('問題なし');
+      expect(report).toContain('Test');
+      expect(report).toContain('No issues');
     });
 
     it('should include failed check details', () => {
       const checks = [
-        { id: 'a', name: 'テスト', passed: false, message: '危険なコード検出' },
+        { id: 'a', name: 'Test', passed: false, message: 'Dangerous code detected' },
       ];
       const report = generateHumanReadableReport(checks);
-      expect(report).toContain('危険なコード検出');
+      expect(report).toContain('Dangerous code detected');
     });
 
     it('should include overall risk summary', () => {
       const checks = [
-        { id: 'a', name: 'テスト', passed: true, message: 'ok' },
+        { id: 'a', name: 'Test', passed: true, message: 'ok' },
       ];
       const report = generateHumanReadableReport(checks);
       expect(report).toBeTruthy();

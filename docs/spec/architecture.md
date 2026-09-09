@@ -1,39 +1,36 @@
-# 全体アーキテクチャカテゴリ
+# System Architecture Category
 
-> パッケージ: システム全体
-> コアフロー: 全フローの統合
+> Package: System-wide
+> Core Flow: Integration of all flows
 
-## 概要
+## Overview
 
-Aegis Agent全体のシステムアーキテクチャ、パッケージ間の関係、
-データフローを定義するカテゴリです。
+Defines the overall system architecture of Aegis Agent, the relationships between packages, and data flows.
 
-**核心思想**: フロントエンド/バックエンドはすべてローカルPC上で動作し、
-AI処理のみクラウドに委譲します。すべてのデータはユーザーPC上に保存され、
-外部送信されるデータはPIIマスキング済みです。
+**Core idea**: Frontend and backend run entirely on the local PC; only AI processing is delegated to the cloud. All data is stored on the user's PC, and any externally transmitted data is PII-masked.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| ARCH-01 | ローカルファーストアーキテクチャ | Must |
-| ARCH-02 | クラウドAI連携（プロンプト/レスポンス） | Must |
-| ARCH-03 | パッケージ間の明確な依存関係 | Must |
-| ARCH-04 | データフローの可観測性 | Should |
-| ARCH-05 | Tauriデスクトップアプリ統合 | Must |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| ARCH-01 | Local-first architecture | Must |
+| ARCH-02 | Cloud AI integration (prompt/response) | Must |
+| ARCH-03 | Clear dependency relationships between packages | Must |
+| ARCH-04 | Data flow observability | Should |
+| ARCH-05 | Tauri desktop app integration | Must |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| ARCH-NF01 | 起動時間 | < 5秒 |
-| ARCH-NF02 | メモリ使用量 | < 500MB |
-| ARCH-NF03 | ディスク使用量 | < 1GB |
-| ARCH-NF04 | クロスプラットフォーム | Windows, macOS |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| ARCH-NF01 | Startup time | < 5 seconds |
+| ARCH-NF02 | Memory usage | < 500MB |
+| ARCH-NF03 | Disk usage | < 1GB |
+| ARCH-NF04 | Cross-platform | Windows, macOS |
 
-## システム構成図
+## System Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -50,7 +47,7 @@ AI処理のみクラウドに委譲します。すべてのデータはユーザ
 │  │                  @aegis/shared                       ││
 │  └──────────────────────────────────────────────────────┘│
 └──────────────────────┬──────────────────────────────────┘
-                       │ HTTPS (PIIマスク済み)
+                       │ HTTPS (PII-masked)
                        ▼
 ┌──────────────────────────────────────────────────────────┐
 │                  Cloud AI Service                        │
@@ -58,10 +55,10 @@ AI処理のみクラウドに委譲します。すべてのデータはユーザ
 └──────────────────────────────────────────────────────────┘
 ```
 
-## パッケージ依存関係
+## Package Dependencies
 
 ```
-@aegis/shared         ← 全パッケージが依存
+@aegis/shared         ← All packages depend on this
     ↑
 @aegis/recorder       ← AI Engine, Approval, Security
     ↑
@@ -73,86 +70,86 @@ AI処理のみクラウドに委譲します。すべてのデータはユーザ
     ↑
 @aegis/healer         ← HITL
     ↑
-@aegis/hitl           ← (循環依存なし)
+@aegis/hitl           ← (no circular dependencies)
     ↑
-@aegis/security       ← 全パッケージが利用
+@aegis/security       ← Used by all packages
 ```
 
-## データフロー
+## Data Flows
 
-### 1. 録画フロー
-
-```
-ユーザー操作 → Recorder → OperationLog (JSON)
-    ↓
-Security.PIIマスク → サニタイズ済みログ
-    ↓
-AI Engine → Pythonコード生成
-```
-
-### 2. 承認フロー
+### 1. Recording Flow
 
 ```
-生成コード → SafetyAnalyzer → リスク評価
+User operation → Recorder → OperationLog (JSON)
     ↓
-UI.CodeReviewPanel → ユーザーレビュー
+Security.PII mask → Sanitized log
     ↓
-ApprovalManager → 承認/却下
-    ↓
-承認済みコードロック（読み取り専用）
+AI Engine → Python code generation
 ```
 
-### 3. 実行フロー
+### 2. Approval Flow
 
 ```
-承認済みコード → ScriptGenerator → Pythonスクリプト
+Generated code → SafetyAnalyzer → Risk assessment
     ↓
-ProcessManager → サブプロセス起動
+UI.CodeReviewPanel → User review
     ↓
-LogCollector → ログ収集
+ApprovalManager → Approve/Reject
     ↓
-エラー検知 → Healer/HITL
+Approved code lock (read-only)
 ```
 
-### 4. 進化フロー
+### 3. Execution Flow
 
 ```
-エラー検知 → ErrorClassifier → エラー分類
+Approved code → ScriptGenerator → Python subprocess
     ↓
-VisionAnalyzer → 画面解析
+ProcessManager → Subprocess launch
     ↓
-CodePatcher → 修正コード提案
+LogCollector → Log collection
     ↓
-HumanLoopEngine → ユーザー承認
-    ↓
-DiffLearner → パターン学習
+Error detected → Healer/HITL
 ```
 
-## 技術スタック
+### 4. Evolution Flow
 
-| レイヤー | 技術 |
-|---------|------|
-| デスクトップフレームワーク | Tauri (Rust + WebView) |
-| フロントエンド | React + TypeScript |
-| AIコード生成 | Python / Playwright / Selenium |
-| ローカルデータ保存 | SQLite (予定) |
-| クラウドAI | OpenAI / Anthropic / ローカルLLM |
-| 暗号化 | OSキーチェーン (AES-256) |
+```
+Error detected → ErrorClassifier → Error classification
+    ↓
+VisionAnalyzer → Screen analysis
+    ↓
+CodePatcher → Proposed code fix
+    ↓
+HumanLoopEngine → User approval
+    ↓
+DiffLearner → Pattern learning
+```
 
-## 実装状況
+## Tech Stack
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| パッケージ構造 | ✅ 完成 | monorepo |
-| `@aegis/shared` | ✅ 完成 | 共通型定義 |
-| Tauriアプリ骨格 | ✅ 完成 | `apps/desktop` |
-| Pythonランタイム | ⬜ テンプレートのみ | `engines/python-runtime` |
-| SQLite永続化 | ⬜ 未実装 | |
-| CI/CDパイプライン | ⬜ 未実装 | |
+| Layer | Technology |
+|-------|------------|
+| Desktop framework | Tauri (Rust + WebView) |
+| Frontend | React + TypeScript |
+| AI code generation | Python / Playwright / Selenium |
+| Local data storage | SQLite (planned) |
+| Cloud AI | OpenAI / Anthropic / Local LLM |
+| Encryption | OS Keychain (AES-256) |
 
-## テストカバレッジ
+## Implementation Status
 
-| テストファイル | 対象 |
-|--------------|------|
-| `packages/@aegis/shared/src/__tests__/types.test.ts` | 共通型定義 |
-| `packages/@aegis/shared/src/__tests__/dependency-checker.test.ts` | 依存関係チェッカー |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Package structure | ✅ Complete | monorepo |
+| `@aegis/shared` | ✅ Complete | Shared type definitions |
+| Tauri app skeleton | ✅ Complete | `apps/desktop` |
+| Python runtime | ⬜ Template only | `engines/python-runtime` |
+| SQLite persistence | ⬜ Not implemented | |
+| CI/CD pipeline | ⬜ Not implemented | |
+
+## Test Coverage
+
+| Test File | Target |
+|-----------|--------|
+| `packages/@aegis/shared/src/__tests__/types.test.ts` | Shared type definitions |
+| `packages/@aegis/shared/src/__tests__/dependency-checker.test.ts` | Dependency checker |
