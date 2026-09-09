@@ -27,7 +27,7 @@ describe('SetupWizard', () => {
     render(
       <SetupWizard dependencies={[]} {...defaultProps} />,
     );
-    expect(screen.getByText('Aegis Agent セットアップ')).toBeInTheDocument();
+    expect(screen.getByText('Aegis Agent Setup')).toBeInTheDocument();
   });
 
   it('renders dependency names', () => {
@@ -91,7 +91,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'pnpm', status: 'missing' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    const btn = screen.getByRole('button', { name: /インストール/ });
+    const btn = screen.getByRole('button', { name: /Install/ });
     expect(btn).toBeInTheDocument();
   });
 
@@ -100,7 +100,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'Node.js', status: 'outdated' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    const btn = screen.getByRole('button', { name: /インストール/ });
+    const btn = screen.getByRole('button', { name: /Install/ });
     expect(btn).toBeInTheDocument();
   });
 
@@ -109,7 +109,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'Node.js', status: 'ok' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.queryByRole('button', { name: /インストール/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Install/ })).not.toBeInTheDocument();
   });
 
   it('calls onInstall with dependency name when install button clicked', () => {
@@ -118,7 +118,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'pnpm', status: 'missing' }),
     ];
     render(<SetupWizard dependencies={deps} onInstall={onInstall} onComplete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /インストール/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Install/ }));
     expect(onInstall).toHaveBeenCalledWith('pnpm');
   });
 
@@ -130,7 +130,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'pnpm', status: 'ok' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.getByText('すべての依存関係が揃いました')).toBeInTheDocument();
+    expect(screen.getByText('All dependencies are ready')).toBeInTheDocument();
   });
 
   it('does not show completion message when some dependencies are missing', () => {
@@ -139,32 +139,32 @@ describe('SetupWizard', () => {
       makeDep({ name: 'pnpm', status: 'missing' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.queryByText('すべての依存関係が揃いました')).not.toBeInTheDocument();
+    expect(screen.queryByText('All dependencies are ready')).not.toBeInTheDocument();
   });
 
-  it('shows 開始する button when all dependencies are ok', () => {
+  it('shows Get Started button when all dependencies are ok', () => {
     const deps: DependencyCheck[] = [
       makeDep({ name: 'Node.js', status: 'ok' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.getByRole('button', { name: '開始する' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Get Started' })).toBeInTheDocument();
   });
 
-  it('does not show 開始する button when dependencies are missing', () => {
+  it('does not show Get Started button when dependencies are missing', () => {
     const deps: DependencyCheck[] = [
       makeDep({ name: 'pnpm', status: 'missing' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.queryByRole('button', { name: '開始する' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Get Started' })).not.toBeInTheDocument();
   });
 
-  it('calls onComplete when 開始する button clicked', () => {
+  it('calls onComplete when Get Started button clicked', () => {
     const onComplete = vi.fn();
     const deps: DependencyCheck[] = [
       makeDep({ name: 'Node.js', status: 'ok' }),
     ];
     render(<SetupWizard dependencies={deps} onInstall={vi.fn()} onComplete={onComplete} />);
-    fireEvent.click(screen.getByRole('button', { name: '開始する' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Get Started' }));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
@@ -172,8 +172,8 @@ describe('SetupWizard', () => {
 
   it('shows completion message and button when dependencies array is empty', () => {
     render(<SetupWizard dependencies={[]} {...defaultProps} />);
-    expect(screen.getByText('すべての依存関係が揃いました')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '開始する' })).toBeInTheDocument();
+    expect(screen.getByText('All dependencies are ready')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Get Started' })).toBeInTheDocument();
   });
 
   // ── Mixed states ───────────────────────────────────────────────────
@@ -192,11 +192,11 @@ describe('SetupWizard', () => {
     expect(screen.getByText('⚠️')).toBeInTheDocument();
 
     // No completion
-    expect(screen.queryByText('すべての依存関係が揃いました')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '開始する' })).not.toBeInTheDocument();
+    expect(screen.queryByText('All dependencies are ready')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Get Started' })).not.toBeInTheDocument();
 
     // Two install buttons (missing + outdated)
-    const installButtons = screen.getAllByRole('button', { name: /インストール/ });
+    const installButtons = screen.getAllByRole('button', { name: /Install/ });
     expect(installButtons).toHaveLength(2);
   });
 });

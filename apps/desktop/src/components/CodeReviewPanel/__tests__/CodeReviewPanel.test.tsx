@@ -7,7 +7,7 @@ const makeRequest = (overrides: Partial<ApprovalRequest> = {}): ApprovalRequest 
   id: 'req-1',
   taskId: 'task-1',
   code: 'def main():\n    print("hello")',
-  explanation: 'テストスクリプト',
+  explanation: 'Test Script',
   exceptionHandlers: [],
   safetyChecks: [],
   createdAt: Date.now(),
@@ -30,13 +30,13 @@ describe('CodeReviewPanel', () => {
   it('renders the title', () => {
     const request = makeRequest();
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('コードレビュー')).toBeInTheDocument();
+    expect(screen.getByText('Code Review')).toBeInTheDocument();
   });
 
   it('renders the explanation', () => {
-    const request = makeRequest({ explanation: 'ログイン処理を追加' });
+    const request = makeRequest({ explanation: 'Add login process' });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('ログイン処理を追加')).toBeInTheDocument();
+    expect(screen.getByText('Add login process')).toBeInTheDocument();
   });
 
   it('renders the code', () => {
@@ -49,45 +49,45 @@ describe('CodeReviewPanel', () => {
   it('shows low risk indicator', () => {
     const request = makeRequest({ riskLevel: 'low' });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('低リスク')).toBeInTheDocument();
+    expect(screen.getByText('Low Risk')).toBeInTheDocument();
   });
 
   it('shows medium risk indicator', () => {
     const request = makeRequest({ riskLevel: 'medium' });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('中リスク')).toBeInTheDocument();
+    expect(screen.getByText('Medium Risk')).toBeInTheDocument();
   });
 
   it('shows high risk indicator', () => {
     const request = makeRequest({ riskLevel: 'high' });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('高リスク')).toBeInTheDocument();
+    expect(screen.getByText('High Risk')).toBeInTheDocument();
   });
 
   it('shows critical risk indicator', () => {
     const request = makeRequest({ riskLevel: 'critical' });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('危険')).toBeInTheDocument();
+    expect(screen.getByText('Critical')).toBeInTheDocument();
   });
 
   // ── Safety checks ──────────────────────────────────────────────────
   it('renders safety check results', () => {
     const request = makeRequest({
       safetyChecks: [
-        { id: '1', name: 'ファイルアクセス', passed: true, message: 'OK' },
-        { id: '2', name: 'ネットワーク', passed: false, message: 'ブロックされた' },
+        { id: '1', name: 'File Access', passed: true, message: 'OK' },
+        { id: '2', name: 'Network', passed: false, message: 'Blocked' },
       ],
     });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByText('ファイルアクセス')).toBeInTheDocument();
-    expect(screen.getByText('ネットワーク')).toBeInTheDocument();
+    expect(screen.getByText('File Access')).toBeInTheDocument();
+    expect(screen.getByText('Network')).toBeInTheDocument();
   });
 
   it('shows pass/fail icons for safety checks', () => {
     const request = makeRequest({
       safetyChecks: [
-        { id: '1', name: 'チェックA', passed: true, message: 'OK' },
-        { id: '2', name: 'チェックB', passed: false, message: 'NG' },
+        { id: '1', name: 'Check A', passed: true, message: 'OK' },
+        { id: '2', name: 'Check B', passed: false, message: 'NG' },
       ],
     });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
@@ -99,32 +99,32 @@ describe('CodeReviewPanel', () => {
   it('renders exception handler proposals', () => {
     const request = makeRequest({
       exceptionHandlers: [
-        { condition: 'ElementNotFound', action: 'リトライ', code: 'retry(3)', riskLevel: 'low' },
+        { condition: 'ElementNotFound', action: 'Retry', code: 'retry(3)', riskLevel: 'low' },
       ],
     });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
     expect(screen.getByText('ElementNotFound')).toBeInTheDocument();
-    expect(screen.getByText('リトライ')).toBeInTheDocument();
+    expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 
   // ── Approve/Reject buttons ─────────────────────────────────────────
   it('shows approve button', () => {
     const request = makeRequest();
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /承認/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Approve/ })).toBeInTheDocument();
   });
 
   it('shows reject button', () => {
     const request = makeRequest();
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /却下/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Reject/ })).toBeInTheDocument();
   });
 
   it('calls onApprove with request id when approve clicked', () => {
     const onApprove = vi.fn();
     const request = makeRequest({ id: 'req-42' });
     render(<CodeReviewPanel request={request} onApprove={onApprove} onReject={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /承認/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Approve/ }));
     expect(onApprove).toHaveBeenCalledWith('req-42');
   });
 
@@ -132,7 +132,7 @@ describe('CodeReviewPanel', () => {
     const onReject = vi.fn();
     const request = makeRequest({ id: 'req-42' });
     render(<CodeReviewPanel request={request} onApprove={vi.fn()} onReject={onReject} />);
-    fireEvent.click(screen.getByRole('button', { name: /却下/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Reject/ }));
     expect(onReject).toHaveBeenCalledWith('req-42', '');
   });
 
