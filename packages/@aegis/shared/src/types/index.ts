@@ -1,3 +1,8 @@
+// ─── Provider ───────────────────────────────────────────────────────
+
+export type { ProviderId, ProviderConfig, ProviderSettings } from './provider';
+export { PROVIDER_REGISTRY } from './provider';
+
 // ─── Task ───────────────────────────────────────────────────────────
 
 export type TaskStatus = 'idle' | 'running' | 'completed' | 'failed' | 'paused';

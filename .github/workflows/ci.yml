@@ -2,9 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
+    paths-ignore:
+      - '.agents/**'
+      - 'docs/**'
+      - '*.md'
   pull_request:
-    branches: [develop]
+    branches: [develop, main]
+    paths-ignore:
+      - '.agents/**'
+      - 'docs/**'
+      - '*.md'
 
 concurrency:
   group: ci-${{ github.ref }}

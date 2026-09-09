@@ -42,15 +42,37 @@ chmod +x .git/hooks/pre-commit
 
 ## Branch Workflow
 
-### Branching Model
+### GitFlow Branch Model
+
+This project follows a **3-branch GitFlow** strategy:
+
+| Branch | Purpose | Push Policy | Merge Target |
+|--------|---------|-------------|--------------|
+| `main` | Stable releases only | **Protected** — no direct push | — (only accepts PR from `develop`) |
+| `develop` | Active development | Open — direct push or PR merge from feature branches | — (integration branch) |
+| `feature/<name>`, `fix/<name>`, `docs/<name>`, `refactor/<name>`, `chore/<name>` | Isolated work | Open — push your own branch | → `develop` |
 
 ```
-main          ← stable releases only
-  └── develop ← active development, PR target
-        └── feature/<name>   ← new features
-        └── fix/<name>       ← bug fixes
-        └── refactor/<name>  ← code refactoring
+main                          ← stable releases only, PR from develop only
+  └── develop                 ← active development, PR target for features
+        ├── feature/<name>    ← new features
+        ├── fix/<name>        ← bug fixes
+        ├── docs/<name>       ← documentation changes
+        ├── refactor/<name>   ← code refactoring
+        └── chore/<name>      ← build, deps, tooling
 ```
+
+### Branch Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feature/<short-description>` | `feature/audio-recorder` |
+| Bug fix | `fix/<short-description>` | `fix/race-condition-start` |
+| Documentation | `docs/<short-description>` | `docs/api-reference` |
+| Refactor | `refactor/<short-description>` | `refactor/extract-core-module` |
+| Chore | `chore/<short-description>` | `chore/upgrade-tauri-v2` |
+
+Use lowercase kebab-case for branch names. Keep descriptions concise (2–4 words).
 
 ### Creating a Branch
 
