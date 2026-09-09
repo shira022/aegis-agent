@@ -75,22 +75,22 @@ aegis-agent/
 4. **Execute** — Approved scripts run in an isolated Python virtual environment
 5. **Replay** — Automations can be triggered on-demand or scheduled
 
-## 製品仕様書
+## Product Specifications
 
-カテゴリ別の製品仕様書は [`docs/spec/`](docs/spec/) にまとめています：
+Product specifications by category are available in [`docs/spec/`](docs/spec/):
 
-| カテゴリ | ファイル | 説明 |
-|---------|---------|------|
-| [製品仕様書トップ](docs/spec/README.md) | `README.md` | 仕様書全体の概要とリンク |
-| [録画・操作記録](docs/spec/recording.md) | `recording.md` | 操作メタデータ構造、セレクタ解決 |
-| [AIエンジン](docs/spec/ai-engine.md) | `ai-engine.md` | コード生成、プロンプト設計 |
-| [承認ワークフロー](docs/spec/approval.md) | `approval.md` | 安全分析、承認管理 |
-| [実行エンジン](docs/spec/execution.md) | `execution.md` | サブプロセス管理、ログ収集 |
-| [セルフヒーリング](docs/spec/self-healing.md) | `self-healing.md` | エラー分類、コード修正提案 |
-| [Human-in-the-Loop](docs/spec/hitl.md) | `hitl.md` | 介入管理、デモ記録、差分学習 |
-| [セキュリティ](docs/spec/security.md) | `security.md` | PIIマスキング、APIキー管理 |
-| [UI/UX](docs/spec/ui.md) | `ui.md` | ダッシュボード、コードレビュー |
-| [全体アーキテクチャ](docs/spec/architecture.md) | `architecture.md` | システム図、データフロー |
+| Category | File | Description |
+|---------|------|-------------|
+| [Specifications Top](docs/spec/README.md) | `README.md` | Overview and links for all specifications |
+| [Recording](docs/spec/recording.md) | `recording.md` | Operation metadata structure, selector resolution |
+| [AI Engine](docs/spec/ai-engine.md) | `ai-engine.md` | Code generation, prompt design |
+| [Approval Workflow](docs/spec/approval.md) | `approval.md` | Safety analysis, approval management |
+| [Execution Engine](docs/spec/execution.md) | `execution.md` | Subprocess management, log collection |
+| [Self-Healing](docs/spec/self-healing.md) | `self-healing.md` | Error classification, code fix proposals |
+| [Human-in-the-Loop](docs/spec/hitl.md) | `hitl.md` | Intervention management, demo recording, differential learning |
+| [Security](docs/spec/security.md) | `security.md` | PII masking, API key management |
+| [UI/UX](docs/spec/ui.md) | `ui.md` | Dashboard, code review |
+| [Architecture](docs/spec/architecture.md) | `architecture.md` | System diagram, data flow |
 
 ## Architecture Decisions
 

@@ -85,7 +85,7 @@ export const PII_DETECTIONS: PIIPattern[] = [
     category: 'name',
     pattern: /(?:氏名|名前)\s*[:：]\s*[\u3000-\u9FFF\uF900-\uFAFF]{2,}/g,
     maskChar: '*',
-    description: 'Japanese name patterns',
+    description: 'Name patterns (Japanese name detection)',
     severity: 'medium',
   },
   {

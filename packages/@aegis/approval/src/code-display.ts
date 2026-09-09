@@ -14,11 +14,11 @@ const WARNING_PATTERNS = /\b(TODO|FIXME|HACK|XXX|WARN|fetch|axios|await)\b/;
 const INFO_PATTERNS = /^(?:\s*\/\/|\/\*|\*)/;
 
 const RISK_HIGHLIGHTS: Array<{ pattern: RegExp; color: string; label: string }> = [
-  { pattern: /\beval\b/, color: '#ff4444', label: '危険: eval使用' },
-  { pattern: /\bexec\b/, color: '#ff4444', label: '危険: exec使用' },
-  { pattern: /\bFunction\b/, color: '#ff8800', label: '警告: Functionコンストラクタ' },
-  { pattern: /\bprocess\.env\b/, color: '#ff8800', label: '警告: 環境変数アクセス' },
-  { pattern: /\b(fetch|axios)\b/, color: '#ffcc00', label: '注意: ネットワーク呼び出し' },
+  { pattern: /\beval\b/, color: '#ff4444', label: 'Danger: eval usage' },
+  { pattern: /\bexec\b/, color: '#ff4444', label: 'Danger: exec usage' },
+  { pattern: /\bFunction\b/, color: '#ff8800', label: 'Warning: Function constructor' },
+  { pattern: /\bprocess\.env\b/, color: '#ff8800', label: 'Warning: env var access' },
+  { pattern: /\b(fetch|axios)\b/, color: '#ffcc00', label: 'Info: network call' },
 ];
 
 export function formatCodeForDisplay(code: string): DisplayableCode {
@@ -36,12 +36,12 @@ export function formatCodeForDisplay(code: string): DisplayableCode {
   const infoCount = lines.filter((l) => l.type === 'info').length;
 
   const parts: string[] = [];
-  if (dangerCount > 0) parts.push(`危険: ${dangerCount}行`);
-  if (warningCount > 0) parts.push(`警告: ${warningCount}行`);
-  if (infoCount > 0) parts.push(`情報: ${infoCount}行`);
-  if (parts.length === 0) parts.push('問題なし');
+  if (dangerCount > 0) parts.push(`Danger: ${dangerCount} lines`);
+  if (warningCount > 0) parts.push(`Warning: ${warningCount} lines`);
+  if (infoCount > 0) parts.push(`Info: ${infoCount} lines`);
+  if (parts.length === 0) parts.push('No issues');
 
-  const summary = `${lines.length}行 | ${parts.join(', ')}`;
+  const summary = `${lines.length} lines | ${parts.join(', ')}`;
 
   return { lines, highlights, summary };
 }
@@ -89,17 +89,17 @@ const STEP_ICONS: Record<StepType, string> = {
 };
 
 const STEP_DESCRIPTIONS: Record<StepType, (target: { selector?: string; text?: string }) => string> = {
-  click: (t) => `要素をクリック${t.text ? `「${t.text}」` : ''}`,
-  type: (t) => `テキスト入力${t.text ? `「${t.text}」` : ''}`,
-  navigate: (t) => `ページ遷移${t.selector ? `→ ${t.selector}` : ''}`,
-  wait: () => '待機',
-  screenshot: () => 'スクリーンショットを撮影',
+  click: (t) => `Click element${t.text ? ` "${t.text}"` : ''}`,
+  type: (t) => `Type text${t.text ? ` "${t.text}"` : ''}`,
+  navigate: (t) => `Navigate${t.selector ? ` → ${t.selector}` : ''}`,
+  wait: () => 'Wait',
+  screenshot: () => 'Take screenshot',
 };
 
 export function generateFlowchart(log: OperationLog): FlowchartStep[] {
   return log.steps.map((step, i) => ({
     order: i + 1,
-    description: STEP_DESCRIPTIONS[step.type]?.(step.target) ?? `${step.type}を実行`,
+    description: STEP_DESCRIPTIONS[step.type]?.(step.target) ?? `${step.type} execute`,
     type: 'action' as const,
     icon: STEP_ICONS[step.type] ?? '📋',
   }));
