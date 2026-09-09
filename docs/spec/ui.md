@@ -1,47 +1,44 @@
-# UI/UXカテゴリ
+# UI/UX Category
 
-> パッケージ: `apps/desktop`（`@aegis/ui`は未実装）
-> コアフロー: クロスカッティング（全フローを視覚化）
+> Package: `apps/desktop` (`@aegis/ui` not yet implemented)
+> Core Flow: Cross-cutting (visualizes all flows)
 
-## 概要
+## Overview
 
-Aegis Agentのユーザーインターフェースを定義するカテゴリです。
-ダッシュボード、タスク一覧、コードレビュー、操作フロービューなどの
-UIコンポーネントを含みます。
+Defines the user interface of Aegis Agent, including UI components such as the dashboard, task list, code review, and operation flow view.
 
-**核心思想**: 非エンジニアでも直感的に操作できるUIを実現し、
-AIの判断を「見える化」して信頼性を確保します。
+**Core idea**: Provides an intuitive interface that non-engineers can use easily, and "visualizes" AI decisions to ensure trustworthiness.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| UI-01 | ダッシュボード（タスク状況の一覧表示） | Must |
-| UI-02 | タスク一覧（実行中/完了/エラーの管理） | Must |
-| UI-03 | コードレビューUI（シンタックスハイライト付き） | Must |
-| UI-04 | 操作フロービュー（記録操作の時系列表示） | Must |
-| UI-05 | 承認/却下ボタン | Must |
-| UI-06 | セットアップウィザード | Should |
-| UI-07 | Toast通知 | Should |
-| UI-08 | モーダルダイアログ | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| UI-01 | Dashboard (task status overview) | Must |
+| UI-02 | Task list (running/completed/error management) | Must |
+| UI-03 | Code review UI (with syntax highlighting) | Must |
+| UI-04 | Operation flow view (timeline of recorded operations) | Must |
+| UI-05 | Approve / Reject buttons | Must |
+| UI-06 | Setup wizard | Should |
+| UI-07 | Toast notifications | Should |
+| UI-08 | Modal dialogs | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| UI-NF01 | 初回表示時間 | < 2秒 |
-| UI-NF02 | レスポンシブデザイン | 1024x768以上 |
-| UI-NF03 | アクセシビリティ | WCAG 2.1 AA |
-| UI-NF04 | ダークテーマ対応 | 必須 |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| UI-NF01 | Initial render time | < 2 seconds |
+| UI-NF02 | Responsive design | 1024×768 and above |
+| UI-NF03 | Accessibility | WCAG 2.1 AA |
+| UI-NF04 | Dark theme support | Required |
 
-## API/インターフェース
+## API / Interfaces
 
-### 実装済みコンポーネント
+### Implemented Components
 
-| コンポーネント | パス | 状態 |
-|---------------|------|------|
+| Component | Path | Status |
+|-----------|------|--------|
 | `Dashboard` | `components/Dashboard/` | ✅ |
 | `TaskList` | `components/TaskList/` | ✅ |
 | `CodeReviewPanel` | `components/CodeReviewPanel/` | ✅ |
@@ -53,37 +50,37 @@ AIの判断を「見える化」して信頼性を確保します。
 | `Badge` | `components/ui/Badge.tsx` | ✅ |
 | `Toast` | `components/ui/Toast.tsx` | ✅ |
 
-### UIフロー
+### UI Flow
 
 ```
-アプリ起動 → SetupWizard → Dashboard
+App launch → SetupWizard → Dashboard
                     ↓
             TaskList → CodeReviewPanel → TimelineView
                     ↓
-            承認/却下 → 実行結果表示
+            Approve / Reject → Execution result display
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `Dashboard` | ✅ 完成 | タスク状況表示 |
-| `TaskList` | ✅ 完成 | タスク一覧 |
-| `CodeReviewPanel` | ✅ 完成 | コードレビュー |
-| `TimelineView` | ✅ 完成 | 操作フロー表示 |
-| `SetupWizard` | ✅ 完成 | 初期設定 |
-| UI基盤コンポーネント | ✅ 完成 | Button, Card, Modal, Badge, Toast |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `Dashboard` | ✅ Complete | Task status display |
+| `TaskList` | ✅ Complete | Task list |
+| `CodeReviewPanel` | ✅ Complete | Code review |
+| `TimelineView` | ✅ Complete | Operation flow display |
+| `SetupWizard` | ✅ Complete | Initial setup |
+| UI foundation components | ✅ Complete | Button, Card, Modal, Badge, Toast |
 
-### 未実装
+### Not Yet Implemented
 
-- `@aegis/ui` パッケージ（共有コンポーネントライブラリ）
-- リアルタイム更新
-- ドラッグ＆ドロップ操作
+- `@aegis/ui` package (shared component library)
+- Real-time updates
+- Drag-and-drop operations
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `components/Dashboard/__tests__/Dashboard.test.tsx` | Dashboard |
 | `components/TaskList/__tests__/TaskList.test.tsx` | TaskList |
 | `components/CodeReviewPanel/__tests__/CodeReviewPanel.test.tsx` | CodeReviewPanel |

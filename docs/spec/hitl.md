@@ -1,48 +1,45 @@
-# Human-in-the-Loopカテゴリ
+# Human-in-the-Loop Category
 
-> パッケージ: `@aegis/hitl`
-> コアフロー: ④育てる（進化）
+> Package: `@aegis/hitl`
+> Core Flow: ④Evolve (Improve)
 
-## 概要
+## Overview
 
-エラー発生時に人間の介入を管理し、デモ記録と差分学習を通じて
-自動化精度を向上させるカテゴリです。
+A category that manages human intervention when errors occur, improving automation accuracy through demonstration recording and diff-based learning.
 
-**核心思想**: すべての修正は人間の判断に基づきます。AIは「提案」し、
-人間は「修正」し、その差分からパターンを学習します。このサイクルが
-「育てる（進化）」の核です。
+**Core idea**: All fixes are based on human judgment. AI "proposes" fixes, humans "apply" them, and patterns are learned from the diffs. This cycle is the core of the "Evolve (Improve)" flow.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| HITL-01 | 介入リクエストの管理 | Must |
-| HITL-02 | デモ記録（ユーザーの修正操作を録画） | Must |
-| HITL-03 | 差分学習（修正前後のコード差分からパターン抽出） | Must |
-| HITL-04 | 介入オプションの提示（修正、中止、スキップ） | Must |
-| HITL-05 | 学習パターンの蓄積と信頼度管理 | Should |
-| HITL-06 | 介入履歴の管理 | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| HITL-01 | Intervention request management | Must |
+| HITL-02 | Demonstration recording (record user correction operations) | Must |
+| HITL-03 | Diff learning (extract patterns from code diffs before/after correction) | Must |
+| HITL-04 | Present intervention options (fix, abort, skip) | Must |
+| HITL-05 | Accumulate learning patterns & manage confidence | Should |
+| HITL-06 | Intervention history management | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| HITL-NF01 | 介入レスポンス時間 | < 500ms |
-| HITL-NF02 | 差分計算精度 | 100%（行レベル） |
-| HITL-NF03 | 学習パターンの照合速度 | < 100ms |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| HITL-NF01 | Intervention response time | < 500ms |
+| HITL-NF02 | Diff calculation accuracy | 100% (line-level) |
+| HITL-NF03 | Learning pattern matching speed | < 100ms |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`HumanLoopEngine`**: HITLフローのオーケストレーション
-- **`InterventionManager`**: 介入リクエストの管理
-- **`DemonstrationRecorder`**: デモ記録の管理
-- **`DiffLearner`**: 差分学習エンジン
+- **`HumanLoopEngine`**: Orchestration of the HITL flow
+- **`InterventionManager`**: Manages intervention requests
+- **`DemonstrationRecorder`**: Manages demonstration recording
+- **`DiffLearner`**: Diff-based learning engine
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 type HitlState = 'idle' | 'waiting_for_human' | 'demonstrating'
@@ -80,37 +77,37 @@ interface LearningPattern {
 }
 ```
 
-### HITLフロー
+### HITL Flow
 
 ```
-エラー検知 → InterventionRequest生成 → ユーザーに提示
+Error detected → InterventionRequest generated → Presented to user
      ↓
-  ユーザー決定 → タイプ別処理:
-  ├── demonstrate → DemonstrationRecorder → デモ記録
-  ├── fix_code → DiffLearner → 差分学習
-  └── abort → 終了
+  User decision → Type-based processing:
+  ├── demonstrate → DemonstrationRecorder → Record demonstration
+  ├── fix_code → DiffLearner → Diff-based learning
+  └── abort → Terminate
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `HumanLoopEngine` | ✅ 完成 | フロー管理 |
-| `InterventionManager` | ✅ 完成 | 介入管理 |
-| `DemonstrationRecorder` | ✅ 完成 | デモ記録 |
-| `DiffLearner` | ✅ 完成 | 差分学習 |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `HumanLoopEngine` | ✅ Complete | Flow management |
+| `InterventionManager` | ✅ Complete | Intervention management |
+| `DemonstrationRecorder` | ✅ Complete | Demonstration recording |
+| `DiffLearner` | ✅ Complete | Diff-based learning |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- デモ記録のビジュアルリプレイ
-- 学習パターンの永続化
-- 介入の優先度管理
+- Visual replay of demonstrations
+- Persistence of learning patterns
+- Intervention priority management
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/human-loop-engine.test.ts` | HumanLoopEngine |
 | `__tests__/intervention-manager.test.ts` | InterventionManager |
 | `__tests__/demonstration-recorder.test.ts` | DemonstrationRecorder |

@@ -1,48 +1,45 @@
-# セルフヒーリングカテゴリ
+# Self-Healing Category
 
-> パッケージ: `@aegis/healer`
-> コアフロー: ④育てる（進化）
+> Package: `@aegis/healer`
+> Core Flow: ④Evolve (Improve)
 
-## 概要
+## Overview
 
-実行中のエラーを自動検知し、原因を分類し、AIが修正コードを提案し、
-学習パターンとして蓄積するカテゴリです。
+Automatically detects errors during execution, classifies causes, proposes AI-generated fix code, and accumulates results as learning patterns.
 
-**核心思想**: すべての修正はユーザーの承認が必要です。AIは「提案」のみ行い、
-実際のコード変更はユーザーの判断で行われます。修正パターンは学習データとして
-蓄積され、類似エラーの自動修正精度が向上します。
+**Core idea**: All fixes require user approval. AI only "proposes" fixes; actual code changes are made based on human judgment. Fix patterns are accumulated as learning data, improving the accuracy of automatic fixes for similar errors.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| HL-01 | エラー分類（タイムアウト、要素未検出、ネットワーク等） | Must |
-| HL-02 | 画面キャプチャからのエラー原因分析（ビジョン解析） | Should |
-| HL-03 | AIによるコード修正提案 | Must |
-| HL-04 | 学習パターンの蓄積と照合 | Must |
-| HL-05 | 修正コードの差分表示 | Must |
-| HL-06 | エラーヒストリー管理 | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| HL-01 | Error classification (timeout, element not found, network, etc.) | Must |
+| HL-02 | Error cause analysis from screen capture (vision analysis) | Should |
+| HL-03 | AI-generated code fix proposals | Must |
+| HL-04 | Accumulate & match learning patterns | Must |
+| HL-05 | Diff display for fix code | Must |
+| HL-06 | Error history management | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| HL-NF01 | エラー分類レスポンス | < 3秒 |
-| HL-NF02 | 修正提案精度 | 70%以上（目標） |
-| HL-NF03 | 学習パターン照合速度 | < 100ms |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| HL-NF01 | Error classification response time | < 3 seconds |
+| HL-NF02 | Fix proposal accuracy | ≥ 70% (target) |
+| HL-NF03 | Learning pattern matching speed | < 100ms |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`HealingEngine`**: ヒーリングフローのオーケストレーション
-- **`ErrorClassifier`**: エラーの自動分類
-- **`VisionAnalyzer`**: 画面キャプチャからのエラー原因分析
-- **`CodePatcher`**: 修正コードの生成と適用
+- **`HealingEngine`**: Orchestration of the healing flow
+- **`ErrorClassifier`**: Automatic error classification
+- **`VisionAnalyzer`**: Error cause analysis from screen capture
+- **`CodePatcher`**: Code fix generation and application
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 interface HealingResult {
@@ -69,7 +66,7 @@ interface CodePatch {
 }
 ```
 
-### エラー分類タイプ
+### Error Classification Types
 
 ```typescript
 type ErrorType =
@@ -82,26 +79,26 @@ type ErrorType =
   | 'unknown';
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `HealingEngine` | ✅ 完成 | フロー管理 |
-| `ErrorClassifier` | ✅ 完成 | エラー分類 |
-| `VisionAnalyzer` | ✅ 完成 | 画面解析 |
-| `CodePatcher` | ✅ 完成 | 修正コード生成 |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `HealingEngine` | ✅ Complete | Flow management |
+| `ErrorClassifier` | ✅ Complete | Error classification |
+| `VisionAnalyzer` | ✅ Complete | Screen analysis |
+| `CodePatcher` | ✅ Complete | Code fix generation |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- パターンの永続化ストレージ
-- 修正精度の統計ダッシュボード
-- 複数修正候補のランク付け
+- Persistent storage for patterns
+- Fix accuracy statistics dashboard
+- Ranking of multiple fix candidates
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/healing-engine.test.ts` | HealingEngine |
 | `__tests__/error-classifier.test.ts` | ErrorClassifier |
 | `__tests__/vision-analyzer.test.ts` | VisionAnalyzer |
