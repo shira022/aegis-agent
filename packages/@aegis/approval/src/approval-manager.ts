@@ -42,7 +42,7 @@ export class ApprovalManager {
     };
 
     this.requests.set(id, request);
-    this.addLog(id, 'created', `承認リクエストを作成しました (リスク: ${riskLevel})`);
+    this.addLog(id, 'created', `Approval request created (risk: ${riskLevel})`);
     return request;
   }
 
@@ -52,7 +52,7 @@ export class ApprovalManager {
     const request = this.getRequestOrThrow(requestId);
 
     if (request.state !== 'pending') {
-      throw new Error(`リクエスト ${requestId} は pending 状態ではありません (現在: ${request.state})`);
+      throw new Error(`Request ${requestId} is not in pending state (current: ${request.state})`);
     }
 
     const code = decision.modifiedCode ?? request.code;
@@ -69,7 +69,7 @@ export class ApprovalManager {
 
     request.state = 'approved';
     this.programs.set(program.id, program);
-    this.addLog(requestId, 'approved', `承認しました (by: ${decision.decidedBy})`);
+    this.addLog(requestId, 'approved', `Approved (by: ${decision.decidedBy})`);
     return program;
   }
 
@@ -79,7 +79,7 @@ export class ApprovalManager {
     const request = this.getRequestOrThrow(requestId);
 
     if (request.state !== 'pending') {
-      throw new Error(`リクエスト ${requestId} は pending 状態ではありません (現在: ${request.state})`);
+      throw new Error(`Request ${requestId} is not in pending state (current: ${request.state})`);
     }
 
     request.state = 'rejected';
@@ -91,7 +91,7 @@ export class ApprovalManager {
       decidedBy,
     };
 
-    this.addLog(requestId, 'rejected', `拒否しました: ${reason} (by: ${decidedBy})`);
+    this.addLog(requestId, 'rejected', `Rejected: ${reason} (by: ${decidedBy})`);
     return decision;
   }
 
@@ -100,11 +100,11 @@ export class ApprovalManager {
   revokeApproval(requestId: string, reason: string): void {
     const request = this.requests.get(requestId);
     if (!request) {
-      throw new Error(`リクエスト ${requestId} が見つかりません`);
+      throw new Error(`Request ${requestId} not found`);
     }
 
     request.state = 'rejected';
-    this.addLog(requestId, 'revoked', `承認を取り消しました: ${reason}`);
+    this.addLog(requestId, 'revoked', `Approval revoked: ${reason}`);
   }
 
   // ─── Query ───────────────────────────────────────────────────────
@@ -133,7 +133,7 @@ export class ApprovalManager {
   private getRequestOrThrow(requestId: string): ApprovalRequest {
     const request = this.requests.get(requestId);
     if (!request) {
-      throw new Error(`リクエスト ${requestId} が見つかりません`);
+      throw new Error(`Request ${requestId} not found`);
     }
     return request;
   }

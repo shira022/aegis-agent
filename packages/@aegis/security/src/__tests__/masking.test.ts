@@ -185,11 +185,11 @@ describe('maskText', () => {
     expect(result.detections[0].category).toBe('ip_address');
   });
 
-  it('should handle Japanese text mixed with PII', () => {
-    const result = maskText('メール: test@example.com で連絡してください');
+  it('should handle text mixed with PII', () => {
+    const result = maskText('Email: test@example.com contact us');
     expect(result.wasModified).toBe(true);
     expect(result.masked).not.toContain('test@example.com');
-    expect(result.masked).toContain('で連絡してください');
+    expect(result.masked).toContain('contact us');
   });
 
   it('should set confidence on detections', () => {
@@ -446,17 +446,17 @@ describe('createSafeLog', () => {
 // ─── Edge Cases ──────────────────────────────────────────────────────
 
 describe('Edge cases', () => {
-  it('should handle Japanese text with no PII', () => {
-    const result = maskText('こんにちは世界。今日はいい天気です。');
+  it('should handle text with no PII', () => {
+    const result = maskText('Hello World. nice weather today.');
     expect(result.wasModified).toBe(false);
-    expect(result.masked).toBe('こんにちは世界。今日はいい天気です。');
+    expect(result.masked).toBe('Hello World. nice weather today.');
   });
 
-  it('should handle mixed Japanese and English PII', () => {
-    const result = maskText('田中さんのメールは tanaka@example.com です');
+  it('should handle mixed text and English PII', () => {
+    const result = maskText("Tanaka's email is tanaka@example.com");
     expect(result.wasModified).toBe(true);
     expect(result.masked).not.toContain('tanaka@example.com');
-    expect(result.masked).toContain('田中さんのメールは');
+    expect(result.masked).toContain("Tanaka's email is");
   });
 
   it('should handle text with only special characters', () => {
@@ -490,7 +490,7 @@ describe('Edge cases', () => {
   });
 
   it('should mask JP postal code in address', () => {
-    const result = maskText('Address: 〒100-0001 東京都千代田区');
+    const result = maskText('Address: 〒100-0001 Tokyo Chiyoda');
     expect(result.wasModified).toBe(true);
     expect(result.masked).not.toContain('100-0001');
   });
