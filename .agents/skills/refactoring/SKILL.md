@@ -7,69 +7,69 @@ category: development
 
 # refactoring
 
-Aegis モノレポでの体系的なリファクタリング手順。
-**テストが通ることを確認 → リファクタリング → テストが通ることを再確認**。
+Systematic refactoring procedures for the Aegis monorepo.
+**Verify tests pass → Refactor → Verify tests still pass**.
 
-## トリガー条件
+## Trigger Conditions
 
-- コードの可読性・保守性を改善したいとき
-- 重複コードを排除したいとき
-- 型安全性を向上させたいとき
-- パッケージ間の境界を整理したいとき
+- When you want to improve code readability or maintainability
+- When you want to eliminate duplicate code
+- When you want to improve type safety
+- When you want to clean up boundaries between packages
 
-## 基本原則
+## Core Principles
 
-1. **リファクタリング前にテストを実行**（既存テストが緑であることを確認）
-2. **リファクタリング後にテストを実行**（すべてのテストがまだ緑であることを確認）
-3. **動作を変更しない**（リファクタリングは構造のみの変更）
-4. **小さく段階的に進める**（一度に大きく変えない）
+1. **Run tests before refactoring** (confirm existing tests are green)
+2. **Run tests after refactoring** (confirm all tests are still green)
+3. **Do not change behavior** (refactoring is structural changes only)
+4. **Proceed in small, incremental steps** (avoid large one-shot changes)
 
-## 実行手順
+## Execution Steps
 
-### 1. リファクタリング前の準備
+### 1. Pre-Refactoring Preparation
 
 ```bash
-# 現在のテストが通ることを確認
+# Confirm current tests pass
 cd packages/@aegis/<package-name>
 pnpm test
 pnpm typecheck
 
-# 必要ならカバレッジ確認（レポートがどこに出るか確認）
+# Check coverage if needed (verify where the report is output)
 pnpm test -- --coverage
 ```
 
-### 2. コードスメルの検出
+### 2. Detect Code Smells
 
-以下のパターンをチェック:
+Check for the following patterns:
 
-| コードスメル | 検出方法 | 対処 |
-|-------------|---------|------|
-| 長い関数 | 30行以上の関数 | 関数の抽出 |
-| 重複コード | 類似パターンの繰り返し | 関数/ユーティリティ化 |
-| 複雑な条件分岐 | ネストが3段以上 | 関数の抽出、早期リターン |
-| より大きなオブジェクト | 多数のプロパティ/メソッド | 責務の分離 |
-| 大きいクラス | 500行以上 | 関心事の分離 |
-| 決まった値の繰り返し | ハードコードされた値 | 定数化 |
-| 引数が多い関数 | 4個以上の引数 | オプションオブジェクト化 |
+| Code Smell | Detection Method | Action |
+|------------|-----------------|--------|
+| Long functions | Functions over 30 lines | Extract functions |
+| Duplicate code | Repeated similar patterns | Extract into functions/utilities |
+| Complex conditionals | Nesting 3+ levels deep | Extract functions, early returns |
+| Large objects | Many properties/methods | Separate responsibilities |
+| Large classes | Over 500 lines | Separation of concerns |
+| Repeated literal values | Hardcoded values | Extract to constants |
+| Functions with many parameters | 4+ parameters | Convert to options object |
 
-### 3. リファクタリングの実行
+### 3. Perform the Refactoring
 
-#### 3a. 関数の抽出
+#### 3a. Function Extraction
 
 ```typescript
 // BEFORE
 async function processWorkflow(workflow: Workflow) {
-  // 1. バリデーション（20行）
+  // 1. Validation (20 lines)
   if (!workflow.name) throw new Error('Name required');
   if (workflow.steps.length === 0) throw new Error('No steps');
-  // ...さらにバリデーションロジック
+  // ...more validation logic
 
-  // 2. 実行準備（15行）
+  // 2. Execution preparation (15 lines)
   const context = { userId: workflow.owner, timestamp: Date.now() };
   const steps = workflow.steps.map(s => ({ ...s, context }));
   // ...
 
-  // 3. 実行（25行）
+  // 3. Execution (25 lines)
   for (const step of steps) {
     await executor.run(step);
   }
@@ -79,7 +79,7 @@ async function processWorkflow(workflow: Workflow) {
 function validateWorkflow(workflow: Workflow): void {
   if (!workflow.name) throw new Error('Name required');
   if (workflow.steps.length === 0) throw new Error('No steps');
-  // ...バリデーションロジック
+  // ...validation logic
 }
 
 function prepareExecutionContext(workflow: Workflow): ExecutionContext {
@@ -94,7 +94,7 @@ async function processWorkflow(workflow: Workflow) {
 }
 ```
 
-#### 3b. 型定義の改善
+#### 3b. Improve Type Definitions
 
 ```typescript
 // BEFORE
@@ -116,7 +116,7 @@ function createUser(input: CreateUserInput): User {
 }
 ```
 
-#### 3c. 重複の排除
+#### 3c. Eliminate Duplication
 
 ```typescript
 // BEFORE
@@ -132,7 +132,7 @@ function formatDisplay(entity: Displayable, role?: string): string {
 }
 ```
 
-#### 3d. 早期リターンとガードクローズ
+#### 3d. Early Returns and Guard Clauses
 
 ```typescript
 // BEFORE
@@ -140,7 +140,7 @@ function processApproval(approval: Approval) {
   if (approval.status !== 'pending') {
     if (approval.status === 'approved') {
       if (approval.approver) {
-        // ...ネストが深い
+        // ...deep nesting
       }
     }
   }
@@ -151,33 +151,33 @@ function processApproval(approval: Approval) {
   if (approval.status !== 'pending') return;
   if (!approval.approver) return;
 
-  // メインロジック（フラット）
+  // Main logic (flat structure)
 }
 ```
 
-### 4. テストの更新
+### 4. Update Tests
 
-リファクタリングに合わせてテストを更新:
-- テストの可読性向上
-- 新しい関数のエクスポートにテストを追加
-- モックの整理
+Update tests alongside the refactoring:
+- Improve test readability
+- Add tests for newly exported functions
+- Clean up mocks
 
-### 5. リファクタリング後の検証
+### 5. Post-Refactoring Verification
 
 ```bash
-# テストが通ることを確認
+# Confirm tests pass
 pnpm test
 
-# 型チェックが通ることを確認
+# Confirm type checks pass
 pnpm typecheck
 
-# リントが通ることを確認
+# Confirm lint passes
 pnpm lint
 ```
 
-## TypeScript 固有のリファクタリング
+## TypeScript-Specific Refactoring
 
-### ユーティリティ型の活用
+### Leverage Utility Types
 
 ```typescript
 // BEFORE
@@ -202,11 +202,11 @@ type UserInput = {
   createdAt: Date;
 };
 
-// 既存型から派生
+// Derived from existing type
 type UserUpdate = Partial<Omit<UserInput, 'createdAt'>>;
 ```
 
-### ジェネリクスによる汎用化
+### Generalize with Generics
 
 ```typescript
 // BEFORE
@@ -228,7 +228,7 @@ function getActive<T extends Activatable>(items: T[]): T[] {
 }
 ```
 
-### Discriminated Union の改善
+### Improve Discriminated Unions
 
 ```typescript
 // BEFORE
@@ -244,30 +244,30 @@ type Result<T> =
   | { success: false; error: string };
 ```
 
-## パッケージ境界の尊重
+## Respecting Package Boundaries
 
-### やってはいけないこと
+### What You Must NOT Do
 
 ```typescript
-// @aegis/ai-engine から @aegis/security の内部実装に直接依存
+// Directly depending on @aegis/security's internal implementation from @aegis/ai-engine
 import { internalPIIDetector } from '@aegis/security/src/internal/pii-detector';
-// ↑ 内部パスは絶対にimportしない
+// ↑ Never import internal paths
 ```
 
-### 正しい依存関係
+### Correct Dependencies
 
 ```typescript
-// 公開APIのみ経由
+// Use only public APIs
 import { detectPII } from '@aegis/security';
 
-// workspace:* を使った参照
+// Reference via workspace:*
 // package.json: { "dependencies": { "@aegis/security": "workspace:*" } }
 ```
 
-### パッケージ間の型共有
+### Sharing Types Across Packages
 
 ```typescript
-// @aegis/shared に共通型を定義
+// Define shared types in @aegis/shared
 // packages/@aegis/shared/src/types/workflow.ts
 
 export interface Workflow {
@@ -276,16 +276,16 @@ export interface Workflow {
   steps: WorkflowStep[];
 }
 
-// 他のパッケージからインポート
+// Import from other packages
 import type { Workflow } from '@aegis/shared';
 ```
 
-## リファクタリングの完了チェック
+## Refactoring Completion Checklist
 
-- [ ] すべてのテストが通る
-- [ ] 型チェックが通る
-- [ ] リントが通る
-- [ ] パッケージ境界を侵害していない
-- [ ] `any` を追加していない
-- [ ] パブリックAPIに破壊的変更がない（ある場合はバージョンを更新）
-- [ ] READMEやドキュメントの更新が必要か確認
+- [ ] All tests pass
+- [ ] Type checks pass
+- [ ] Lint passes
+- [ ] Package boundaries are not violated
+- [ ] No new `any` types introduced
+- [ ] No breaking changes to public API (update version if applicable)
+- [ ] Check if README or documentation needs updating

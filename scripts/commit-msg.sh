@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# commit-msg hook — Conventional Commits 検証
+# commit-msg hook — Conventional Commits validation
 #
-# フォーマット: <type>(<scope>): <description>
+# Format: <type>(<scope>): <description>
 # type: feat, fix, docs, style, refactor, test, chore, ci, revert
-# scope: パッケージ名（省略可）
+# scope: package name (optional)
 #
-# 例:
+# Examples:
 #   feat(ai-engine): add streaming support
 #   fix(security): handle nested PII patterns
 #   docs: update ADR for selector strategy
@@ -18,7 +18,7 @@ COMMIT_MSG_FILE="$1"
 COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE")
 
 # Conventional Commits pattern
-PATTERN="^(feat|fix|docs|style|refactor|test|chore|ci|revert)(\([a-zA-Z0-9._-]+\))?(!)?: .+"
+PATTERN="^(feat|fix|docs|style|refactor|test|chore|ci|revert)(\\([a-zA-Z0-9._-]+\\))?(!)?: .+"
 
 if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo ""

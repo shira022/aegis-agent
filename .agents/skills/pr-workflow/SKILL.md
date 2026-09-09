@@ -7,46 +7,46 @@ category: development
 
 # pr-workflow
 
-Aegis モノレポでの Pull Request ワークフロー。
-**ブランチ作業 → コミット → 検証 → PR作成** の一連の手順。
+Pull Request workflow for the Aegis monorepo.
+**Branch → Commit → Verify → Create PR** — the complete sequence.
 
-## トリガー条件
+## Trigger Conditions
 
-- PRを作成するとき
-- 変更を `develop` にマージするとき
-- 作業を始める前にブランチを切るとき
+- When creating a Pull Request
+- When merging changes into `develop`
+- When creating a branch before starting work
 
-## ブランチ戦略
+## Branch Strategy
 
-| ブランチタイプ | 命名規則 | 用途 | マージ先 |
-|---------------|---------|------|---------|
-| feature | `feature/<descriptive-name>` | 新機能開発 | `develop` |
-| fix | `fix/<issue-number>-<short-desc>` | バグ修正 | `develop` |
-| docs | `docs/<topic>` | ドキュメント更新 | `develop` |
-| refactor | `refactor/<scope>-<what>` | リファクタリング | `develop` |
-| chore | `chore/<task>` | 雑務（依存更新、CI調整等） | `develop` |
+| Branch Type | Naming Convention | Purpose | Merge Target |
+|-------------|-------------------|---------|--------------|
+| feature | `feature/<descriptive-name>` | New feature development | `develop` |
+| fix | `fix/<issue-number>-<short-desc>` | Bug fixes | `develop` |
+| docs | `docs/<topic>` | Documentation updates | `develop` |
+| refactor | `refactor/<scope>-<what>` | Refactoring | `develop` |
+| chore | `chore/<task>` | Maintenance (dependency updates, CI adjustments, etc.) | `develop` |
 
-**命名ルール**:
-- kebab-case（小文字、ハイフン区切り）
-- 短く具体的に（例: `feature/audio-recorder`, `fix/race-condition`）
-- イssue番号があれば含める（例: `fix/42-timeout-on-large-workflow`）
+**Naming Rules**:
+- kebab-case (lowercase, hyphen-separated)
+- Short and specific (e.g., `feature/audio-recorder`, `fix/race-condition`)
+- Include issue numbers when available (e.g., `fix/42-timeout-on-large-workflow`)
 
-## 実行手順
+## Execution Steps
 
-### 1. ブランチの作成
+### 1. Create a Branch
 
 ```bash
-# develop を最新にする
+# Sync develop with remote
 git checkout develop
 git pull origin develop
 
-# 新しいブランチを作成
+# Create a new branch
 git checkout -b feature/my-new-feature
 ```
 
-### 2. 作業とコミット
+### 2. Work and Commit
 
-#### コミットメッセージ規則（Conventional Commits）
+#### Commit Message Rules (Conventional Commits)
 
 ```
 <type>(<scope>): <subject>
@@ -56,143 +56,143 @@ git checkout -b feature/my-new-feature
 <footer>
 ```
 
-**タイプ**:
+**Types**:
 
-| タイプ | 用途 | 例 |
-|--------|------|-----|
-| feat | 新機能 | `feat(ai-engine): add streaming response support` |
-| fix | バグ修正 | `fix(executor): handle timeout on long workflows` |
-| docs | ドキュメント | `docs(readme): add architecture overview` |
-| style | コードスタイル（ロジック変更なし） | `style(ui): format button components` |
-| refactor | リファクタリング（機能追加・修正なし） | `refactor(shared): extract common types` |
-| test | テスト追加・修正 | `test(security): add PII detection edge cases` |
-| chore | 雑務 | `chore(deps): update vitest to v2` |
-| ci | CI/CD設定 | `ci(github): add security audit workflow` |
+| Type | Purpose | Example |
+|------|---------|---------|
+| feat | New feature | `feat(ai-engine): add streaming response support` |
+| fix | Bug fix | `fix(executor): handle timeout on long workflows` |
+| docs | Documentation | `docs(readme): add architecture overview` |
+| style | Code style (no logic changes) | `style(ui): format button components` |
+| refactor | Refactoring (no feature additions or fixes) | `refactor(shared): extract common types` |
+| test | Adding or fixing tests | `test(security): add PII detection edge cases` |
+| chore | Maintenance | `chore(deps): update vitest to v2` |
+| ci | CI/CD configuration | `ci(github): add security audit workflow` |
 
-**スコープ**（省略可能 but 推奨）:
-- パッケージ名: `ai-engine`, `executor`, `security`, `ui`, `shared`
-- アプリ名: `desktop`
-- 設定: `config`, `ci`, `deps`
+**Scope** (optional but recommended):
+- Package names: `ai-engine`, `executor`, `security`, `ui`, `shared`
+- App names: `desktop`
+- Configuration: `config`, `ci`, `deps`
 
-**例**:
+**Examples**:
 ```bash
 git commit -m "feat(recorder): add CSS selector generation for shadow DOM"
 git commit -m "fix(security): prevent PII leak in error messages"
 git commit -m "test(approval): cover all approval flow transitions"
 ```
 
-### 3. 作業中のコミット戦略
+### 3. Commit Strategy During Work
 
-- **小さなコミット**: 1つの論理的な変更ごとにコミット
-- **わざと赤くする**: 途中でテストが赤でもOK（コミットメッセージに注釈）
-- **rebase で整理**: PR作成前にrebaseしてコミット履歴を整理
+- **Small commits**: One commit per logical change
+- **Intentionally red**: It's OK if tests are red mid-way (annotate in the commit message)
+- **Rebase to tidy up**: Rebase before creating the PR to clean up commit history
 
 ```bash
-# 最新のdevelopにrebase
+# Rebase onto latest develop
 git fetch origin
 git rebase origin/develop
 
-# コミットを整理（必要なら）
+# Interactive rebase (if needed)
 git rebase -i HEAD~3
 ```
 
-### 4. PR作成前の検証
+### 4. Pre-PR Verification
 
 ```bash
-# 1. 依存関係インストール
+# 1. Install dependencies
 pnpm install
 
-# 2. リント
+# 2. Lint
 pnpm lint
 
-# 3. 型チェック
+# 3. Type check
 pnpm typecheck
 
-# 4. テスト
+# 4. Test
 pnpm test
 
-# 5. ビルド
+# 5. Build
 pnpm build
 ```
 
-**変更したパッケージのみ検証する場合**:
+**Verify only changed packages**:
 ```bash
 cd packages/@aegis/<changed-package>
 pnpm test
 pnpm typecheck
 ```
 
-**CI相当のフルチェック**:
+**Full CI-equivalent check**:
 ```bash
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ```
 
-### 5. PRの作成
+### 5. Create the PR
 
 ```bash
-# ブランチをプッシュ
+# Push the branch
 git push origin feature/my-new-feature
 
-# PRを作成（GitHub CLI）
+# Create PR (GitHub CLI)
 gh pr create \
   --base develop \
   --title "feat(ai-engine): add streaming response support" \
   --body-file .github/pr-template.md
 ```
 
-**PR本文テンプレート**:
+**PR Body Template**:
 ```markdown
-## 概要
+## Summary
 
-<!-- 何を変更したか、なぜ変更したか -->
+<!-- What changed and why -->
 
-## 変更内容
+## Changes
 
-- [ ] 変更点1
-- [ ] 変更点2
+- [ ] Change 1
+- [ ] Change 2
 
-## テスト
+## Testing
 
-<!-- どうテストしたか、新しいテストが含まれる場合 -->
+<!-- How it was tested, including new tests if applicable -->
 
-## 確認事項
+## Checklist
 
-- [ ] `pnpm lint` が通る
-- [ ] `pnpm typecheck` が通る
-- [ ] `pnpm test` が通る
-- [ ] `pnpm build` が通る
-- [ ] ローカルで動作確認済み
+- [ ] `pnpm lint` passes
+- [ ] `pnpm typecheck` passes
+- [ ] `pnpm test` passes
+- [ ] `pnpm build` passes
+- [ ] Verified locally
 
-## 関連Issue
+## Related Issues
 
 Closes #<issue-number>
 ```
 
-### 6. PR作成後の対応
+### 6. Post-Creation Follow-Up
 
-- CIが失敗した場合、ローカルで再現して修正
-- レビューコメントに対応
-- 必要ならrebaseしてforce push
+- If CI fails, reproduce locally and fix
+- Address review comments
+- Rebase and force push if necessary
 
 ```bash
-# レビュー対応後のpush
+# Push after addressing review
 git add .
 git commit -m "fix(address review): resolve type safety issue"
 git push origin feature/my-new-feature
 ```
 
-## ワークツリーを使った並列開発
+## Parallel Development with Worktrees
 
-複数の機能を並列に開発する場合:
+When developing multiple features in parallel:
 
 ```bash
-# 1つ目の機能
+# First feature
 git worktree add ../worktree-feature-a feature/a
 
-# 2つ目の機能
+# Second feature
 git worktree add ../worktree-feature-b feature/b
 
-# 各ワークツリーで作業
+# Work in each worktree
 cd ../worktree-feature-a
 pnpm install
 pnpm test
@@ -201,40 +201,40 @@ cd ../worktree-feature-b
 pnpm install
 pnpm test
 
-# 完了後、ワークツリーを削除
+# After completion, remove worktrees
 git worktree remove ../worktree-feature-a
 git worktree remove ../worktree-feature-b
 ```
 
-## マージ戦略
+## Merge Strategy
 
-| シナリオ | 推奨アクション |
-|---------|--------------|
-| コンフリクトなし | Squash merge or merge commit |
-| コンフリクトあり | ローカルでrebase → 解決 → force push |
-| 大規模なリファクタリング | 先に `develop` にrebase |
+| Scenario | Recommended Action |
+|----------|-------------------|
+| No conflicts | Squash merge or merge commit |
+| Conflicts | Rebase locally → resolve → force push |
+| Large-scale refactoring | Rebase onto `develop` first |
 
-**マージ方法**:
-- **S squash merge**（推奨）: PR全体を1つのコミットにまとめてマージ
-- **Merge commit**: すべてのコミットを保持してマージ
-- **Rebase**: 個々のコミットを `develop` の先頭にリベース
+**Merge Methods**:
+- **Squash merge** (recommended): Combines the entire PR into a single commit before merging
+- **Merge commit**: Merges while keeping all individual commits
+- **Rebase**: Rebases individual commits onto the tip of `develop`
 
-## 検証チェックリスト
+## Verification Checklist
 
-PR作成前に以下がすべて通ることを確認:
+Before creating the PR, ensure all of the following pass:
 
-- [ ] `pnpm lint` — リントエラーなし
-- [ ] `pnpm typecheck` — TypeScript型エラーなし
-- [ ] `pnpm test` — テスト全パス
-- [ ] `pnpm build` — ビルド成功
-- [ ] コードレビュー完了
-- [ ] コミット履歴が整理されている
-- [ ] PR本文に変更内容が書かれている
+- [ ] `pnpm lint` — no lint errors
+- [ ] `pnpm typecheck` — no TypeScript type errors
+- [ ] `pnpm test` — all tests pass
+- [ ] `pnpm build` — build succeeds
+- [ ] Code review completed
+- [ ] Commit history is tidy
+- [ ] PR body describes the changes
 
-## 注意事項
+## Important Notes
 
-- `main` ブランチへの直接マージは禁止（PR必须）
-- コードレビューなしでのマージは禁止
-- CIが失敗しているPRはマージしない
-- 大きなPR（500行以上）は分割を検討
-- セキュリティに関する変更には `security-audit` スキルを実行
+- Direct merges to `main` are prohibited (PRs required)
+- Merges without code review are prohibited
+- Do not merge PRs where CI is failing
+- Consider splitting large PRs (500+ lines)
+- Security-related changes require running the `security-audit` skill

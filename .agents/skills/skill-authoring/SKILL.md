@@ -7,83 +7,83 @@ category: development
 
 # skill-authoring
 
-エージェントが自律的にスキルを作成・修正するためのメタスキル。
-Hermes Agentのスキル作成パターンを参考に、プロジェクト固有のスキルを自律的に生み出す。
+A meta-skill for autonomously creating and modifying agent skills.
+Leverages Hermes Agent's skill creation patterns to generate project-specific skills autonomously.
 
-## トリガー条件
+## Trigger Conditions
 
-- 同じパターンのタスクを3回以上実行したとき
-- 新しいドメイン・技術領域に着手するとき
-- 既存スキルの手順が間違っている・不足していると発見したとき
-- レビューで「もっと良い方法がある」とわかったとき
+- When the same task pattern has been executed 3 or more times
+- When starting work in a new domain or technology area
+- When an existing skill is found to have incorrect or missing steps
+- When a review reveals a better approach exists
 
-## スキル作成手順
+## Skill Creation Procedure
 
-### 1. パターンの特定
+### 1. Identify the Pattern
 
 ```
-// 同じ操作を繰り返していないか？
-// 例: pnpm test → typecheck → build を毎回手動でやっている
-// → build-and-test スキルに追加する価値がある
+// Am I repeating the same operation?
+// Example: manually running pnpm test → typecheck → build every time
+// → worth adding as a build-and-test skill
 ```
 
-### 2. スキルフォーマット（agentskills.io準拠）
+### 2. Skill Format (agentskills.io compliant)
 
 ```yaml
 ---
-name: <skill-name>           # 小文字ハイフン区切り、最大64文字
-description: "<trigger>"     # 57文字以内。"Use when <条件>. <一言で何をするか>."
-tags: [tag1, tag2]           # 検索用タグ
+name: <skill-name>           # lowercase with hyphens, max 64 characters
+description: "<trigger>"     # 57 chars max. "Use when <condition>. <one-line behavior>."
+tags: [tag1, tag2]           # searchable tags
 category: <development|documentation|security>
 ---
 # <skill-name>
 
-<markdown本文>
+<markdown body>
 ```
 
-### 3. 必須セクション
+### 3. Required Sections
 
-1. **トリガー条件** — いつこのスキルを読むか
-2. **実行手順** — ステップバイステップ（コマンド付き）
-3. **例** — 具体的な入出力例
-4. **注意事項** — パイトラップ・よくあるミス
+1. **Trigger Conditions** — when to read this skill
+2. **Execution Steps** — step-by-step (with commands)
+3. **Examples** — concrete input/output examples
+4. **Pitfalls** — common mistakes and notes
 
-### 4. ファイル構成
+### 4. File Structure
 
 ```
 .agents/skills/<skill-name>/
-├── SKILL.md              ← 必須（スキル本文）
-└── references/           ← オプション（補足資料）
+├── SKILL.md              ← required (skill body)
+└── references/           ← optional (supplementary materials)
     └── api.md
 ```
 
-## スキル修正手順
+## Skill Modification Procedure
 
-1. **既存スキルを必ず読む** — `skill_view` または `read_file` で現状を確認
-2. **対象を特定** — 修正箇所の `old_string` を正確に抽出
-3. **パッチ適用** — `patch` ツールで最小限の変更
-4. **検証** — 修正後のスキルが正しく読み込めるか確認
+1. **Always read the existing skill first** — check the current state with `skill_view` or `read_file`
+2. **Identify the target** — extract the exact `old_string` for the section to be modified
+3. **Apply the patch** — make minimal changes with the `patch` tool
+4. **Verify** — confirm the modified skill loads correctly
 
-## スキル検証チェックリスト
+## Skill Verification Checklist
 
-- [ ] YAML frontmatter に `name`, `description`, `tags`, `category` がある
-- [ ] `description` は57文字以内で、`Use when` で始まる
-- [ ] 実行手順に具体的なコマンドが含まれている
-- [ ] エラーパス・注意事項が記載されている
-- [ ] 既存スキルと重複していない
+- [ ] YAML frontmatter contains `name`, `description`, `tags`, `category`
+- [ ] `description` is 57 characters or fewer and starts with `Use when`
+- [ ] Execution steps include concrete commands
+- [ ] Error paths and pitfalls are documented
+- [ ] No duplication with existing skills
 
-## タグ規約
+## Tag Conventions
 
-| カテゴリ | 例 |
+| Category | Examples |
 |----------|-----|
 | development | build, test, typecheck, monorepo, tdd, refactor |
 | documentation | adr, readme, spec, changelog |
 | security | audit, secret, pii, ssrf |
 
-## 自律的なスキル進化
+## Autonomous Skill Evolution
 
-1. **複雑なタスク完了後** — self-improvement スキルを参照
-2. **パターン発見** — 同じ操作を3回以上繰り返したら記録
-3. **スキル化** — 上記手順でSKILL.mdを作成
-4. **検証** - 次回同じタスクで試す
-5. **改善** — 問題があればパッチ修正
+1. **After completing a complex task** — refer to the self-improvement skill
+2. **Discover a pattern** — record it when the same operation repeats 3 or more times
+3. **Create a skill** — write a SKILL.md following the procedure above
+4. **Verify** — try it on the next occurrence of the task
+5. **Improve** — apply patches if issues are found

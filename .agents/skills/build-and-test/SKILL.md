@@ -7,68 +7,68 @@ category: development
 
 # build-and-test
 
-Aegis monorepo のビルド・テスト・型チェック手順。
+Procedure for building, testing, and type-checking the Aegis monorepo.
 
-## トリガー条件
+## Trigger Conditions
 
-- 変更後の検証時
-- CI失敗のデバッグ時
-- PR作成前の確認時
+- When verifying changes
+- When debugging CI failures
+- When checking before creating a PR
 
-## 実行手順
+## Procedure
 
-1. **依存関係インストール**
+1. **Install dependencies**
    ```bash
    pnpm install
    ```
 
-2. **変更箇所に応じたテスト**
+2. **Test based on changed areas**
    ```bash
-   # 全体テスト
+   # All tests
    pnpm test
 
-   # 個別パッケージ
+   # Individual packages
    cd packages/@aegis/ai-engine && pnpm test
    cd packages/@aegis/security && pnpm test
 
-   # デスクトップアプリ
+   # Desktop app
    cd apps/desktop && pnpm test
    ```
 
-3. **型チェック**
+3. **Type check**
    ```bash
    pnpm typecheck
-   # or 個別: cd packages/@aegis/shared && pnpm typecheck
+   # or individually: cd packages/@aegis/shared && pnpm typecheck
    ```
 
-4. **ビルド確認**
+4. **Build verification**
    ```bash
    pnpm build
-   # dist/ が生成されたか確認
+   # Verify that dist/ was generated
    ls packages/@aegis/*/dist/
    ```
 
-5. **CI相当のチェック**
+5. **Full CI-equivalent check**
    ```bash
    pnpm lint && pnpm typecheck && pnpm test && pnpm build
    ```
 
-## パッケージ一覧
+## Package List
 
-| パッケージ | パス | 役割 |
-|-----------|------|------|
-| shared | packages/@aegis/shared | 共有型・ユーティリティ |
-| ai-engine | packages/@aegis/ai-engine | AI推論（Vercel AI SDK v6） |
-| executor | packages/@aegis/executor | RPA実行 |
-| approval | packages/@aegis/approval | 承認フロー |
-| hitl | packages/@aegis/hitl | ヒューマンインザループ |
-| healer | packages/@aegis/healer | 自己修復 |
-| recorder | packages/@aegis/recorder | アクション記録 |
-| security | packages/@aegis/security | セキュリティ |
-| ui | packages/@aegis/ui | 共有UI |
+| Package | Path | Role |
+|---------|------|------|
+| shared | packages/@aegis/shared | Shared types & utilities |
+| ai-engine | packages/@aegis/ai-engine | AI inference (Vercel AI SDK v6) |
+| executor | packages/@aegis/executor | RPA execution |
+| approval | packages/@aegis/approval | Approval workflow |
+| hitl | packages/@aegis/hitl | Human-in-the-loop |
+| healer | packages/@aegis/healer | Self-healing |
+| recorder | packages/@aegis/recorder | Action recording |
+| security | packages/@aegis/security | Security |
+| ui | packages/@aegis/ui | Shared UI |
 
-## 注意事項
+## Notes
 
-- Pythonパッケージ（python-runtime）は venv が必要: `cd packages/@aegis/python-runtime && python -m venv .venv && .venv/bin/pip install -r requirements.txt`
-- Tauriビルド（apps/desktop/src-tauri）はRust Toolchainが必要
-- turbo で依存関係を解決して並列実行するため、ルートで `pnpm test` すれば良い
+- Python packages (python-runtime) require a venv: `cd packages/@aegis/python-runtime && python -m venv .venv && .venv/bin/pip install -r requirements.txt`
+- Tauri builds (apps/desktop/src-tauri) require the Rust Toolchain
+- `pnpm test` at the root resolves dependencies and runs tests in parallel via turbo, so running it from the root is sufficient

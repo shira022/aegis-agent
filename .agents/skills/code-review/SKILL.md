@@ -7,41 +7,41 @@ category: development
 
 # code-review
 
-Aegisプロジェクトのコードレビューチェックリスト。
+Code review checklist for the Aegis project.
 
-## トリガー条件
+## Trigger Conditions
 
-- PRレビュー時
-- マージ前の確認
-- 自分自身のコードレビュー
+- When reviewing a PR
+- When checking before merging
+- When doing a self-review of your own code
 
-## レビューチェックリスト
+## Review Checklist
 
-### 型安全性
-- [ ] TypeScript strict mode で型エラーなし
-- [ ] `any` の使用がない（正当な理由がある場合はコメント付き）
-- [ ] `workspace:*` 参照先の型が正しくimportされている
+### Type Safety
+- [ ] No type errors in TypeScript strict mode
+- [ ] No use of `any` (with justification comment if legitimately needed)
+- [ ] Types from `workspace:*` references are correctly imported
 
-### テスト
-- [ ] 新機能・バグ修正にテストが含まれている
-- [ ] テストが実際に失敗→成功するか確認（GREEN保証）
-- [ ] エッジケース・エラーパスがカバーされている
+### Tests
+- [ ] New features and bug fixes include tests
+- [ ] Tests actually fail first → then pass (GREEN guarantee)
+- [ ] Edge cases and error paths are covered
 
-### セキュリティ
-- [ ] APIキー・シークレットがハードコードされていない
-- [ ] ユーザー入力のサニタイズがある
-- [ ] PII検出ロジックに影響を与える変更ではないか
-- [ ] SSRF防护に影響を与える変更ではないか
+### Security
+- [ ] API keys and secrets are not hardcoded
+- [ ] User input is sanitized
+- [ ] Changes do not affect PII detection logic
+- [ ] Changes do not affect SSRF protection
 
-### パッケージ設計
-- [ ] 循環参照が発生していない
-- [ ] 既存パッケージの职责を超えていない
-- [ ] workspace:* で適切に参照している
+### Package Design
+- [ ] No circular references are introduced
+- [ ] Does not exceed the responsibilities of existing packages
+- [ ] Proper `workspace:*` references are used
 
-### ドキュメント
-- [ ] 変更内容がPR説明に書かれている
-- [ ] 重要な設計判断がある場合、ADRを追加している
+### Documentation
+- [ ] Changes are documented in the PR description
+- [ ] An ADR is added if there are significant design decisions
 
 ### CI
-- [ ] ローカルで `pnpm lint && pnpm typecheck && pnpm test` が通る
-- [ ] ビルドが成功する
+- [ ] `pnpm lint && pnpm typecheck && pnpm test` passes locally
+- [ ] Build succeeds
