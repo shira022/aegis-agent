@@ -2,6 +2,34 @@
 
 Thank you for your interest in contributing! This document covers the development workflow, PR process, and code standards.
 
+
+## English-Only Policy
+
+All human-readable text in this repository **must be written in English**. This includes:
+
+- **Documentation** (README, CONTRIBUTING, spec docs, ADRs)
+- **Code comments** (inline, block, JSDoc/TSDoc, docstrings)
+- **User-facing strings** (UI labels, error messages, toast notifications, log messages)
+- **Test descriptions and test data** (describe/it blocks, fixture names, assertion messages)
+- **Commit messages and PR titles**
+
+### Why
+
+This is an open-source project with a global contributor base. Non-English text creates barriers for non-native speakers and erodes consistency. Even a single non-English string in an otherwise English codebase looks accidental.
+
+### Exceptions
+
+The only acceptable use of non-Latin script is:
+
+- **Regex patterns that detect non-Latin text** (e.g., PII detection for Japanese names/addresses in `pii-patterns.ts`) — the pattern itself stays in the target language, but all surrounding code and comments must be English.
+- **Third-party vendored code** that cannot be modified.
+
+### Enforcement
+
+- Run `bash scripts/check-no-japanese.sh` locally before pushing.
+- CI runs this check automatically on every PR.
+- During PR review, flag any non-English text as a blocking comment.
+
 ## Development Setup
 
 ### Prerequisites

@@ -47,6 +47,16 @@ jobs:
       - name: TypeScript type check
         run: pnpm run typecheck
 
+  text-locale:
+    name: English-Only Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for non-English text in source files
+        run: bash scripts/check-no-japanese.sh
+
   test:
     name: Test
     runs-on: ubuntu-latest
