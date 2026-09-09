@@ -1,5 +1,5 @@
 import type { ProviderId } from '@aegis/shared';
-import type { LanguageModelV1 } from 'ai';
+import type { LanguageModel } from 'ai';
 
 // ─── SDK Provider Factories ──────────────────────────────────────
 
@@ -16,7 +16,7 @@ export interface ProviderCredentials {
   region?: string;
 }
 
-export type ProviderFactory = (credentials: ProviderCredentials) => LanguageModelV1;
+export type ProviderFactory = (credentials: ProviderCredentials) => LanguageModel;
 
 // ─── Registry ────────────────────────────────────────────────────
 
@@ -49,9 +49,10 @@ const SDK_FACTORIES: Partial<Record<ProviderId, ProviderFactory>> = {
   google: (c) =>
     createGoogleGenerativeAI({ apiKey: c.apiKey })('gemini-2.5-flash'),
   'gcp-vertexai': (c) =>
-    createGoogleGenerativeAI({ apiKey: c.apiKey, location: c.region })(
-      'gemini-2.5-flash',
-    ),
+    createGoogleGenerativeAI({
+      apiKey: c.apiKey,
+      ...(c.region ? { baseURL: `https://${c.region}-aiplatform.googleapis.com/v1beta` } : {}),
+    })('gemini-2.5-flash'),
   'aws-bedrock': (c) =>
     createAmazonBedrock({
       region: c.region ?? 'us-east-1',
@@ -61,13 +62,13 @@ const SDK_FACTORIES: Partial<Record<ProviderId, ProviderFactory>> = {
 // ─── Main Adapter ────────────────────────────────────────────────
 
 /**
- * Create a LanguageModelV1 instance for the given provider.
+ * Create a LanguageModel instance for the given provider.
  * Used by AiEngine to call generateText() from Vercel AI SDK.
  */
 export function createProviderModel(
   providerId: ProviderId,
   credentials: ProviderCredentials,
-): LanguageModelV1 {
+): LanguageModel {
   const factory = SDK_FACTORIES[providerId];
   if (!factory) {
     throw new Error(`Unsupported provider: ${providerId}`);

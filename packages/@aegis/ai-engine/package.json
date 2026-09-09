@@ -11,11 +11,11 @@
   },
   "dependencies": {
     "@aegis/shared": "workspace:*",
-    "ai": "^6.0.278",
+    "@ai-sdk/amazon-bedrock": "^3.0.129",
+    "@ai-sdk/anthropic": "^3.0.116",
+    "@ai-sdk/google": "^3.0.121",
     "@ai-sdk/openai": "^3.0.110",
-    "@ai-sdk/anthropic": "^3.0.110",
-    "@ai-sdk/google": "^3.0.110",
-    "@ai-sdk/amazon-bedrock": "^3.0.110"
+    "ai": "^6.0.277"
   },
   "devDependencies": {
     "typescript": "^5.8.0",
