@@ -7,35 +7,35 @@ category: documentation
 
 # adr
 
-Aegisプロジェクトのアーキテクチャ判断記録（ADR）作成手順。
+Procedure for creating Architecture Decision Records (ADRs) for the Aegis project.
 
-## トリガー条件
+## Trigger Conditions
 
-- 新しい技術選択を行うとき
-- アーキテクチャパターンを変更するとき
-- 既存の判断を取り消すとき
+- When making a new technology choice
+- When changing an architectural pattern
+- When reversing an existing decision
 
-## 実行手順
+## Procedure
 
-1. **テンプレートに従いADRを作成**
+1. **Create an ADR following the template**
    ```bash
-   ls docs/adr/ | tail -1  # 最新番号を確認
+   ls docs/adr/ | tail -1  # Check the latest number
    ```
 
-2. **ファイル名**: `docs/adr/<NNN>-<short-title>.md`
+2. **File name**: `docs/adr/<NNN>-<short-title>.md`
 
-3. **フォーマット**:
+3. **Format**:
    ```markdown
-   # ADR-<NNN>: <タイトル>
+   # ADR-<NNN>: <title>
 
    ## Status
    Proposed | Accepted | Deprecated | Superseded by ADR-XXX
 
    ## Context
-   なぜこの判断が必要なのか。背景と課題。
+   Why this decision is needed. Background and challenges.
 
    ## Decision
-   何を決めるか。
+   What is being decided.
 
    ## Consequences
    ### Positive
@@ -48,13 +48,13 @@ Aegisプロジェクトのアーキテクチャ判断記録（ADR）作成手順
    - ...
    ```
 
-4. **必須フィールド**
-   - Status（状態）
-   - Context（背景）
-   - Decision（判断内容）
-   - Consequences（影響）
+4. **Required fields**
+   - Status (state of the decision)
+   - Context (background)
+   - Decision (what was decided)
+   - Consequences (impact)
 
-## 既存ADR一覧
+## Existing ADRs
 
 - ADR-001: Tauri Desktop Framework
 - ADR-002: NPM Distribution

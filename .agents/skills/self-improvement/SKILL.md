@@ -7,99 +7,99 @@ category: development
 
 # self-improvement
 
-タスク完了後に学びを抽出し、スキルやADRへの反映を自律的に行うスキル。
+A skill that autonomously extracts learnings after task completion and proposes updates to skills or ADRs.
 
-## トリガー条件
+## Trigger Conditions
 
-- 複雑なタスク（3ステップ以上）を完了したとき
-- 問題を解決したとき（エラーの原因判明・修正後）
-- 設計判断を行ったとき（技術選選択・アーキテクチャ変更）
-- レビューで改善点を指摘されたとき
+- When completing a complex task (3 or more steps)
+- When a problem is resolved (root cause identified and fix applied)
+- When a design decision is made (technology selection, architecture change)
+- When a review identifies areas for improvement
 
-## 実行手順
+## Execution Steps
 
-### 1. 学びの抽出
+### 1. Extracting Learnings
 
-完了したタスクについて以下を確認：
+Review the completed task against the following:
 
 ```
-□ 何がうまくいったか？
-□ 何が問題だったか？
-□ もう一度やるなら何を変えるか？
-□ 新しく知ったこと（API、パターン、ツール）は？
-□ パイトラップはあったか？
+□ What went well?
+□ What was problematic?
+□ What would you do differently next time?
+□ What new knowledge was gained (APIs, patterns, tools)?
+□ Were there any pitfalls?
 ```
 
-### 2. 学習記録の保存
+### 2. Saving Learning Records
 
-`learnings/` ディレクトリに日付付きで保存：
+Save to the `learnings/` directory with a date prefix:
 
 ```bash
-# ファイル名: learnings/YYYY-MM-DD-<topic>.md
-# 例: learnings/2026-09-09-monorepo-typecheck-workaround.md
+# Filename: learnings/YYYY-MM-DD-<topic>.md
+# Example: learnings/2026-09-09-monorepo-typecheck-workaround.md
 ```
 
-フォーマット：
+Format:
 ```markdown
-# <トピック>
+# <topic>
 
-## 日付
+## Date
 2026-09-09
 
-## 背景
-<何をしていたか>
+## Context
+<what you were doing>
 
-## 学び
-<具体的な発見>
+## Learnings
+<concrete discoveries>
 
-## アクション
-- [ ] <改善アクション>
+## Actions
+- [ ] <improvement action>
 ```
 
-### 3. ADRトリガー検出
+### 3. ADR Trigger Detection
 
-以下の場合はADR作成が必要：
+An ADR is required in the following cases:
 
-- 技術選択を行った（A vs BでBを選んだ）
-- 既存パターンを破る変更をした
-- セキュリティに関する判断をした
-- パフォーマンスvs可読性のトレードオフを決めた
+- A technology choice was made (e.g., chose B over A)
+- A change was made that breaks an existing pattern
+- A security-related decision was made
+- A performance vs. readability trade-off was decided
 
-→ `adr` スキルを参照して `docs/adr/` に記録
+→ Refer to the `adr` skill and record in `docs/adr/`
 
-### 4. スキル更新の提案
+### 4. Skill Update Proposal
 
-以下の場合はスキル修正を検討：
+Consider a skill patch in the following cases:
 
-- スキルの手順が間違っていた
-- より良い方法を発見した
-- 新しいエラーパタェンを発見した
-- スキルに不足しているステップがあった
+- The skill's procedure was incorrect
+- A better approach was discovered
+- A new error pattern was identified
+- A step was missing from the skill
 
-→ `skill-authoring` スキルを参照してパッチ修正
+→ Refer to the `skill-authoring` skill and apply a patch
 
-### 5. 検証ループ
+### 5. Verification Loop
 
-学びを反映した後：
+After reflecting learnings:
 
-1. **修正内容が正しいか確認** — テスト実行・ビルド確認
-2. **他に影響がないか確認** — 関連スキル・コードへの影響チェック
-3. **次回同じタスクで試す** — 実際に使ってみる
+1. **Verify the fix is correct** — run tests, confirm build passes
+2. **Check for side effects** — assess impact on related skills and code
+3. **Try it on the next task** — apply it in practice
 
-## 既知の学びパターン
+## Known Learning Patterns
 
-### パイトラップ記録例
+### Example Pitfall Records
 
-| パターン | 対策 |
+| Pattern | Mitigation |
 |----------|------|
-| worktreeで `pnpm install` 後にpre-commitが失敗 | 依存関係を先にインストール |
-| `any` 型を暂时的に使用 | コメント付きで許可、TODO残す |
-| CIで `paths-ignore` にスキルが含まれる | スキル変更ではCI走らない（意図通り） |
+| `pnpm install` followed by pre-commit failure in a worktree | Install dependencies first |
+| Temporary use of `any` type | Allow with a comment, leave a TODO |
+| Skills included in CI `paths-ignore` | CI won't run on skill changes (by design) |
 
-## 自律サイクル
+## Autonomous Cycle
 
 ```
-タスク実行 → 学び抽出 → スキル/ADR更新 → 検証 → 次のタスク
-     ↑                                              |
-     └──────────────────────────────────────────────┘
+Task Execution → Learning Extraction → Skill/ADR Update → Verification → Next Task
+     ↑                                                       |
+     └───────────────────────────────────────────────────────┘
 ```

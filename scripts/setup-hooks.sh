@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
-# setup-hooks.sh — シンボリックリンクでGit hooksをセットアップする
+# setup-hooks.sh — Set up Git hooks via symbolic links
 #
-# pnpm install 後に実行するか、package.json の prepare スクリプトから呼ばれる
-# worktree対応: git rev-parse --git-dir で正しいhooksディレクトリを取得
+# Run after pnpm install, or called from the package.json prepare script.
+# Worktree support: uses git rev-parse --git-dir to locate the correct hooks directory.
 #
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-# worktreeでも正しく動くよう git rev-parse で .git ディレクトリを取得
+# Use git rev-parse to get the correct .git directory, even in worktrees
 GIT_DIR="$(git -C "$REPO_ROOT" rev-parse --git-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
 
-# 相対パスなら絶対パスに変換
+# Convert relative path to absolute
 if [[ ! "$GIT_DIR" = /* ]]; then
   GIT_DIR="$REPO_ROOT/$GIT_DIR"
 fi

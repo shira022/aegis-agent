@@ -7,50 +7,50 @@ category: development
 
 # security-audit
 
-Aegis固有のセキュリティ監査手順。
+Security audit procedures specific to Aegis.
 
-## トリガー条件
+## Trigger Conditions
 
-- リリース前
-- セキュリティ影響のある変更時
-- 定期的な監査
+- Before a release
+- When making security-impacting changes
+- During periodic audits
 
-## チェック項目
+## Checklist Items
 
-### 1. シークレット漏洩
+### 1. Secret Leakage
 ```bash
-# 硬编码されたAPIキーの検索
+# Search for hardcoded API keys
 grep -rn "api[_-]key\|secret[_-]key\|password\|token"   --include="*.ts" --include="*.tsx" --include="*.py"   packages/ apps/ | grep -v node_modules | grep -v ".test." | grep -v "mock"
 
-# 環境変数ファイルの確認
+# Check environment variable files
 cat .gitignore | grep -E "\.env|secret|key"
 ```
 
-### 2. PII漏洩
-- `@aegis/security` パッケージの検証
-- ユーザー入力がフィルタリングされているか
-- ログにPIIが含まれていないか
+### 2. PII Leakage
+- Verify the `@aegis/security` package
+- Check that user input is filtered
+- Check that logs do not contain PII
 
-### 3. SSRF防止
-- 外部URLへのアクセスが検証されているか
-- ユーザー指定URLがブロックリストでフィルタリングされているか
+### 3. SSRF Prevention
+- Verify that external URL access is validated
+- Check that user-supplied URLs are filtered against a blocklist
 
-### 4. コマンドインジェクション
-- Pythonサブプロセス実行でシェルインジェクションがないか
-- `execSync` → `execFileSync` 置換が必要な箇所がないか
+### 4. Command Injection
+- Check for shell injection in Python subprocess execution
+- Identify places where `execSync` should be replaced with `execFileSync`
 
-### 5. 依存関係
+### 5. Dependencies
 ```bash
 pnpm audit --audit-level=high
 ```
 
-### 6. TruffleHog（CI連動）
+### 6. TruffleHog (CI Integration)
 ```bash
 trufflehog filesystem --only-verified ./
 ```
 
-## 関連パッケージ
+## Related Packages
 
-- `@aegis/security` — PII検出・フィルタリング
-- `@aegis/ai-engine` — プロンプトインジェクション防止
-- `@aegis/executor` — コマンド実行の安全なラッピング
+- `@aegis/security` — PII detection and filtering
+- `@aegis/ai-engine` — Prompt injection prevention
+- `@aegis/executor` — Safe command execution wrapping

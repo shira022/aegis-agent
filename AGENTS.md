@@ -1,52 +1,52 @@
 # Aegis Agent — AI-Powered RPA Desktop App
 
-このリポジトリは **Aegis Agent** のモノレポ（pnpm + Turborepo）です。
-非エンジニア向けのAI駆動RPAデスクトップアプリを構築しています。
+This repository is the monorepo for **Aegis Agent** (pnpm + Turborepo).
+We are building an AI-driven RPA desktop application for non-engineers.
 
-## プロジェクト構成
+## Project Structure
 
 ```
 aegis-agent/
-├── apps/desktop/          ← Tauri v2 デスクトップアプリ（React + TypeScript）
+├── apps/desktop/          <- Tauri v2 desktop app (React + TypeScript)
 ├── packages/@aegis/
-│   ├── shared/            ← 共有型・ユーティリティ
-│   ├── ai-engine/         ← Vercel AI SDK v6 ベースのAI推論エンジン
-│   ├── executor/          ← RPAスクリプト実行エンジン
-│   ├── approval/          ← HITL承認フロー
-│   ├── hitl/              ← ヒューマンインザループ管理
-│   ├── healer/            ← 自己修復ロジック
-│   ├── recorder/          ← アクション記録・CSSセレクタ生成
-│   ├── security/          ← PII検出・SSRF防护
-│   └── ui/                ← 共有UIコンポーネント
-├── engines/python-runtime ← Pythonサブプロセス実行ランタイム
-├── docs/                  ← スペック・ADR
-└── learnings/             ← 開発での学び
+│   ├── shared/            <- Shared types and utilities
+│   ├── ai-engine/         <- Vercel AI SDK v6 based AI inference engine
+│   ├── executor/          <- RPA script execution engine
+│   ├── approval/          <- HITL approval flow
+│   ├── hitl/              <- Human-in-the-loop management
+│   ├── healer/            <- Self-healing logic
+│   ├── recorder/          <- Action recording and CSS selector generation
+│   ├── security/          <- PII detection and SSRF protection
+│   └── ui/                <- Shared UI components
+├── engines/python-runtime <- Python subprocess execution runtime
+├── docs/                  <- Specs and ADRs
+└── learnings/             <- Development learnings
 ```
 
-## ブランチ戦略（Git Flow）
+## Branch Strategy (Git Flow)
 
-| ブランチ | 目的 | マージ先 |
+| Branch | Purpose | Merge Target |
 |----------|------|----------|
-| `main` | リリースのみ（PR必須） | — |
-| `develop` | 開発統合ブランチ | `main`（PR） |
-| `feature/*`, `fix/*`, `docs/*`, `refactor/*`, `chore/*` | 隔離作業 | `develop`（PR） |
+| `main` | Release only (PR required) | — |
+| `develop` | Dev integration branch | `main` (PR) |
+| `feature/*`, `fix/*`, `docs/*`, `refactor/*`, `chore/*` | Isolated work | `develop` (PR) |
 
-- ブランチ命名: kebab-case (`feature/audio-recorder`, `fix/race-condition`)
-- コミット: [Conventional Commits](https://www.conventionalcommits.org/)（`feat:`, `fix:`, `docs:` etc.）
-- PRは `develop` へ向ける。`main` への直接マージ禁止
+- Branch naming: kebab-case (`feature/audio-recorder`, `fix/race-condition`)
+- Commits: [Conventional Commits](https://www.conventionalcommits.org/)(`feat:`, `fix:`, `docs:` etc.)
+- PRs target `develop`. Direct merges to `main` are prohibited.
 
-## ビルド・テストコマンド
+## Build and Test Commands
 
 ```bash
-pnpm install           # 依存関係インストール
-pnpm dev               # 開発サーバー起動（Turborepo並列）
-pnpm build             # 全パッケージビルド
-pnpm test              # 全テスト実行
-pnpm lint              # リント
-pnpm typecheck         # TypeScript型チェック
+pnpm install           # Install dependencies
+pnpm dev               # Start dev server (Turborepo parallel)
+pnpm build             # Build all packages
+pnpm test              # Run all tests
+pnpm lint              # Lint
+pnpm typecheck         # TypeScript type check
 ```
 
-個別パッケージの操作:
+Individual package operations:
 ```bash
 cd packages/@aegis/ai-engine && pnpm test
 cd apps/desktop && pnpm typecheck
@@ -54,26 +54,26 @@ cd apps/desktop && pnpm typecheck
 
 ## CI/CD
 
-GitHub Actions（`.github/workflows/ci.yml`）が自動実行:
+GitHub Actions (`.github/workflows/ci.yml`) runs automatically:
 - **Lint & Type Check** → pnpm lint + tsc --noEmit
-- **Test** → vitest（カバレッジ付き）
-- **Build** → turbo build + dist確認
+- **Test** → vitest(with coverage)
+- **Build** -> turbo build + dist check
 - **Security Audit** → pnpm audit + TruffleHog
 
-## ルール
+## Rules
 
-- **型安全**: strict TypeScript。any の使用は原則禁止
-- **テスト必須**: 新機能・バグ修正にはテストを添える
-- **セキュリティ**: APIキー等の機密情報はコミットしない（.env, OS keychain）
-- **共有UI**: `@aegis/ui` に集約。Web/Desktopの共通部分は共有コードで維持
-- **AI SDK**: Vercel AI SDK v6系（`ai@6.x`, `@ai-sdk/*@3.x`）を使用。v4/v5とは非互換
-- **パッケージ間参照**: `workspace:*` で相互参照。循環参照禁止
+- **Type Safety**: strict TypeScript. `any` usage is prohibited by default.
+- **Tests Required**: new features and bug fixes must include tests.
+- **Security**: never commit secrets (API keys, etc.) — use `.env` or OS keychain.
+- **Shared UI**: consolidate in `@aegis/ui`. Common parts between Web/Desktop stay as shared code.
+- **AI SDK**: use Vercel AI SDK v6 (`ai@6.x`, `@ai-sdk/*@3.x`). v4/v5 are incompatible.
+- **Cross-package References**: use `workspace:*`. Circular dependencies are prohibited.
 
-## 開発時の注意
+## Development Notes
 
-- TauriビルドにはRust Toolchain + Windows SDK（ホスト側）が必要
-- Pythonサブプロセスは `engines/python-runtime` 経由
-- モデルプロバイダー設定はOSキーチェーンに保存（.env非推奨）
+- Tauri builds require Rust Toolchain + Windows SDK (on the host).
+- Python subprocesses run via `engines/python-runtime`.
+- Model provider settings are stored in the OS keychain (`.env` is not recommended)
 
 ## Autonomous Agent Workflow
 
