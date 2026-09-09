@@ -1,47 +1,45 @@
-# 承認ワークフローカテゴリ
+# Approval Workflow Category
 
-> パッケージ: `@aegis/approval`
-> コアフロー: ②確認する（承認）
+> Package: `@aegis/approval`
+> Core Flow: ②Review (Approve)
 
-## 概要
+## Overview
 
-AIが生成したコードをユーザーが安全にレビューし、承認するワークフローを管理するカテゴリです。
+A category that manages the workflow for users to safely review and approve AI-generated code.
 
-**核心思想**: 承認されたコードは「ロック（読み取り専用）」され、
-その後のAI/システムによる改ざんを防止します。承認フローは安全分析とコード表示の
-2つの柱で構成されます。
+**Core idea**: Approved code is "locked" (read-only), preventing modification by AI or the system afterward. The approval workflow consists of two pillars: safety analysis and code display.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| APR-01 | 生成コードのレビューUI表示 | Must |
-| APR-02 | 安全分析（危険操作の検出） | Must |
-| APR-03 | コード承認/却下操作 | Must |
-| APR-04 | 承認済みコードのロック（読み取り専用化） | Must |
-| APR-05 | 承認履歴の記録 | Must |
-| APR-06 | 安全性スコアリング | Should |
-| APR-07 | コード差分表示 | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| APR-01 | Review UI for generated code | Must |
+| APR-02 | Safety analysis (dangerous operation detection) | Must |
+| APR-03 | Code approve/reject operations | Must |
+| APR-04 | Locking approved code (read-only) | Must |
+| APR-05 | Approval history recording | Must |
+| APR-06 | Safety scoring | Should |
+| APR-07 | Code diff display | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| APR-NF01 | 安全分析レスポンス | < 5秒 |
-| APR-NF02 | 承認状態の一貫性 | ACID準拠 |
-| APR-NF03 | ロックの不可逆性 | ハッシュ検証 |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| APR-NF01 | Safety analysis response time | < 5 seconds |
+| APR-NF02 | Approval state consistency | ACID compliant |
+| APR-NF03 | Lock immutability | Hash verification |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`ApprovalManager`**: 承認フローの管理（承認、却下、履歴）
-- **`SafetyAnalyzer`**: コードの安全分析（危険操作検出、リスク評価）
-- **`CodeDisplay`**: コード表示フォーマット（シンタックスハイライト、差分）
+- **`ApprovalManager`**: Manages the approval workflow (approve, reject, history)
+- **`SafetyAnalyzer`**: Safety analysis of code (dangerous operation detection, risk assessment)
+- **`CodeDisplay`**: Code display formatting (syntax highlighting, diffs)
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 interface ApprovalDecision {
@@ -65,33 +63,33 @@ interface SafetyFinding {
 }
 ```
 
-### 承認フロー
+### Approval Flow
 
 ```
-AIコード生成 → 安全分析 → ユーザーレビュー → 承認/却下
+AI code generation → Safety analysis → User review → Approve/Reject
      ↓                                        ↓
-  コード表示 ←─────── 承認済みコードロック ←───┘
+  Code display ←─────── Approved code lock ←───┘
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `ApprovalManager` | ✅ 完成 | 承認、却下、履歴記録 |
-| `SafetyAnalyzer` | ✅ 完成 | 危険操作検出、リスク評価 |
-| `CodeDisplay` | ✅ 完成 | シンタックスハイライト |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `ApprovalManager` | ✅ Complete | Approve, reject, history recording |
+| `SafetyAnalyzer` | ✅ Complete | Dangerous operation detection, risk assessment |
+| `CodeDisplay` | ✅ Complete | Syntax highlighting |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- チーム承認（複数人承認ワークフロー）
-- 承認ルールのカスタマイズ
-- 承認メール通知
+- Team approval (multi-person approval workflow)
+- Approval rule customization
+- Approval email notifications
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/approval-manager.test.ts` | ApprovalManager |
 | `__tests__/safety-analyzer.test.ts` | SafetyAnalyzer |
 | `__tests__/code-display.test.ts` | CodeDisplay |

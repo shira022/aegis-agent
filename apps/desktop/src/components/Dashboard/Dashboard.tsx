@@ -23,14 +23,14 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-neutral-100">ダッシュボード</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-neutral-100">Dashboard</h2>
         <div className="flex items-center gap-2">
           <Button variant="primary" size="sm" onClick={onNewTask}>
-            + 新規タスク
+            + New Task
           </Button>
           <Button variant="secondary" size="sm" onClick={onRunAll}>
-            すべて実行
+            Run All
           </Button>
         </div>
       </div>
@@ -38,18 +38,18 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
       {/* Stats cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
-          <p className="text-xs text-neutral-500 mb-1">タスク数</p>
+          <p className="text-xs text-neutral-500 mb-1">Tasks</p>
           <p className="text-2xl font-bold text-neutral-100">{tasks.length}</p>
         </Card>
         <Card>
-          <p className="text-xs text-neutral-500 mb-1">成功率</p>
+          <p className="text-xs text-neutral-500 mb-1">Success Rate</p>
           <p className="text-2xl font-bold text-neutral-100">{successRate}</p>
         </Card>
         <Card>
-          <p className="text-xs text-neutral-500 mb-1">最終実行</p>
+          <p className="text-xs text-neutral-500 mb-1">Last Run</p>
           <p className="text-sm text-neutral-200">
             {lastRun
-              ? lastRun.toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+              ? lastRun.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—'}
           </p>
         </Card>
@@ -59,7 +59,7 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
       {runningCount > 0 && (
         <Card>
           <div className="flex items-center gap-2">
-            <Badge variant="warning">実行中</Badge>
+            <Badge variant="warning">Running</Badge>
             <span className="text-2xl font-bold text-neutral-100">{runningCount}</span>
           </div>
         </Card>
@@ -67,10 +67,10 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
 
       {/* Recent activity */}
       <div>
-        <h2 className="text-sm font-semibold text-neutral-200 mb-3">最近のアクティビティ</h2>
+        <h2 className="text-sm font-semibold text-neutral-200 mb-3">Recent Activity</h2>
         {recentActivity.length === 0 ? (
           <Card>
-            <p className="text-sm text-neutral-400 text-center py-4">最近のアクティビティはありません</p>
+            <p className="text-sm text-neutral-400 text-center py-4">No recent activity</p>
           </Card>
         ) : (
           <div className="space-y-2">
@@ -79,10 +79,10 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Badge variant="info">{log.source}</Badge>
-                    <span className="text-neutral-300">{log.steps.length} ステップ</span>
+                    <span className="text-neutral-300">{log.steps.length} step(s)</span>
                   </div>
                   <time className="text-xs text-neutral-500">
-                    {new Date(log.recordedAt).toLocaleString('ja-JP')}
+                    {new Date(log.recordedAt).toLocaleString('en-US')}
                   </time>
                 </div>
               </Card>

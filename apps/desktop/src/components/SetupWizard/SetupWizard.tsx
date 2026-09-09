@@ -24,7 +24,7 @@ export function SetupWizard({ dependencies, onInstall, onComplete }: SetupWizard
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-xl font-bold text-neutral-900">Aegis Agent セットアップ</h2>
+      <h2 className="mb-4 text-xl font-bold text-neutral-900">Aegis Agent Setup</h2>
 
       <ul className="mb-6 space-y-3">
         {dependencies.map((dep) => (
@@ -47,7 +47,7 @@ export function SetupWizard({ dependencies, onInstall, onComplete }: SetupWizard
                 onClick={() => onInstall(dep.name)}
                 className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800"
               >
-                インストール
+                Install
               </button>
             )}
           </li>
@@ -57,13 +57,13 @@ export function SetupWizard({ dependencies, onInstall, onComplete }: SetupWizard
       {allOk && (
         <div className="text-center">
           <p className="mb-4 text-sm font-medium text-green-700">
-            すべての依存関係が揃いました
+            All dependencies are ready
           </p>
           <button
             onClick={onComplete}
             className="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 active:bg-green-800"
           >
-            開始する
+            Get Started
           </button>
         </div>
       )}

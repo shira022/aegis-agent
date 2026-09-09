@@ -21,28 +21,28 @@ describe('TimelineView', () => {
   // ── Rendering ──────────────────────────────────────────────────────
   it('renders the title', () => {
     render(<TimelineView steps={[]} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('操作フロー')).toBeInTheDocument();
+    expect(screen.getByText('Action Flow')).toBeInTheDocument();
   });
 
   it('renders step descriptions', () => {
     const steps: OperationStep[] = [
-      makeStep({ type: 'click', target: { text: 'ログインボタン' }, timestamp: '2025-01-01T00:00:00Z' }),
-      makeStep({ type: 'type', target: { text: 'ユーザー名を入力' }, timestamp: '2025-01-01T00:00:01Z' }),
+      makeStep({ type: 'click', target: { text: 'Login Button' }, timestamp: '2025-01-01T00:00:00Z' }),
+      makeStep({ type: 'type', target: { text: 'Enter username' }, timestamp: '2025-01-01T00:00:01Z' }),
     ];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('ログインボタンをクリック')).toBeInTheDocument();
-    expect(screen.getByText('ユーザー名を入力')).toBeInTheDocument();
+    expect(screen.getByText('Click Login Button')).toBeInTheDocument();
+    expect(screen.getByText('Enter username')).toBeInTheDocument();
   });
 
   // ── Step type icons ────────────────────────────────────────────────
   it('shows click icon for click steps', () => {
-    const steps = [makeStep({ type: 'click', target: { text: 'ボタン' }, timestamp: '2025-01-01T00:00:00Z' })];
+    const steps = [makeStep({ type: 'click', target: { text: 'Button' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
     expect(screen.getByText('🖱')).toBeInTheDocument();
   });
 
   it('shows type icon for type steps', () => {
-    const steps = [makeStep({ type: 'type', target: { text: '入力' }, timestamp: '2025-01-01T00:00:00Z' })];
+    const steps = [makeStep({ type: 'type', target: { text: 'Input' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
     expect(screen.getByText('⌨')).toBeInTheDocument();
   });
@@ -78,34 +78,34 @@ describe('TimelineView', () => {
 
   // ── Timestamps ─────────────────────────────────────────────────────
   it('displays timestamps for each step', () => {
-    const steps = [makeStep({ type: 'click', target: { text: 'テスト' }, timestamp: '2025-06-15T10:30:00Z' })];
+    const steps = [makeStep({ type: 'click', target: { text: 'Test' }, timestamp: '2025-06-15T10:30:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText(/19:30/)).toBeInTheDocument();
+    expect(screen.getByText(/0?7:30/)).toBeInTheDocument();
   });
 
   // ── Mode toggle ────────────────────────────────────────────────────
   it('shows flowchart toggle button', () => {
     render(<TimelineView steps={[]} mode="timeline" {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /フローチャート/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Flowchart/ })).toBeInTheDocument();
   });
 
   it('calls onToggleMode when toggle button clicked', () => {
     const onToggleMode = vi.fn();
     render(<TimelineView steps={[]} mode="timeline" onToggleMode={onToggleMode} />);
-    fireEvent.click(screen.getByRole('button', { name: /フローチャート/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Flowchart/ }));
     expect(onToggleMode).toHaveBeenCalledTimes(1);
   });
 
   // ── Expand/collapse ────────────────────────────────────────────────
   it('expands step details when clicked', () => {
-    const steps = [makeStep({ type: 'click', target: { text: 'ボタン', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
+    const steps = [makeStep({ type: 'click', target: { text: 'Button', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
     fireEvent.click(screen.getByText('🖱'));
     expect(screen.getByText('#btn')).toBeInTheDocument();
   });
 
   it('collapses step details when clicked again', () => {
-    const steps = [makeStep({ type: 'click', target: { text: 'ボタン', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
+    const steps = [makeStep({ type: 'click', target: { text: 'Button', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
     const icon = screen.getByText('🖱');
     fireEvent.click(icon);
@@ -117,6 +117,6 @@ describe('TimelineView', () => {
   // ── Empty state ────────────────────────────────────────────────────
   it('shows empty state when no steps', () => {
     render(<TimelineView steps={[]} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('操作が記録されていません')).toBeInTheDocument();
+    expect(screen.getByText('No actions recorded')).toBeInTheDocument();
   });
 });

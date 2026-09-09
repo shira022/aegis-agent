@@ -4,13 +4,13 @@ import { Card } from '../Card';
 
 describe('Card', () => {
   it('renders children', () => {
-    render(<Card><p>カード内容</p></Card>);
-    expect(screen.getByText('カード内容')).toBeInTheDocument();
+    render(<Card><p>Card content</p></Card>);
+    expect(screen.getByText('Card content')).toBeInTheDocument();
   });
 
   it('renders with a title', () => {
-    render(<Card title="タスク一覧">content</Card>);
-    expect(screen.getByText('タスク一覧')).toBeInTheDocument();
+    render(<Card title="Task List">content</Card>);
+    expect(screen.getByText('Task List')).toBeInTheDocument();
   });
 
   it('applies custom className', () => {
@@ -31,10 +31,10 @@ describe('Card', () => {
 
   it('renders with optional actions', () => {
     render(
-      <Card title="テスト" actions={<button>アクション</button>}>
+      <Card title="Test" actions={<button>Action</button>}>
         content
       </Card>
     );
-    expect(screen.getByText('アクション')).toBeInTheDocument();
+    expect(screen.getByText('Action')).toBeInTheDocument();
   });
 });

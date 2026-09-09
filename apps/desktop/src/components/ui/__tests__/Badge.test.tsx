@@ -4,8 +4,8 @@ import { Badge } from '../Badge';
 
 describe('Badge', () => {
   it('renders children text', () => {
-    render(<Badge>実行中</Badge>);
-    expect(screen.getByText('実行中')).toBeInTheDocument();
+    render(<Badge>Running</Badge>);
+    expect(screen.getByText('Running')).toBeInTheDocument();
   });
 
   it('renders with default variant', () => {
@@ -15,26 +15,26 @@ describe('Badge', () => {
   });
 
   it('renders with success variant', () => {
-    render(<Badge variant="success">完了</Badge>);
-    const badge = screen.getByText('完了');
+    render(<Badge variant="success">Completed</Badge>);
+    const badge = screen.getByText('Completed');
     expect(badge.className).toContain('bg-green-800');
   });
 
   it('renders with warning variant', () => {
-    render(<Badge variant="warning">警告</Badge>);
-    const badge = screen.getByText('警告');
+    render(<Badge variant="warning">Warning</Badge>);
+    const badge = screen.getByText('Warning');
     expect(badge.className).toContain('bg-yellow-800');
   });
 
   it('renders with danger variant', () => {
-    render(<Badge variant="danger">失敗</Badge>);
-    const badge = screen.getByText('失敗');
+    render(<Badge variant="danger">Failed</Badge>);
+    const badge = screen.getByText('Failed');
     expect(badge.className).toContain('bg-red-800');
   });
 
   it('renders with info variant', () => {
-    render(<Badge variant="info">情報</Badge>);
-    const badge = screen.getByText('情報');
+    render(<Badge variant="info">Info</Badge>);
+    const badge = screen.getByText('Info');
     expect(badge.className).toContain('bg-blue-800');
   });
 });
