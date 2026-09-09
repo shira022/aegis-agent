@@ -1,49 +1,47 @@
-# 実行エンジンカテゴリ
+# Execution Engine Category
 
-> パッケージ: `@aegis/executor`
-> コアフロー: ③任せる（実行）
+> Package: `@aegis/executor`
+> Core Flow: ③Delegate (Execute)
 
-## 概要
+## Overview
 
-承認されたPythonスクリプトを安全に実行し、リソースを監視し、ログを収集するエンジンです。
+An engine that safely executes approved Python scripts, monitors resources, and collects logs.
 
-**核心思想**: すべてのコード実行は**人間の承認後にのみ**実行され、
-サブプロセスとして分離実行されます。リソース監視により、無限ループや
-メモリリークを検出し、自動的にプロセスを終了します。
+**Core idea**: All code execution happens **only after human approval** and runs in isolated subprocesses. Resource monitoring detects infinite loops and memory leaks, automatically terminating processes when needed.
 
-## 要件
+## Requirements
 
-### 機能要件
+### Functional Requirements
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| EXE-01 | Pythonサブプロセスの起動・管理 | Must |
-| EXE-02 | リソース監視（CPU、メモリ、ディスク） | Must |
-| EXE-03 | ログ収集（標準出力、エラー出力） | Must |
-| EXE-04 | スクリプト生成（テンプレート注入） | Must |
-| EXE-05 | タイムアウト管理 | Must |
-| EXE-06 | プロセス強制終了 | Must |
-| EXE-07 | requirements.txt自動生成 | Should |
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| EXE-01 | Python subprocess launch & management | Must |
+| EXE-02 | Resource monitoring (CPU, memory, disk) | Must |
+| EXE-03 | Log collection (stdout, stderr) | Must |
+| EXE-04 | Script generation (template injection) | Must |
+| EXE-05 | Timeout management | Must |
+| EXE-06 | Process forced termination | Must |
+| EXE-07 | Automatic requirements.txt generation | Should |
 
-### 非機能要件
+### Non-Functional Requirements
 
-| ID | 要件 | 基準値 |
-|----|------|--------|
-| EXE-NF01 | プロセス起動時間 | < 2秒 |
-| EXE-NF02 | リソース監視間隔 | 1秒 |
-| EXE-NF03 | ログバッファサイズ | < 10MB |
-| EXE-NF04 | プロセス分離度 | 完全サンドボックス |
+| ID | Requirement | Threshold |
+|----|-------------|-----------|
+| EXE-NF01 | Process startup time | < 2 seconds |
+| EXE-NF02 | Resource monitoring interval | 1 second |
+| EXE-NF03 | Log buffer size | < 10MB |
+| EXE-NF04 | Process isolation level | Full sandbox |
 
-## API/インターフェース
+## API / Interfaces
 
-### メインクラス
+### Main Classes
 
-- **`ProcessManager`**: Pythonサブプロセスの起動・管理・監視
-- **`ExecutionEngine`**: 実行エンジンのオーケストレーション
-- **`LogCollector`**: ログ収集・フォーマット・エクスポート
-- **`ScriptGenerator`**: スクリプト生成・テンプレート注入
+- **`ProcessManager`**: Launch, manage, and monitor Python subprocesses
+- **`ExecutionEngine`**: Orchestration of the execution engine
+- **`LogCollector`**: Log collection, formatting, and export
+- **`ScriptGenerator`**: Script generation and template injection
 
-### 主要型定義
+### Key Type Definitions
 
 ```typescript
 interface ProcessInfo {
@@ -55,42 +53,42 @@ interface ProcessInfo {
 }
 
 interface ResourceUsage {
-  cpu: number;      // パーセント
+  cpu: number;      // percentage
   memory: number;   // MB
   disk: number;     // MB
 }
 ```
 
-### 実行フロー
+### Execution Flow
 
 ```
-承認済みコード → ScriptGenerator → Pythonサブプロセス起動
+Approved code → ScriptGenerator → Python subprocess launch
      ↓                                     ↓
-  LogCollector ←──── リソース監視 ←─── 実行中
+  LogCollector ←──── Resource monitoring ←─── Executing
      ↓
-  結果/ログ → エラーハイリング（如有）
+  Results/logs → Error triage (if any)
 ```
 
-## 実装状況
+## Implementation Status
 
-| コンポーネント | 状態 | 備考 |
-|---------------|------|------|
-| `ProcessManager` | ✅ 完成 | サブプロセス管理 |
-| `ExecutionEngine` | ✅ 完成 | オーケストレーション |
-| `LogCollector` | ✅ 完成 | ログ収集・フォーマット |
-| `ScriptGenerator` | ✅ 完成 | スクリプト生成 |
-| `types.ts` | ✅ 完成 | 全型定義 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `ProcessManager` | ✅ Complete | Subprocess management |
+| `ExecutionEngine` | ✅ Complete | Orchestration |
+| `LogCollector` | ✅ Complete | Log collection & formatting |
+| `ScriptGenerator` | ✅ Complete | Script generation |
+| `types.ts` | ✅ Complete | All type definitions |
 
-### 未実装
+### Not Yet Implemented
 
-- プロセスプール（同時実行管理）
-- 実行キューイング
-- 実行結果の永続化
+- Process pool (concurrent execution management)
+- Execution queuing
+- Execution result persistence
 
-## テストカバレッジ
+## Test Coverage
 
-| テストファイル | 対象 |
-|--------------|------|
+| Test File | Target |
+|-----------|--------|
 | `__tests__/process-manager.test.ts` | ProcessManager |
 | `__tests__/execution-engine.test.ts` | ExecutionEngine |
 | `__tests__/log-collector.test.ts` | LogCollector |

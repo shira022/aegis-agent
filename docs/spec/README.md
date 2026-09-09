@@ -1,74 +1,73 @@
-# Aegis Agent — 製品仕様書
+# Aegis Agent — Product Specification
 
-> AIにプログラム（RPA）を作らせ、人間が承認したコードだけを安全に実行する、
-> 非エンジニア向け次世代AIエージェント・デスクトップアプリ
+> AI creates programs (RPA) for you, and only human-approved code runs safely.
+> A next-generation AI agent desktop app for non-engineers.
 
-## 製品概要
+## Product Overview
 
-Aegis Agent（イージス・エージェント）は、Shield（盾）の意味を持つ名前の通り、
-安全を最優先にしたAI駆動RPAデスクトップアプリケーションです。
+Aegis Agent — named after "Aegis" meaning "Shield" — is an AI-driven RPA desktop application that prioritizes safety above all else.
 
-### コアフロー
+### Core Flow
 
 ```
-①見せる（学習）→ ②確認する（承認）→ ③任せる（実行）→ ④育てる（進化）
+①Show (Learn) → ②Review (Approve) → ③Delegate (Execute) → ④Evolve (Improve)
 ```
 
-| フェーズ | 説明 | コア技術 |
-|---------|------|---------|
-| **見せる（学習）** | PC操作を1回録画し、軽量JSONメタデータとして保存 | Tauri IPC、Playwright、スクリーンショット |
-| **確認する（承認）** | AIが決定論的Pythonスクリプト+事前例外ハンドラを生成、ユーザー承認後にロック | AI Code Generation、Static Analysis |
-| **任せる（実行）** | サンドボックス化されたPythonサブプロセスで安全に実行 | Python Runtime、Resource Monitor |
-| **育てる（進化）** | AIが障害を検知し修正案を提案、パターンを学習 | Error Classification、Vision Analysis |
+| Phase | Description | Core Technology |
+|-------|-------------|-----------------|
+| **Show (Learn)** | Record a PC operation once and save it as lightweight JSON metadata | Tauri IPC, Playwright, Screenshots |
+| **Review (Approve)** | AI generates deterministic Python scripts with pre-defined exception handlers; locked after user approval | AI Code Generation, Static Analysis |
+| **Delegate (Execute)** | Runs safely inside a sandboxed Python subprocess | Python Runtime, Resource Monitor |
+| **Evolve (Improve)** | AI detects failures, proposes fixes, and learns patterns | Error Classification, Vision Analysis |
 
-### セキュリティ原則
+### Security Principles
 
-- **承認必須**: 全コード実行に人間の承認が必要（自律実行なし）
-- **AI幻覚防止**: 決定論的コード生成により予測可能な出力を保証
-- **ローカルファースト**: データはすべてユーザーPC上に保存
-- **OSキーチェーン**: APIキーはOS標準のキーチェーンで管理
+- **Human approval required**: Every code execution requires human approval (no autonomous execution)
+- **AI hallucination prevention**: Deterministic code generation guarantees predictable output
+- **Local-first**: All data is stored on the user's PC
+- **OS Keychain**: API keys are managed via the OS-standard keychain
 
-## 仕様カテゴリ一覧
+## Specification Index
 
-| # | カテゴリ | ファイル | 関連コアフロー |
-|---|---------|---------|---------------|
-| 1 | [録画・操作記録](recording.md) | `recording.md` | ①見せる（学習） |
-| 2 | [AIエンジン](ai-engine.md) | `ai-engine.md` | ②確認する（承認） |
-| 3 | [承認ワークフロー](approval.md) | `approval.md` | ②確認する（承認） |
-| 4 | [実行エンジン](execution.md) | `execution.md` | ③任せる（実行） |
-| 5 | [セルフヒーリング](self-healing.md) | `self-healing.md` | ④育てる（進化） |
-| 6 | [Human-in-the-Loop](hitl.md) | `hitl.md` | ④育てる（進化） |
-| 7 | [セキュリティ](security.md) | `security.md` | クロスカッティング |
-| 8 | [UI/UX](ui.md) | `ui.md` | クロスカッティング |
-| 9 | [全体アーキテクチャ](architecture.md) | `architecture.md` | システム全体 |
+| # | Category | File | Related Core Flow |
+|---|----------|------|-------------------|
+| 1 | [Recording & Operation Logging](recording.md) | `recording.md` | ①Show (Learn) |
+| 2 | [AI Engine](ai-engine.md) | `ai-engine.md` | ②Review (Approve) |
+| 3 | [Approval Workflow](approval.md) | `approval.md` | ②Review (Approve) |
+| 4 | [Execution Engine](execution.md) | `execution.md` | ③Delegate (Execute) |
+| 5 | [Self-Healing](self-healing.md) | `self-healing.md` | ④Evolve (Improve) |
+| 6 | [Human-in-the-Loop](hitl.md) | `hitl.md` | ④Evolve (Improve) |
+| 7 | [Security](security.md) | `security.md` | Cross-cutting |
+| 8 | [UI/UX](ui.md) | `ui.md` | Cross-cutting |
+| 9 | [System Architecture](architecture.md) | `architecture.md` | System-wide |
 
-## パッケージ構成
+## Package Structure
 
 ```
 packages/@aegis/
-├── shared/       共通型定義・ユーティリティ
-├── recorder/     録画・操作記録
-├── ai-engine/    AIコード生成エンジン
-├── approval/     承認ワークフロー
-├── executor/     実行エンジン
-├── healer/       セルフヒーリング
+├── shared/       Shared type definitions & utilities
+├── recorder/     Recording & operation logging
+├── ai-engine/    AI code generation engine
+├── approval/     Approval workflow
+├── executor/     Execution engine
+├── healer/       Self-healing
 ├── hitl/         Human-in-the-Loop
-├── security/     セキュリティ（PIIマスキング等）
-└── ui/           UIコンポーネント（未実装）
+├── security/     Security (PII masking, etc.)
+└── ui/           UI components (not yet implemented)
 apps/
-└── desktop/      Tauriデスクトップアプリ
+└── desktop/      Tauri desktop application
 engines/
-└── python-runtime/  Python実行環境テンプレート
+└── python-runtime/  Python execution environment template
 ```
 
-## 開発状況
+## Implementation Status
 
-| カテゴリ | 状態 |
-|---------|------|
-| shared, recorder, ai-engine, approval, executor | ✅ 実装済み |
-| healer, hitl, security | ✅ 実装済み |
-| ui | ⬜ 未実装 |
-| desktop app | ⬜ 未実装（骨格のみ） |
-| Python runtime | ⬜ テンプレートのみ |
+| Category | Status |
+|----------|--------|
+| shared, recorder, ai-engine, approval, executor | ✅ Implemented |
+| healer, hitl, security | ✅ Implemented |
+| ui | ⬜ Not implemented |
+| desktop app | ⬜ Not implemented (skeleton only) |
+| Python runtime | ⬜ Template only |
 
-最終更新: 2026-09-08
+Last updated: 2026-09-08
