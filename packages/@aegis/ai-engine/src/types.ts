@@ -1,14 +1,14 @@
-import type { OperationLog } from '@aegis/shared';
+import type { OperationLog, ProviderId } from '@aegis/shared';
 
 // ─── AI Provider ───────────────────────────────────────────────────
 
-export type AIProvider = 'openai' | 'anthropic' | 'custom';
-
 export interface AIConfig {
-  provider: AIProvider;
+  providerId: ProviderId;
   apiKey: string;
   model: string;
   baseUrl?: string;
+  region?: string;
+  projectId?: string;
   maxTokens?: number;
   temperature?: number;
 }
@@ -49,7 +49,7 @@ export interface CodeGenerationResponse {
 export interface SafetyRule {
   id: string;
   description: string;
-  validator: string; // regex pattern or function name
+  validator: string;
 }
 
 export interface ValidationResult {

@@ -1,7 +1,6 @@
 // ─── Types ─────────────────────────────────────────────────────────
 
 export type {
-  AIProvider,
   AIConfig,
   CodeGenerationRequest,
   CodeGenerationResponse,
@@ -32,6 +31,11 @@ export {
   buildHealingPrompt,
   SAFETY_PROMPT,
 } from './prompt-builder';
+
+// ─── Provider Adapter ──────────────────────────────────────────────
+
+export { createProviderModel, requiresApiKey } from './provider-adapter';
+export type { ProviderCredentials } from './provider-adapter';
 
 // ─── Generator ─────────────────────────────────────────────────────
 
