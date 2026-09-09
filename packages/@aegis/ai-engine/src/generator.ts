@@ -22,13 +22,13 @@ export class AiEngine {
       model,
       system,
       prompt: user,
-      maxTokens: this.config.maxTokens ?? 2048,
+      maxOutputTokens: this.config.maxTokens ?? 2048,
       temperature: this.config.temperature ?? 0,
     });
 
     return this.parseCodeResponse(result.text, {
-      input_tokens: result.usage.promptTokens,
-      output_tokens: result.usage.completionTokens,
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
     });
   }
 
@@ -39,7 +39,7 @@ export class AiEngine {
     const result = await generateText({
       model,
       prompt,
-      maxTokens: this.config.maxTokens ?? 2048,
+      maxOutputTokens: this.config.maxTokens ?? 2048,
     });
 
     return this.parseExceptionsResponse(result.text);
@@ -52,7 +52,7 @@ export class AiEngine {
     const result = await generateText({
       model,
       prompt,
-      maxTokens: this.config.maxTokens ?? 2048,
+      maxOutputTokens: this.config.maxTokens ?? 2048,
     });
 
     return result.text;

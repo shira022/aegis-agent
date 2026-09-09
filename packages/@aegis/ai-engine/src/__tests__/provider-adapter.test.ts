@@ -10,7 +10,7 @@ const { mockGenerateText } = vi.hoisted(() => ({
       exceptionHandlers: [],
       warnings: [],
     }),
-    usage: { promptTokens: 10, completionTokens: 20 },
+    usage: { inputTokens: 10, outputTokens: 20 },
   }),
 }));
 
@@ -124,7 +124,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
         exceptionHandlers: [],
         warnings: [],
       }),
-      usage: { promptTokens: 10, completionTokens: 20 },
+      usage: { inputTokens: 10, outputTokens: 20 },
     });
   });
 
@@ -166,7 +166,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
   it.each(providers)('generateExceptions via $id', async ({ id, baseUrl }) => {
     mockGenerateText.mockResolvedValueOnce({
       text: JSON.stringify([{ condition: 'error', action: 'retry', code: 'pass', riskLevel: 'low' }]),
-      usage: { promptTokens: 5, completionTokens: 10 },
+      usage: { inputTokens: 5, outputTokens: 10 },
     });
 
     const engine = new AiEngine({
@@ -191,7 +191,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
   it.each(providers)('suggestHealing via $id', async ({ id, baseUrl }) => {
     mockGenerateText.mockResolvedValueOnce({
       text: 'Add try/except around the operation',
-      usage: { promptTokens: 5, completionTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5 },
     });
 
     const engine = new AiEngine({
@@ -208,7 +208,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
   it('handles non-JSON AI response gracefully', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: 'def hello(): print("hi")',
-      usage: { promptTokens: 5, completionTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5 },
     });
 
     const engine = new AiEngine({

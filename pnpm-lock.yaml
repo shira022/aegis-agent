@@ -76,20 +76,20 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@ai-sdk/amazon-bedrock':
-        specifier: ^3.0.110
+        specifier: ^3.0.129
         version: 3.0.129(zod@3.25.76)
       '@ai-sdk/anthropic':
-        specifier: ^3.0.110
+        specifier: ^3.0.116
         version: 3.0.116(zod@3.25.76)
       '@ai-sdk/google':
-        specifier: ^3.0.110
+        specifier: ^3.0.121
         version: 3.0.121(zod@3.25.76)
       '@ai-sdk/openai':
         specifier: ^3.0.110
         version: 3.0.110(zod@3.25.76)
       ai:
-        specifier: ^6.0.278
-        version: 6.0.278(zod@3.25.76)
+        specifier: ^6.0.277
+        version: 6.0.277(zod@3.25.76)
     devDependencies:
       typescript:
         specifier: ^5.8.0
@@ -266,8 +266,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@3.0.190':
-    resolution: {integrity: sha512-Xz1l7j1MYUINkWQfKL24J8e6CxHLSwlNsMq71m7aMXL13+0g3Rh6Avtpj4+yNkONDViRYW4er1yVBX7sbFHF1w==}
+  '@ai-sdk/gateway@3.0.189':
+    resolution: {integrity: sha512-roPKojHenQm7U77kNNE0w586jP2vnjxaNx/+KFSQkJRLLAxrg7yUwZQfyOEizoTxdaltu+ZIlLRTw09X3XbGvQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1000,8 +1000,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@6.0.278:
-    resolution: {integrity: sha512-Xc0lycRErXDqp7M8XKaih7pf0Exg7nQvJkkph0gcIgPYFHU/vP0i/Y/FlV1L6qqo4EfJncaXCbW/kGzV3RT30g==}
+  ai@6.0.277:
+    resolution: {integrity: sha512-fYlPj2QsisCH66SsEfWM8gV0ZR+6NLuRYSnVw3GKUKlvP+iIAUQR1bUJn1Y6lcAKeoEWQeZaann2ahXZY2HXtQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1726,7 +1726,7 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.50(zod@3.25.76)
       zod: 3.25.76
 
-  '@ai-sdk/gateway@3.0.190(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.189(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.15
       '@ai-sdk/provider-utils': 4.0.50(zod@3.25.76)
@@ -2334,9 +2334,9 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@6.0.278(zod@3.25.76):
+  ai@6.0.277(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 3.0.190(zod@3.25.76)
+      '@ai-sdk/gateway': 3.0.189(zod@3.25.76)
       '@ai-sdk/provider': 3.0.15
       '@ai-sdk/provider-utils': 4.0.50(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
