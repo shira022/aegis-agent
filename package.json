@@ -8,7 +8,8 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "prepare": "bash scripts/setup-hooks.sh"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
