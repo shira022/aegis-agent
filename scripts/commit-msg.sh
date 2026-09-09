@@ -38,3 +38,33 @@ if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo ""
   exit 1
 fi
+
+# --- ADR reference validation (soft warning only) ---
+# Matches patterns like ADR-003, ADR-1, refs ADR-012, see ADR-5, etc.
+FULL_COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+ADR_REFS=$(echo "$FULL_COMMIT_MSG" | grep -ioE 'ADR-[0-9]+' | sort -u || true)
+
+if [ -n "$ADR_REFS" ]; then
+  REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+  MISSING_ADRS=""
+
+  for ref in $ADR_REFS; do
+    # Normalize: ADR-003 -> 003
+    NUM=$(echo "$ref" | sed 's/^[Aa][Dd][Rr]-//')
+    # Zero-pad to 3 digits for filename lookup
+    PADDED=$(printf "%03d" "$((10#$NUM))")
+
+    ADR_FILE=$(ls "$REPO_ROOT/docs/adr/${PADDED}"-*.md 2>/dev/null || true)
+    if [ -z "$ADR_FILE" ]; then
+      MISSING_ADRS="$MISSING_ADRS $ref"
+    fi
+  done
+
+  if [ -n "$MISSING_ADRS" ]; then
+    echo ""
+    echo "⚠️  ADR reference(s) may not exist:$MISSING_ADRS"
+    echo "  Expected files in docs/adr/ (e.g. docs/adr/003-python-subprocess.md)"
+    echo "  This is a soft warning — commit will proceed."
+    echo ""
+  fi
+fi

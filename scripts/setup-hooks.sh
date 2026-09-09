@@ -37,4 +37,10 @@ if [ -f "$SCRIPTS_DIR/commit-msg.sh" ]; then
   echo "  ✓ commit-msg"
 fi
 
+# post-commit hook
+if [ -f "$SCRIPTS_DIR/post-commit.sh" ]; then
+  ln -sf "../../scripts/post-commit.sh" "$HOOKS_DIR/post-commit"
+  echo "  ✓ post-commit"
+fi
+
 echo "✅ Git hooks installed."
