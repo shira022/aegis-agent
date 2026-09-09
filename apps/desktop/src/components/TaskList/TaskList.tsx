@@ -60,7 +60,7 @@ export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
                 <p className="text-xs text-neutral-500">
                   <Badge variant={statusVariant[task.status]}>{statusLabel[task.status]}</Badge>
                   {' · '}
-                  <time>{new Date(task.updatedAt).toLocaleString('ja-JP')}</time>
+                  <time>{new Date(task.updatedAt).toLocaleString('en-US')}</time>
                 </p>
               </div>
             </div>

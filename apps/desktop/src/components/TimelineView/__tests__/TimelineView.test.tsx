@@ -80,7 +80,7 @@ describe('TimelineView', () => {
   it('displays timestamps for each step', () => {
     const steps = [makeStep({ type: 'click', target: { text: 'Test' }, timestamp: '2025-06-15T10:30:00Z' })];
     render(<TimelineView steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText(/19:30/)).toBeInTheDocument();
+    expect(screen.getByText(/0?7:30/)).toBeInTheDocument();
   });
 
   // ── Mode toggle ────────────────────────────────────────────────────
