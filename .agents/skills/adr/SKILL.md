@@ -61,3 +61,5 @@ Procedure for creating Architecture Decision Records (ADRs) for the Aegis projec
 - ADR-003: Python Subprocess Execution
 - ADR-004: pnpm Monorepo
 - ADR-005: React TypeScript Frontend
+- ADR-006: Frontend–Backend IPC Contract
+- ADR-007: Mock-First Seams for AI Generation and Credential Storage
