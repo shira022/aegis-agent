@@ -18,7 +18,7 @@ vi.mock('ai', () => ({ generateText: mockGenerateText }));
 
 // Mock SDK provider packages — each returns a factory function
 vi.mock('@ai-sdk/openai', () => ({
-  createOpenAI: vi.fn((_config: Record<string, unknown>) => (model: string) => ({
+  createOpenAI: vi.fn(() => (model: string) => ({
     modelId: model,
     provider: 'openai',
     doGenerate: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock('@ai-sdk/openai', () => ({
 }));
 
 vi.mock('@ai-sdk/anthropic', () => ({
-  createAnthropic: vi.fn((_config: Record<string, unknown>) => (model: string) => ({
+  createAnthropic: vi.fn(() => (model: string) => ({
     modelId: model,
     provider: 'anthropic',
     doGenerate: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock('@ai-sdk/anthropic', () => ({
 }));
 
 vi.mock('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: vi.fn((_config: Record<string, unknown>) => (model: string) => ({
+  createGoogleGenerativeAI: vi.fn(() => (model: string) => ({
     modelId: model,
     provider: 'google',
     doGenerate: vi.fn(),
@@ -45,7 +45,7 @@ vi.mock('@ai-sdk/google', () => ({
 }));
 
 vi.mock('@ai-sdk/amazon-bedrock', () => ({
-  createAmazonBedrock: vi.fn((_config: Record<string, unknown>) => (model: string) => ({
+  createAmazonBedrock: vi.fn(() => (model: string) => ({
     modelId: model,
     provider: 'bedrock',
     doGenerate: vi.fn(),

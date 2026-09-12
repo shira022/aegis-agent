@@ -3,7 +3,6 @@ import type {
   HealingContext,
   ErrorType,
   ErrorClassification,
-  ClassificationRule,
 } from './types';
 import { CLASSIFICATION_RULES } from './types';
 
@@ -110,6 +109,7 @@ const ERROR_PATTERNS: ErrorPattern[] = [
 
 export function classifyError(
   error: ExecutionError,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- context is part of the public API and reserved for context-aware classification
   context: HealingContext,
 ): ErrorClassification {
   const searchText = [error.message, error.stack || '', error.code || ''].join(' ');

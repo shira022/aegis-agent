@@ -19,7 +19,7 @@ export class DiffLearner {
 
       if (oldLine === newLine) continue;
 
-      let reason = '';
+      let reason: string;
       if (oldLine === undefined) {
         reason = 'line added';
       } else if (newLine === undefined) {

@@ -1,7 +1,5 @@
 import type { Task } from '@aegis/shared';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Button, Card, Badge } from '@aegis/ui';
 
 interface TaskListProps {
   tasks: Task[];

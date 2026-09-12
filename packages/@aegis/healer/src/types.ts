@@ -1,4 +1,4 @@
-import type { RecordedAction, ElementSelector, BoundingBox } from '@aegis/recorder';
+import type { RecordedAction, ElementSelector } from '@aegis/recorder';
 
 // ─── Healing State ──────────────────────────────────────────────
 

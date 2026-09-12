@@ -7,13 +7,16 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@aegis/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",
-    "vitest": "^3.1.0"
+    "vitest": "^3.1.0",
+    "@vitest/coverage-v8": "3.2.7"
   }
 }
