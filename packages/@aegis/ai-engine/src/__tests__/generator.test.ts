@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AiEngine } from '../generator';
-import type { AIConfig, CodeGenerationRequest } from '../types';
+import type { AIConfig } from '../types';
 import type { OperationLog } from '@aegis/shared';
 
 // ─── Mock Vercel AI SDK ─────────────────────────────────────────

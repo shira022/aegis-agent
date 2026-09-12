@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { InterventionManager } from '../intervention-manager';
 import type { ErrorContext, InterventionDecision } from '../types';
 

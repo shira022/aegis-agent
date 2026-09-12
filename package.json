@@ -7,18 +7,22 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "prepare": "bash scripts/setup-hooks.sh"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@tailwindcss/vite": "^4.3.3",
+    "eslint": "10.8.0",
     "tailwindcss": "^4.3.3",
     "turbo": "^2.5.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "8.65.0"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=22.13",
     "pnpm": ">=9"
   },
   "packageManager": "pnpm@11.17.0"

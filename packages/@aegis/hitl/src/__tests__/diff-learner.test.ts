@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { DiffLearner } from '../diff-learner';
 import type { CodeDiff, LearningPattern } from '../types';
 

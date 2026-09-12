@@ -50,7 +50,7 @@ export class ExecutionEngine {
     try {
       if (this.activeCount >= this.config.maxConcurrent) {
         await new Promise<ExecutionResult>((res, rej) => {
-          this.queue.push({ config, resolve: res as any, reject: rej });
+          this.queue.push({ config, resolve: res, reject: rej });
         });
       }
 
@@ -69,12 +69,12 @@ export class ExecutionEngine {
       log.result = result;
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       log.endTime = Date.now();
       log.state = 'failed';
       log.error = {
         code: 'EXECUTION_ERROR',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
         recoverable: true,
       };
       throw error;
@@ -89,7 +89,6 @@ export class ExecutionEngine {
     const retryDelay = config.retryDelay ?? 1000;
 
     let lastError: ExecutionError | undefined;
-    let retryCount = 0;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -101,22 +100,20 @@ export class ExecutionEngine {
 
         // Non-zero exit — treat as retryable if retries remain
         if (attempt < maxRetries) {
-          retryCount++;
           const delay = retryDelay * Math.pow(2, attempt);
           await new Promise((r) => setTimeout(r, delay));
           continue;
         }
 
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = {
           code: 'EXECUTION_ERROR',
-          message: error.message,
+          message: error instanceof Error ? error.message : String(error),
           recoverable: attempt < maxRetries,
         };
 
         if (attempt < maxRetries) {
-          retryCount++;
           const delay = retryDelay * Math.pow(2, attempt);
           await new Promise((r) => setTimeout(r, delay));
           continue;
@@ -161,7 +158,7 @@ export class ExecutionEngine {
     pausedLog.state = 'running';
 
     if (this.pausedProcess) {
-      this.processManager.kill(this.pausedProcess, 'SIGCONT' as any);
+      this.processManager.kill(this.pausedProcess, 'SIGCONT');
     }
   }
 

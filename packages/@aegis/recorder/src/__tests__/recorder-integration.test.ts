@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { OperationLogger } from '../operation-logger';
 import { resolveSelector, generateStableSelector, rankSelector } from '../selector-resolver';
 import { ScreenshotManager } from '../screenshot-manager';
-import type { RecordingSession, RecordedAction, SessionMetadata } from '../types';
+import type { RecordedAction } from '../types';
 
 describe('Recorder Integration', () => {
   let logger: OperationLogger;

@@ -4,10 +4,13 @@
   "version": "0.1.0",
   "identifier": "com.aegis.agent",
   "build": {
+    "beforeDevCommand": "pnpm --filter @aegis/desktop dev",
+    "beforeBuildCommand": "pnpm --filter @aegis/desktop build",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Aegis Agent",
@@ -18,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; connect-src ipc: http://ipc.localhost http://localhost:5173 ws://localhost:5173; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     }
   },
   "bundle": {

@@ -1,4 +1,4 @@
-import { spawn as cpSpawn, ChildProcess, SpawnOptions } from 'child_process';
+import { spawn as cpSpawn, execFile, ChildProcess, SpawnOptions } from 'child_process';
 import type { ExecutionConfig, ExecutionResult, OutputLine } from './types';
 
 export class ProcessManager {
@@ -33,7 +33,6 @@ export class ProcessManager {
   async getMemoryUsage(pid: number): Promise<number> {
     return new Promise((resolve) => {
       try {
-        const { execFile } = require('child_process');
         execFile('ps', ['-o', 'rss=', '-p', String(pid)], (err: Error | null, stdout: string) => {
           if (err || !stdout.trim()) {
             resolve(0);

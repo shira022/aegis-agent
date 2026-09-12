@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   VisionAnalyzer,
 } from '../vision-analyzer';
-import type { ElementSelector, BoundingBox } from '@aegis/recorder';
+import type { ElementSelector } from '@aegis/recorder';
 import type { HealingRequest } from '../types';
 
 // ─── Mocks ──────────────────────────────────────────────────────

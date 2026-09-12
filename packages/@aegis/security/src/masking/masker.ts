@@ -59,7 +59,6 @@ export function maskText(
   let lastEnd = Infinity;
   for (const item of allMatches) {
     const start = item.match.index;
-    const end = start + item.match[0].length;
     if (start >= lastEnd) continue; // overlaps with a later match
     filtered.push(item);
     lastEnd = start;
