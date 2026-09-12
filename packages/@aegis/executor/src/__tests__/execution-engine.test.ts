@@ -149,7 +149,6 @@ describe('ExecutionEngine', () => {
 
   describe('kill', () => {
     it('should kill the current process', async () => {
-      const config = makeConfig({ scriptPath: '/tmp/long.py', timeout: 60000 });
       await engine.kill();
     });
   });

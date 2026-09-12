@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { LogCollector } from '../log-collector';
-import type { ExecutionLog, ExecutionConfig, CollectedLogs } from '../types';
+import type { ExecutionLog, CollectedLogs } from '../types';
 
 function makeExecutionLog(overrides: Partial<ExecutionLog> = {}): ExecutionLog {
   return {

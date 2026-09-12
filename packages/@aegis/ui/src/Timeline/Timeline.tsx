@@ -50,7 +50,7 @@ export function Timeline({ steps, mode: _mode, onToggleMode }: TimelineProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-mode={_mode}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-neutral-100">Action Flow</h2>
         <Button variant="ghost" size="sm" onClick={onToggleMode}>

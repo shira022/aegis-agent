@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ScreenshotManager } from '../screenshot-manager';
-import type { BoundingBox, ScreenshotDiffResult } from '../types';
+import type { BoundingBox } from '../types';
 
 describe('ScreenshotManager', () => {
   let manager: ScreenshotManager;

@@ -1,5 +1,11 @@
 import type { ExecutionConfig, ExecutionResult } from './types';
 
+interface TauriWindow extends Window {
+  __TAURI__?: {
+    invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+  };
+}
+
 /**
  * Tauri bridge for the Python runtime (PART K).
  *
@@ -30,8 +36,9 @@ export interface PythonRuntimeInfo {
  */
 function getInvoke(): (cmd: string, args?: Record<string, unknown>) => Promise<unknown> {
   // Check if we're in Tauri environment
-  if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-    return (window as any).__TAURI__.invoke;
+  const tauri = typeof window !== 'undefined' ? (window as TauriWindow).__TAURI__ : undefined;
+  if (tauri) {
+    return tauri.invoke;
   }
 
   // Mock for testing/development
@@ -45,7 +52,7 @@ function getInvoke(): (cmd: string, args?: Record<string, unknown>) => Promise<u
  * Whether a Tauri host is available in the current environment
  */
 export function isTauriAvailable(): boolean {
-  return typeof window !== 'undefined' && Boolean((window as any).__TAURI__);
+  return typeof window !== 'undefined' && Boolean((window as TauriWindow).__TAURI__);
 }
 
 /**

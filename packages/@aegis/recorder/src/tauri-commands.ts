@@ -1,12 +1,19 @@
 import type { RecordingSession, RecordingState, BoundingBox } from './types';
 
+interface TauriWindow extends Window {
+  __TAURI__?: {
+    invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+  };
+}
+
 /**
  * Get Tauri invoke function
  */
 function getInvoke(): (cmd: string, args?: Record<string, unknown>) => Promise<unknown> {
   // Check if we're in Tauri environment
-  if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-    return (window as any).__TAURI__.invoke;
+  const tauri = typeof window !== 'undefined' ? (window as TauriWindow).__TAURI__ : undefined;
+  if (tauri) {
+    return tauri.invoke;
   }
 
   // Mock for testing/development

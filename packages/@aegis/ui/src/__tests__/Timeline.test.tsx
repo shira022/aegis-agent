@@ -78,9 +78,18 @@ describe('Timeline', () => {
 
   // ── Timestamps ─────────────────────────────────────────────────────
   it('displays timestamps for each step', () => {
-    const steps = [makeStep({ type: 'click', target: { text: 'Test' }, timestamp: '2025-06-15T10:30:00Z' })];
-    render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText(/0?7:30/)).toBeInTheDocument();
+    const steps = [
+      makeStep({ type: 'click', target: { text: 'Test' }, timestamp: '2025-06-15T10:30:00Z' }),
+      makeStep({ type: 'click', target: { text: 'Other' }, timestamp: '2025-06-15T23:05:00Z' }),
+    ];
+    const { container } = render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
+    const formatTimestamp = (timestamp: string) =>
+      new Date(timestamp).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    const rendered = Array.from(container.querySelectorAll('time')).map((el) => el.textContent);
+    expect(rendered).toEqual(steps.map((step) => formatTimestamp(step.timestamp)));
   });
 
   // ── Mode toggle ────────────────────────────────────────────────────
