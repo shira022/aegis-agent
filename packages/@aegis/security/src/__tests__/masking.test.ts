@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PII_DETECTIONS, type PIICategory, type PIIPattern, type PIIDetection } from '../masking/pii-patterns';
+import { PII_DETECTIONS, type PIICategory, type PIIPattern } from '../masking/pii-patterns';
 import { maskText, maskSelector, maskScreenshot } from '../masking/masker';
 import { LogSanitizer } from '../masking/sanitizer';
 import { validateNoPII, validateLogSafe, createSafeLog } from '../masking/validator';

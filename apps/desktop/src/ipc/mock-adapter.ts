@@ -165,7 +165,7 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
 
   let tasks: Task[] = seedTasks();
   const activity: OperationLog[] = seedActivity();
-  let approvals: PendingApproval[] = seedApprovals();
+  const approvals: PendingApproval[] = seedApprovals();
   const healing: HealingEvent[] = seedHealing();
   let recorder: RecorderSession = defaultRecorder();
   let activeRun: TaskRun | null = null;

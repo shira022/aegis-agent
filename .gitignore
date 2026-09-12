@@ -6,3 +6,10 @@ dist/
 *.log
 .DS_Store
 **/src-tauri/target/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.tsbuildinfo
+coverage/
+test-results/

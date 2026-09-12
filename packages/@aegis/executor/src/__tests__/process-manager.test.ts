@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProcessManager } from '../process-manager';
 import type { ExecutionConfig } from '../types';
 import { spawn } from 'child_process';
@@ -180,7 +180,6 @@ describe('ProcessManager', () => {
   describe('waitForExit', () => {
     it('should resolve with exit code 0 on success', async () => {
       const mockProc = createMockChildProcess();
-      const config: ExecutionConfig = { scriptPath: '/tmp/test.py' };
 
       const exitPromise = manager.waitForExit(mockProc, 5000);
 
@@ -217,7 +216,6 @@ describe('ProcessManager', () => {
 
     it('should capture stdout lines', async () => {
       const mockProc = createMockChildProcess();
-      const config: ExecutionConfig = { scriptPath: '/tmp/test.py' };
 
       const exitPromise = manager.waitForExit(mockProc, 5000);
       // The implementation listens for 'data' events on stdout/stderr

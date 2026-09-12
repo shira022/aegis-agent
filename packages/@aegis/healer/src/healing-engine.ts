@@ -112,7 +112,7 @@ export class HealingEngine {
 
     // If not recoverable, return failure
     if (!classification.recoverable) {
-      return this.buildUnrecoverableResult(classification, request);
+      return this.buildUnrecoverableResult(classification);
     }
 
     // If not recoverable, escalate
@@ -194,7 +194,6 @@ export class HealingEngine {
 
   private buildUnrecoverableResult(
     classification: ErrorClassification,
-    request: HealingRequest,
   ): HealingResult {
     const fallbackType =
       classification.suggestedStrategy === 'pause_for_human'
