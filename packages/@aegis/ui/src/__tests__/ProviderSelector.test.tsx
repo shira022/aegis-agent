@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProviderSelector } from '../ProviderSelector/ProviderSelector';
-import { PROVIDER_REGISTRY, type ProviderId } from '@aegis/shared';
+import { PROVIDER_REGISTRY } from '@aegis/shared';
 
 describe('ProviderSelector', () => {
   const defaultProps = {
@@ -164,7 +164,7 @@ describe('ProviderSelector', () => {
 
   it('displays correct display names from PROVIDER_REGISTRY', () => {
     render(<ProviderSelector {...defaultProps} />);
-    for (const [id, config] of Object.entries(PROVIDER_REGISTRY)) {
+    for (const config of Object.values(PROVIDER_REGISTRY)) {
       expect(screen.getByText(config.displayName)).toBeTruthy();
     }
   });

@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   PROVIDER_REGISTRY,
   type ProviderId,
-  type ProviderConfig,
   type ProviderSettings,
-  type ProviderCategory,
 } from '../provider';
 
 describe('PROVIDER_REGISTRY', () => {

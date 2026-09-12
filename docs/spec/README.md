@@ -53,7 +53,7 @@ packages/@aegis/
 ├── healer/       Self-healing
 ├── hitl/         Human-in-the-Loop
 ├── security/     Security (PII masking, etc.)
-└── ui/           UI components (not yet implemented)
+└── ui/           UI components
 apps/
 └── desktop/      Tauri desktop application
 engines/
@@ -64,10 +64,10 @@ engines/
 
 | Category | Status |
 |----------|--------|
-| shared, recorder, ai-engine, approval, executor | ✅ Implemented |
-| healer, hitl, security | ✅ Implemented |
-| ui | ⬜ Not implemented |
-| desktop app | ⬜ Not implemented (skeleton only) |
-| Python runtime | ⬜ Template only |
+| shared (4 src / 3 test), recorder (6/5), ai-engine (6/4) | ✅ Implemented |
+| approval (5/3), executor (6/4), healer (6/4) | ✅ Implemented |
+| hitl (6/4), security (4/1), ui (19/9) | ✅ Implemented |
+| desktop app (35 src / 23 test) | 🟡 Partially implemented — React UI reads from stores through an IPC adapter; the Tauri v2 backend implements 16 commands (recorder, screenshot, python execution, setup, AI and keychain). AI generation and the OS keychain are deterministic mocks |
+| Python runtime (4 modules, 4 Jinja2 templates, 103 pytest tests) | ✅ Implemented |
 
-Last updated: 2026-09-08
+Last updated: 2026-09-12

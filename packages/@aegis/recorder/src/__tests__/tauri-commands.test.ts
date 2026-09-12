@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { RecordingSession, RecordingState } from '../types';
+import type { RecordingSession } from '../types';
 
 // Mock Tauri invoke
 const mockInvoke = vi.fn();
@@ -54,7 +54,7 @@ describe('TauriCommands', () => {
       mockInvoke.mockResolvedValue(mockSession);
 
       const { startRecording } = await import('../tauri-commands');
-      const session = await startRecording();
+      await startRecording();
 
       expect(mockInvoke).toHaveBeenCalledWith('start_recording', { name: undefined });
     });
