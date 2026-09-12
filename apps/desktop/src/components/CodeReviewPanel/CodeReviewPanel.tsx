@@ -1,12 +1,10 @@
 import type { ApprovalRequest } from '@aegis/approval';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Button, Card, Badge } from '@aegis/ui';
 
 interface CodeReviewPanelProps {
   request: ApprovalRequest;
-  onApprove: (requestId: string) => void;
-  onReject: (requestId: string, reason: string) => void;
+  onApprove?: (requestId: string) => void;
+  onReject?: (requestId: string, reason: string) => void;
 }
 
 const riskLabels: Record<string, string> = {
@@ -92,14 +90,20 @@ export function CodeReviewPanel({ request, onApprove, onReject }: CodeReviewPane
       )}
 
       {/* Action buttons */}
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={() => onApprove(request.id)}>
-          Approve
-        </Button>
-        <Button variant="danger" onClick={() => onReject(request.id, '')}>
-          Reject
-        </Button>
-      </div>
+      {(onApprove || onReject) && (
+        <div className="flex items-center gap-3">
+          {onApprove && (
+            <Button variant="primary" onClick={() => onApprove(request.id)}>
+              Approve
+            </Button>
+          )}
+          {onReject && (
+            <Button variant="danger" onClick={() => onReject(request.id, '')}>
+              Reject
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

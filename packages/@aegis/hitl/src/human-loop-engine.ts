@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import type {
   HitlState,
   HitlResult,
@@ -45,6 +44,7 @@ export class HumanLoopEngine {
 
   async processError(
     context: ErrorContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future screenshot-based healing
     _screenshot?: string,
   ): Promise<HitlResult> {
     this.history.push(context);

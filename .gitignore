@@ -5,4 +5,11 @@ dist/
 .env.local
 *.log
 .DS_Store
-src-tauri/target/
+**/src-tauri/target/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.tsbuildinfo
+coverage/
+test-results/

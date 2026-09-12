@@ -1,11 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { HealingEngine } from '../healing-engine';
 import type {
   ExecutionError,
   HealingContext,
   HealingConfig,
   HealingRequest,
-  HealingResult,
 } from '../types';
 import type { RecordedAction } from '@aegis/recorder';
 
@@ -384,7 +383,6 @@ describe('HealingEngine', () => {
       };
       const engine2 = new HealingEngine(config);
 
-      const logId = 'log-max-attempts';
       const error = makeError('Element not found: #btn');
       const context = makeContext();
 

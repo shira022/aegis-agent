@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OperationLogger } from '../operation-logger';
-import type { RecordedAction, ActionType } from '../types';
+import type { RecordedAction } from '../types';
 
 describe('OperationLogger', () => {
   let logger: OperationLogger;
