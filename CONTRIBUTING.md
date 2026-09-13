@@ -22,6 +22,7 @@ This is an open-source project with a global contributor base. Non-English text 
 The only acceptable use of non-Latin script is:
 
 - **Regex patterns that detect non-Latin text** (e.g., PII detection for Japanese names/addresses in `pii-patterns.ts`) — the pattern itself stays in the target language, but all surrounding code and comments must be English.
+- **Translation resources** under `**/i18n/locales/*.json` — these files are the intentional, non-English locale data itself (the translations), analogous to the PII regex patterns above. All other files, including source, tests and documentation, must stay English and must reference these resources instead of embedding translated text.
 - **Third-party vendored code** that cannot be modified.
 
 ### Enforcement

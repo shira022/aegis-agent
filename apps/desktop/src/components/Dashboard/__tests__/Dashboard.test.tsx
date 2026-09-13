@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { Task } from '@aegis/shared';
-import { changeLanguage } from '@aegis/ui';
+import { changeLanguage, i18n } from '@aegis/ui';
 import { Dashboard } from '../Dashboard';
 
 const makeTask = (overrides: Partial<Task> & { id: string; name: string }): Task => ({
@@ -36,7 +36,7 @@ describe('Dashboard', () => {
   it('renders the Japanese dashboard title when the locale is ja', async () => {
     await changeLanguage('ja');
     render(<Dashboard tasks={[]} recentActivity={[]} {...defaultProps} />);
-    expect(screen.getByText('ダッシュボード')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('dashboard.title'))).toBeInTheDocument();
   });
 
   // ── Stats cards ────────────────────────────────────────────────────

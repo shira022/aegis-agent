@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import App from '../App';
 import { DesktopProvider } from '../stores/DesktopContext';
 import { createMockAdapter } from '../ipc/mock-adapter';
-import { I18nProvider, ThemeProvider, changeLanguage } from '@aegis/ui';
+import { I18nProvider, ThemeProvider, changeLanguage, i18n } from '@aegis/ui';
 
 function renderApp() {
   const api = createMockAdapter();
@@ -154,7 +154,7 @@ describe('App integration', () => {
     const switcher = screen.getByTestId('language-switcher');
     fireEvent.change(switcher, { target: { value: 'ja' } });
 
-    await screen.findByRole('button', { name: /ダッシュボード/ });
+    await screen.findByRole('button', { name: i18n.t('nav.dashboard') });
     expect(screen.queryByRole('button', { name: /^Dashboard$/ })).not.toBeInTheDocument();
     expect(document.documentElement.lang).toBe('ja');
   });

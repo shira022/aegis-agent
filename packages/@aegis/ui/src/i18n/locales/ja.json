@@ -1,4 +1,7 @@
 {
+  "locale": {
+    "self": "日本語"
+  },
   "app": {
     "name": "Aegis Agent",
     "tagline": "ワークフロー自動化",
