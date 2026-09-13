@@ -38,31 +38,31 @@ describe('Timeline', () => {
   it('shows click icon for click steps', () => {
     const steps = [makeStep({ type: 'click', target: { text: 'Button' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('🖱')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Click' }).querySelector('svg')).not.toBeNull();
   });
 
   it('shows type icon for type steps', () => {
     const steps = [makeStep({ type: 'type', target: { text: 'Input' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('⌨')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Type' }).querySelector('svg')).not.toBeNull();
   });
 
   it('shows navigate icon for navigate steps', () => {
     const steps = [makeStep({ type: 'navigate', target: {}, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('🌐')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Navigate' }).querySelector('svg')).not.toBeNull();
   });
 
   it('shows wait icon for wait steps', () => {
     const steps = [makeStep({ type: 'wait', target: {}, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('⏳')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Wait' }).querySelector('svg')).not.toBeNull();
   });
 
   it('shows screenshot icon for screenshot steps', () => {
     const steps = [makeStep({ type: 'screenshot', target: {}, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    expect(screen.getByText('📷')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Take screenshot' }).querySelector('svg')).not.toBeNull();
   });
 
   // ── Connector lines ────────────────────────────────────────────────
@@ -109,14 +109,14 @@ describe('Timeline', () => {
   it('expands step details when clicked', () => {
     const steps = [makeStep({ type: 'click', target: { text: 'Button', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    fireEvent.click(screen.getByText('🖱'));
+    fireEvent.click(screen.getByRole('button', { name: 'Click' }));
     expect(screen.getByText('#btn')).toBeInTheDocument();
   });
 
   it('collapses step details when clicked again', () => {
     const steps = [makeStep({ type: 'click', target: { text: 'Button', selector: '#btn' }, timestamp: '2025-01-01T00:00:00Z' })];
     render(<Timeline steps={steps} mode="timeline" {...defaultProps} />);
-    const icon = screen.getByText('🖱');
+    const icon = screen.getByRole('button', { name: 'Click' });
     fireEvent.click(icon);
     expect(screen.getByText('#btn')).toBeInTheDocument();
     fireEvent.click(icon);

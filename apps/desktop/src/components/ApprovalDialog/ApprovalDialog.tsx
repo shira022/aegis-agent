@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ApprovalRequest } from '@aegis/approval';
-import { Modal, Button } from '@aegis/ui';
+import { Button, Modal, useAppTranslation } from '@aegis/ui';
 import { CodeReviewPanel } from '../CodeReviewPanel/CodeReviewPanel';
 
 export interface ApprovalDialogProps {
@@ -18,6 +18,7 @@ export function ApprovalDialog({
   onReject,
   onClose,
 }: ApprovalDialogProps) {
+  const { t } = useAppTranslation();
   const [reason, setReason] = useState('');
 
   useEffect(() => {
@@ -51,32 +52,32 @@ export function ApprovalDialog({
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title="Approve or Reject">
+    <Modal open={open} onClose={handleClose} title={t('approval.title')}>
       <CodeReviewPanel request={request} />
 
       <div className="mt-4 space-y-3">
         <label
           htmlFor="approval-reject-reason"
-          className="block text-sm font-medium text-neutral-200"
+          className="block text-sm font-medium text-fg"
         >
-          Reject reason
+          {t('approval.rejectReason')}
         </label>
         <textarea
           id="approval-reject-reason"
           data-testid="reject-reason"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          placeholder="Explain why this request should be rejected"
+          placeholder={t('approval.rejectReasonPlaceholder')}
           rows={3}
-          className="w-full resize-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full resize-none rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm text-fg placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
         <div className="flex items-center gap-3">
           <Button variant="primary" onClick={handleApprove}>
-            Approve
+            {t('common.approve')}
           </Button>
           <Button variant="danger" disabled={trimmedReason.length === 0} onClick={handleReject}>
-            Reject
+            {t('common.reject')}
           </Button>
         </div>
       </div>

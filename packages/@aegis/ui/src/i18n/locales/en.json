@@ -1,0 +1,196 @@
+{
+  "app": {
+    "name": "Aegis Agent",
+    "tagline": "Workflow Automation",
+    "loadingDependencies": "Checking dependencies..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "timeline": "Action Flow",
+    "review": "Code Review",
+    "recorder": "Recorder"
+  },
+  "common": {
+    "run": "Run",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "approve": "Approve",
+    "reject": "Reject",
+    "install": "Install",
+    "back": "Back",
+    "loading": "Loading..."
+  },
+  "settings": {
+    "language": {
+      "label": "Language"
+    },
+    "theme": {
+      "toggle": "Switch theme (current: {{mode}})",
+      "mode": {
+        "dark": "Dark",
+        "light": "Light",
+        "system": "System"
+      }
+    },
+    "provider": {
+      "title": "AI Provider",
+      "description": "Configure the model provider used by the AI engine.",
+      "saveKey": "Save API Key",
+      "saving": "Saving...",
+      "categories": {
+        "cloud": "Cloud Providers",
+        "local": "Local Providers",
+        "compatible": "Custom / Compatible"
+      },
+      "regionRequired": "Region required",
+      "projectIdRequired": "Project ID required",
+      "customEndpoint": "Custom endpoint",
+      "model": "Model",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter API key",
+      "show": "Show",
+      "hide": "Hide",
+      "region": "Region",
+      "regionPlaceholder": "e.g. us-east-1",
+      "projectId": "Project ID",
+      "projectIdPlaceholder": "Enter GCP project ID",
+      "baseUrl": "Base URL",
+      "localBaseUrlPlaceholder": "e.g. http://localhost:11434/v1",
+      "customBaseUrlPlaceholder": "e.g. https://your-api.com/v1"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "newTask": "New Task",
+    "runAll": "Run All",
+    "stats": {
+      "tasks": "Tasks",
+      "successRate": "Success Rate",
+      "lastRun": "Last Run"
+    },
+    "running": "Running",
+    "recentActivity": "Recent Activity",
+    "noRecentActivity": "No recent activity",
+    "viewActions": "View actions for {{source}} run ({{count}} steps)",
+    "steps_one": "{{count}} step",
+    "steps_other": "{{count}} steps",
+    "viewActionsCta": "View actions"
+  },
+  "tasks": {
+    "title": "Task List",
+    "cardView": "Card view",
+    "empty": "No tasks yet",
+    "createFirst": "Create first task",
+    "loading": "Loading tasks...",
+    "status": {
+      "idle": "Idle",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "paused": "Paused"
+    }
+  },
+  "actionFlow": {
+    "title": "Action Flow",
+    "flowchart": "Flowchart",
+    "loading": "Loading action flow...",
+    "empty": "No actions recorded",
+    "emptyDescription": "No actions recorded yet.",
+    "guidance": "Pick a recorded run from Recent Activity on the Dashboard, or run a task — its steps will appear here.",
+    "runIdle": "Run idle tasks",
+    "goToTasks": "Go to Tasks",
+    "viewing": "Viewing recorded run from {{source}} · {{count}} steps",
+    "backToLive": "Back to live run",
+    "showDetails": "Show details",
+    "unknownAction": "action",
+    "details": {
+      "selector": "Selector",
+      "text": "Text",
+      "type": "Type"
+    },
+    "actions": {
+      "click": "Click",
+      "type": "Type",
+      "navigate": "Navigate",
+      "wait": "Wait",
+      "screenshot": "Take screenshot"
+    },
+    "descriptions": {
+      "click": "Click {{text}}",
+      "type": "{{text}}",
+      "navigate": "Navigate",
+      "navigateWithSelector": "Navigate: {{selector}}",
+      "wait": "Wait",
+      "screenshot": "Take screenshot"
+    }
+  },
+  "review": {
+    "title": "Code Review",
+    "loading": "Loading approvals...",
+    "noPending": "No pending approvals",
+    "safetyCheck": "Safety Check",
+    "exceptionHandler": "Exception Handler",
+    "passed": "Passed",
+    "failed": "Failed",
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Medium Risk",
+      "high": "High Risk",
+      "critical": "Critical"
+    }
+  },
+  "recorder": {
+    "title": "Recorder",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "screenshot": "Screenshot",
+    "started": "Started",
+    "actions": "Actions",
+    "screenshots": "Screenshots",
+    "status": {
+      "idle": "Idle",
+      "recording": "Recording",
+      "paused": "Paused",
+      "stopped": "Stopped"
+    }
+  },
+  "setup": {
+    "title": "Aegis Agent Setup",
+    "allReady": "All dependencies are ready",
+    "getStarted": "Get Started",
+    "status": {
+      "ok": "Ready",
+      "missing": "Missing",
+      "outdated": "Outdated",
+      "error": "Error"
+    }
+  },
+  "approval": {
+    "title": "Approve or Reject",
+    "rejectReason": "Reject reason",
+    "rejectReasonPlaceholder": "Explain why this request should be rejected"
+  },
+  "healing": {
+    "error": "Error",
+    "healing": "Healing",
+    "healed": "Healed",
+    "failed": "Failed",
+    "fallback": "Fallback",
+    "dismissAll": "Dismiss all",
+    "dismiss": "Dismiss {{message}}"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Info",
+    "created": "Created \"{{name}}\"",
+    "taskDeleted": "Task deleted",
+    "editUnavailable": "Editing \"{{taskId}}\" is not available yet",
+    "approved": "Approved {{requestId}}",
+    "rejected": "Rejected {{requestId}}"
+  }
+}

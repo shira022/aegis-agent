@@ -1,28 +1,67 @@
 @import "tailwindcss";
 @source "../../../packages/@aegis/ui/src";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --color-bg: #0a0a0b;
-  --color-surface: #141416;
-  --color-border: #27272a;
-  --color-text: #fafafa;
-  --color-text-muted: #a1a1aa;
-  --color-primary: #6366f1;
-  --color-primary-hover: #818cf8;
-  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  color-scheme: light;
+  --aegis-canvas: #ffffff;
+  --aegis-surface: #f6f7f9;
+  --aegis-surface-raised: #eceef2;
+  --aegis-border: #d8dbe2;
+  --aegis-fg: #101114;
+  --aegis-muted: #5b616e;
+  --aegis-primary: #4f46e5;
+  --aegis-primary-hover: #4338ca;
+  --aegis-primary-fg: #ffffff;
+  --aegis-success: #15803d;  --aegis-success-surface: #dcfce7; --aegis-success-fg: #14532d;
+  --aegis-warning: #b45309;  --aegis-warning-surface: #fef3c7; --aegis-warning-fg: #78350f;
+  --aegis-danger:  #b91c1c;  --aegis-danger-surface:  #fee2e2; --aegis-danger-fg:  #7f1d1d;
+  --aegis-info:    #1d4ed8;  --aegis-info-surface:    #dbeafe; --aegis-info-fg:    #1e3a8a;
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-html,
-body {
-  height: 100%;
-  font-family: var(--font-family);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.dark {
+  color-scheme: dark;
+  --aegis-canvas: #0a0a0b;
+  --aegis-surface: #141416;
+  --aegis-surface-raised: #1c1c1f;
+  --aegis-border: #27272a;
+  --aegis-fg: #fafafa;
+  --aegis-muted: #a1a1aa;
+  --aegis-primary: #6366f1;
+  --aegis-primary-hover: #818cf8;
+  --aegis-primary-fg: #ffffff;
+  --aegis-success: #4ade80;  --aegis-success-surface: #052e16; --aegis-success-fg: #bbf7d0;
+  --aegis-warning: #fbbf24;  --aegis-warning-surface: #451a03; --aegis-warning-fg: #fde68a;
+  --aegis-danger:  #f87171;  --aegis-danger-surface:  #450a0a; --aegis-danger-fg:  #fecaca;
+  --aegis-info:    #60a5fa;  --aegis-info-surface:    #172554; --aegis-info-fg:    #bfdbfe;
 }
 
-#root {
-  height: 100%;
+@theme inline {
+  --font-sans: var(--font-family);
+  --color-canvas: var(--aegis-canvas);
+  --color-surface: var(--aegis-surface);
+  --color-surface-raised: var(--aegis-surface-raised);
+  --color-border: var(--aegis-border);
+  --color-fg: var(--aegis-fg);
+  --color-muted: var(--aegis-muted);
+  --color-primary: var(--aegis-primary);
+  --color-primary-hover: var(--aegis-primary-hover);
+  --color-primary-fg: var(--aegis-primary-fg);
+  --color-success: var(--aegis-success);
+  --color-success-surface: var(--aegis-success-surface);
+  --color-success-fg: var(--aegis-success-fg);
+  --color-warning: var(--aegis-warning);
+  --color-warning-surface: var(--aegis-warning-surface);
+  --color-warning-fg: var(--aegis-warning-fg);
+  --color-danger: var(--aegis-danger);
+  --color-danger-surface: var(--aegis-danger-surface);
+  --color-danger-fg: var(--aegis-danger-fg);
+  --color-info: var(--aegis-info);
+  --color-info-surface: var(--aegis-info-surface);
+  --color-info-fg: var(--aegis-info-fg);
 }
+
+html, body { height: 100%; font-family: var(--font-family); background-color: var(--aegis-canvas); color: var(--aegis-fg); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#root { height: 100%; }

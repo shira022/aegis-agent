@@ -1,15 +1,20 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import App from '../App';
 import { DesktopProvider } from '../stores/DesktopContext';
 import { createMockAdapter } from '../ipc/mock-adapter';
+import { I18nProvider, ThemeProvider, changeLanguage } from '@aegis/ui';
 
 function renderApp() {
   const api = createMockAdapter();
   const utils = render(
-    <DesktopProvider api={api}>
-      <App />
-    </DesktopProvider>,
+    <ThemeProvider>
+      <I18nProvider>
+        <DesktopProvider api={api}>
+          <App />
+        </DesktopProvider>
+      </I18nProvider>
+    </ThemeProvider>,
   );
   return { api, ...utils };
 }
@@ -23,6 +28,13 @@ async function completeSetup(): Promise<void> {
   fireEvent.click(await screen.findByRole('button', { name: 'Get Started' }));
   await screen.findByRole('heading', { name: 'Dashboard' });
 }
+
+afterEach(async () => {
+  await changeLanguage('en');
+  window.localStorage.clear();
+  document.documentElement.classList.remove('dark');
+  document.documentElement.lang = 'en';
+});
 
 describe('App integration', () => {
   it('shows the setup gate first and reveals the shell after completing setup', async () => {
@@ -110,12 +122,40 @@ describe('App integration', () => {
     fireEvent.click(browserCard);
 
     expect(
-      await screen.findByText('Viewing recorded run from browser · 6 step(s)'),
+      await screen.findByText('Viewing recorded run from browser · 6 steps'),
     ).toBeInTheDocument();
     expect(screen.getByText('Navigate: https://portal.example.com')).toBeInTheDocument();
     expect(screen.queryByText('No actions recorded yet.')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to live run' }));
     expect(await screen.findByText('No actions recorded yet.')).toBeInTheDocument();
+  });
+
+  it('exposes a theme toggle in the shell that flips the document theme', async () => {
+    renderApp();
+    await completeSetup();
+
+    const toggle = screen.getByTestId('theme-toggle');
+    expect(document.documentElement).toHaveClass('dark');
+
+    fireEvent.click(toggle);
+    await waitFor(() => {
+      expect(document.documentElement).not.toHaveClass('dark');
+    });
+    expect(document.documentElement.style.colorScheme).toBe('light');
+  });
+
+  it('switches the visible nav labels between en and ja', async () => {
+    renderApp();
+    await completeSetup();
+
+    expect(screen.getByRole('button', { name: /Dashboard/ })).toBeInTheDocument();
+
+    const switcher = screen.getByTestId('language-switcher');
+    fireEvent.change(switcher, { target: { value: 'ja' } });
+
+    await screen.findByRole('button', { name: /ダッシュボード/ });
+    expect(screen.queryByRole('button', { name: /^Dashboard$/ })).not.toBeInTheDocument();
+    expect(document.documentElement.lang).toBe('ja');
   });
 });

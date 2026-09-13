@@ -1,5 +1,5 @@
 import type { RecorderSession, RecorderStatus } from '../../ipc';
-import { Badge, Button } from '@aegis/ui';
+import { Badge, Button, formatTime, useAppTranslation } from '@aegis/ui';
 
 export interface RecorderProps {
   session: RecorderSession;
@@ -10,12 +10,12 @@ export interface RecorderProps {
   onScreenshot: () => void;
 }
 
-const statusLabels: Record<RecorderStatus, string> = {
-  idle: 'Idle',
-  recording: 'Recording',
-  paused: 'Paused',
-  stopped: 'Stopped',
-};
+const STATUS_LABEL_KEYS = {
+  idle: 'recorder.status.idle',
+  recording: 'recorder.status.recording',
+  paused: 'recorder.status.paused',
+  stopped: 'recorder.status.stopped',
+} as const;
 
 const statusVariant: Record<
   RecorderStatus,
@@ -27,17 +27,6 @@ const statusVariant: Record<
   stopped: 'info',
 };
 
-function formatTime(timestamp?: number): string {
-  if (timestamp === undefined) {
-    return '—';
-  }
-  return new Date(timestamp).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
 export function Recorder({
   session,
   onStart,
@@ -46,6 +35,7 @@ export function Recorder({
   onResume,
   onScreenshot,
 }: RecorderProps) {
+  const { t, i18n } = useAppTranslation();
   const { status } = session;
 
   const canStart = status === 'idle' || status === 'stopped';
@@ -54,56 +44,59 @@ export function Recorder({
   const canStop = status === 'recording' || status === 'paused';
   const canScreenshot = status !== 'idle';
 
+  const formatTimestamp = (timestamp?: number): string =>
+    timestamp === undefined ? '—' : formatTime(timestamp, i18n.language);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-100">Recorder</h2>
+        <h2 className="text-lg font-semibold text-fg">{t('recorder.title')}</h2>
         <div className="flex items-center gap-2">
           {status === 'recording' && (
             <span
               data-testid="recording-indicator"
               aria-hidden="true"
-              className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500"
+              className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-danger"
             />
           )}
-          <Badge variant={statusVariant[status]}>{statusLabels[status]}</Badge>
+          <Badge variant={statusVariant[status]}>{t(STATUS_LABEL_KEYS[status])}</Badge>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="primary" size="sm" disabled={!canStart} onClick={onStart}>
-          Start
+          {t('recorder.start')}
         </Button>
         <Button variant="secondary" size="sm" disabled={!canPause} onClick={onPause}>
-          Pause
+          {t('recorder.pause')}
         </Button>
         <Button variant="secondary" size="sm" disabled={!canResume} onClick={onResume}>
-          Resume
+          {t('recorder.resume')}
         </Button>
         <Button variant="danger" size="sm" disabled={!canStop} onClick={onStop}>
-          Stop
+          {t('recorder.stop')}
         </Button>
         <Button variant="ghost" size="sm" disabled={!canScreenshot} onClick={onScreenshot}>
-          Screenshot
+          {t('recorder.screenshot')}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-          <p className="text-xs text-neutral-500">Started</p>
-          <p data-testid="recorder-started" className="text-sm text-neutral-200">
-            {formatTime(session.startedAt)}
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <p className="text-xs text-muted">{t('recorder.started')}</p>
+          <p data-testid="recorder-started" className="text-sm text-fg">
+            {formatTimestamp(session.startedAt)}
           </p>
         </div>
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-          <p className="text-xs text-neutral-500">Actions</p>
-          <p data-testid="recorder-action-count" className="text-sm text-neutral-200">
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <p className="text-xs text-muted">{t('recorder.actions')}</p>
+          <p data-testid="recorder-action-count" className="text-sm text-fg">
             {session.actions.length}
           </p>
         </div>
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-          <p className="text-xs text-neutral-500">Screenshots</p>
-          <p data-testid="recorder-screenshot-count" className="text-sm text-neutral-200">
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <p className="text-xs text-muted">{t('recorder.screenshots')}</p>
+          <p data-testid="recorder-screenshot-count" className="text-sm text-fg">
             {session.screenshots.length}
           </p>
         </div>
@@ -114,11 +107,11 @@ export function Recorder({
           {session.screenshots.map((screenshot) => (
             <li
               key={screenshot.id}
-              className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
-              <span className="text-neutral-200">{screenshot.label}</span>
-              <time className="text-xs text-neutral-500">
-                {formatTime(screenshot.capturedAt)}
+              <span className="text-fg">{screenshot.label}</span>
+              <time className="text-xs text-muted">
+                {formatTimestamp(screenshot.capturedAt)}
               </time>
             </li>
           ))}
