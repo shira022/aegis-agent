@@ -12,16 +12,20 @@
   },
   "dependencies": {
     "@aegis/shared": "workspace:*",
-    "react": "^19.1.0"
+    "i18next": "^26.4.2",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "lucide-react": "^1.45.0",
+    "react": "^19.1.0",
+    "react-i18next": "^17.0.13"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.0.0",
     "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^19.1.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "@vitest/coverage-v8": "3.2.7",
     "jsdom": "^26.0.0",
     "typescript": "^5.8.0",
-    "vitest": "^3.1.0",
-    "@vitest/coverage-v8": "3.2.7",
-    "@vitejs/plugin-react": "^4.0.0"
+    "vitest": "^3.1.0"
   }
 }

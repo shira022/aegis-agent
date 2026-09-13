@@ -28,17 +28,17 @@ describe('HealingNotifier', () => {
   });
 
   it('renders the right icon, colour and message for each event type', () => {
-    const cases: { type: HealingEventType; icon: string; className: string }[] = [
-      { type: 'error', icon: '✕', className: 'bg-red-900' },
-      { type: 'healing', icon: '🛠', className: 'bg-amber-900' },
-      { type: 'healed', icon: '✓', className: 'bg-green-900' },
-      { type: 'failed', icon: '✗', className: 'bg-red-950' },
-      { type: 'fallback', icon: '↩', className: 'bg-neutral-800' },
+    const cases: { type: HealingEventType; className: string }[] = [
+      { type: 'error', className: 'bg-danger-surface' },
+      { type: 'healing', className: 'bg-warning-surface' },
+      { type: 'healed', className: 'bg-success-surface' },
+      { type: 'failed', className: 'bg-danger-surface' },
+      { type: 'fallback', className: 'bg-surface-raised' },
     ];
     const events = cases.map(({ type }) => makeEvent(type));
     const { container } = render(<HealingNotifier events={events} onDismiss={vi.fn()} />);
 
-    for (const { type, icon, className } of cases) {
+    for (const { type, className } of cases) {
       const entry = container.querySelector<HTMLElement>(`[data-type="${type}"]`);
       if (entry === null) {
         throw new Error(`Missing healing entry for type "${type}"`);
@@ -46,7 +46,7 @@ describe('HealingNotifier', () => {
       expect(entry).toHaveClass(className);
       expect(entry).toHaveTextContent(`Message for ${type}`);
       const iconNode = entry.querySelector('[data-testid="healing-icon"]');
-      expect(iconNode).toHaveTextContent(icon);
+      expect(iconNode?.querySelector('svg')).not.toBeNull();
     }
   });
 

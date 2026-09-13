@@ -1,0 +1,195 @@
+{
+  "app": {
+    "name": "Aegis Agent",
+    "tagline": "ワークフロー自動化",
+    "loadingDependencies": "依存関係を確認しています..."
+  },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "tasks": "タスク",
+    "timeline": "アクションフロー",
+    "review": "コードレビュー",
+    "recorder": "レコーダー"
+  },
+  "common": {
+    "run": "実行",
+    "edit": "編集",
+    "delete": "削除",
+    "close": "閉じる",
+    "approve": "承認",
+    "reject": "却下",
+    "install": "インストール",
+    "back": "戻る",
+    "loading": "読み込み中..."
+  },
+  "settings": {
+    "language": {
+      "label": "言語"
+    },
+    "theme": {
+      "toggle": "テーマを切り替える（現在: {{mode}}）",
+      "mode": {
+        "dark": "ダーク",
+        "light": "ライト",
+        "system": "システム"
+      }
+    },
+    "provider": {
+      "title": "AIプロバイダー",
+      "description": "AIエンジンで使用するモデルプロバイダーを設定します。",
+      "saveKey": "APIキーを保存",
+      "saving": "保存中...",
+      "categories": {
+        "cloud": "クラウドプロバイダー",
+        "local": "ローカルプロバイダー",
+        "compatible": "カスタム / 互換"
+      },
+      "regionRequired": "リージョンが必要です",
+      "projectIdRequired": "プロジェクトIDが必要です",
+      "customEndpoint": "カスタムエンドポイント",
+      "model": "モデル",
+      "apiKey": "APIキー",
+      "apiKeyPlaceholder": "APIキーを入力",
+      "show": "表示",
+      "hide": "非表示",
+      "region": "リージョン",
+      "regionPlaceholder": "例: us-east-1",
+      "projectId": "プロジェクトID",
+      "projectIdPlaceholder": "GCPプロジェクトIDを入力",
+      "baseUrl": "ベースURL",
+      "localBaseUrlPlaceholder": "例: http://localhost:11434/v1",
+      "customBaseUrlPlaceholder": "例: https://your-api.com/v1"
+    }
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "newTask": "新規タスク",
+    "runAll": "すべて実行",
+    "stats": {
+      "tasks": "タスク",
+      "successRate": "成功率",
+      "lastRun": "最終実行"
+    },
+    "running": "実行中",
+    "recentActivity": "最近のアクティビティ",
+    "noRecentActivity": "最近のアクティビティはありません",
+    "viewActions": "{{source}}実行のアクションを表示（{{count}}ステップ）",
+    "steps_other": "{{count}}ステップ",
+    "viewActionsCta": "アクションを表示"
+  },
+  "tasks": {
+    "title": "タスク一覧",
+    "cardView": "カード表示",
+    "empty": "タスクがありません",
+    "createFirst": "最初のタスクを作成",
+    "loading": "タスクを読み込んでいます...",
+    "status": {
+      "idle": "待機中",
+      "running": "実行中",
+      "completed": "完了",
+      "failed": "失敗",
+      "paused": "一時停止"
+    }
+  },
+  "actionFlow": {
+    "title": "アクションフロー",
+    "flowchart": "フローチャート",
+    "loading": "アクションフローを読み込んでいます...",
+    "empty": "記録されたアクションはありません",
+    "emptyDescription": "まだアクションが記録されていません。",
+    "guidance": "ダッシュボードの最近のアクティビティから記録済みの実行を選択するか、タスクを実行してください。そのステップがここに表示されます。",
+    "runIdle": "待機中のタスクを実行",
+    "goToTasks": "タスクへ移動",
+    "viewing": "{{source}}の記録済み実行を表示中 · {{count}}ステップ",
+    "backToLive": "ライブ実行に戻る",
+    "showDetails": "詳細を表示",
+    "unknownAction": "アクション",
+    "details": {
+      "selector": "セレクター",
+      "text": "テキスト",
+      "type": "種類"
+    },
+    "actions": {
+      "click": "クリック",
+      "type": "入力",
+      "navigate": "移動",
+      "wait": "待機",
+      "screenshot": "スクリーンショット"
+    },
+    "descriptions": {
+      "click": "{{text}}をクリック",
+      "type": "{{text}}",
+      "navigate": "移動",
+      "navigateWithSelector": "移動: {{selector}}",
+      "wait": "待機",
+      "screenshot": "スクリーンショットを撮影"
+    }
+  },
+  "review": {
+    "title": "コードレビュー",
+    "loading": "承認を読み込んでいます...",
+    "noPending": "保留中の承認はありません",
+    "safetyCheck": "安全チェック",
+    "exceptionHandler": "例外ハンドラー",
+    "passed": "合格",
+    "failed": "不合格",
+    "risk": {
+      "low": "低リスク",
+      "medium": "中リスク",
+      "high": "高リスク",
+      "critical": "重大"
+    }
+  },
+  "recorder": {
+    "title": "レコーダー",
+    "start": "開始",
+    "pause": "一時停止",
+    "resume": "再開",
+    "stop": "停止",
+    "screenshot": "スクリーンショット",
+    "started": "開始時刻",
+    "actions": "アクション",
+    "screenshots": "スクリーンショット",
+    "status": {
+      "idle": "待機中",
+      "recording": "記録中",
+      "paused": "一時停止",
+      "stopped": "停止済み"
+    }
+  },
+  "setup": {
+    "title": "Aegis Agent セットアップ",
+    "allReady": "すべての依存関係が準備できました",
+    "getStarted": "開始",
+    "status": {
+      "ok": "準備完了",
+      "missing": "不足",
+      "outdated": "更新が必要",
+      "error": "エラー"
+    }
+  },
+  "approval": {
+    "title": "承認または却下",
+    "rejectReason": "却下理由",
+    "rejectReasonPlaceholder": "このリクエストを却下すべき理由を説明してください"
+  },
+  "healing": {
+    "error": "エラー",
+    "healing": "修復中",
+    "healed": "修復済み",
+    "failed": "失敗",
+    "fallback": "フォールバック",
+    "dismissAll": "すべて閉じる",
+    "dismiss": "{{message}}を閉じる"
+  },
+  "toast": {
+    "success": "成功",
+    "error": "エラー",
+    "info": "情報",
+    "created": "「{{name}}」を作成しました",
+    "taskDeleted": "タスクを削除しました",
+    "editUnavailable": "「{{taskId}}」の編集はまだ利用できません",
+    "approved": "{{requestId}}を承認しました",
+    "rejected": "{{requestId}}を却下しました"
+  }
+}

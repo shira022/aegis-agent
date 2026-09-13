@@ -11,19 +11,19 @@ describe('Toast', () => {
   it('renders success variant', () => {
     render(<Toast message="Success" type="success" onDismiss={vi.fn()} />);
     const toast = screen.getByRole('alert');
-    expect(toast.className).toContain('bg-green-900');
+    expect(toast.className).toContain('bg-success-surface');
   });
 
   it('renders error variant', () => {
     render(<Toast message="Error" type="error" onDismiss={vi.fn()} />);
     const toast = screen.getByRole('alert');
-    expect(toast.className).toContain('bg-red-900');
+    expect(toast.className).toContain('bg-danger-surface');
   });
 
   it('renders info variant', () => {
     render(<Toast message="Info" type="info" onDismiss={vi.fn()} />);
     const toast = screen.getByRole('alert');
-    expect(toast.className).toContain('bg-blue-900');
+    expect(toast.className).toContain('bg-info-surface');
   });
 
   it('calls onDismiss when dismiss button clicked', () => {

@@ -1,5 +1,5 @@
 import type { OperationStep, OperationLog } from '@aegis/shared';
-import { Button, Card, Timeline } from '@aegis/ui';
+import { Button, Card, Timeline, useAppTranslation } from '@aegis/ui';
 
 interface ActionFlowViewProps {
   steps: OperationStep[];
@@ -20,25 +20,24 @@ export function ActionFlowView({
   onRunIdleTasks,
   onGoToTasks,
 }: ActionFlowViewProps) {
+  const { t } = useAppTranslation();
+
   if (steps.length === 0) {
     return (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-100">Action Flow</h2>
+        <h2 className="text-lg font-semibold text-fg">{t('actionFlow.title')}</h2>
         <Card>
           <div className="space-y-4 py-4 text-center">
             <div className="space-y-1">
-              <p className="text-sm text-neutral-200">No actions recorded yet.</p>
-              <p className="text-sm text-neutral-400">
-                Pick a recorded run from Recent Activity on the Dashboard, or run a task — its steps
-                will appear here.
-              </p>
+              <p className="text-sm text-fg">{t('actionFlow.emptyDescription')}</p>
+              <p className="text-sm text-muted">{t('actionFlow.guidance')}</p>
             </div>
             <div className="flex items-center justify-center gap-2">
               <Button variant="primary" onClick={onRunIdleTasks}>
-                Run idle tasks
+                {t('actionFlow.runIdle')}
               </Button>
               <Button variant="secondary" onClick={onGoToTasks}>
-                Go to Tasks
+                {t('actionFlow.goToTasks')}
               </Button>
             </div>
           </div>
@@ -52,11 +51,14 @@ export function ActionFlowView({
       {selectedLog !== null && (
         <Card>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm text-neutral-300">
-              Viewing recorded run from {selectedLog.source} · {selectedLog.steps.length} step(s)
+            <p className="text-sm text-muted">
+              {t('actionFlow.viewing', {
+                source: selectedLog.source,
+                count: selectedLog.steps.length,
+              })}
             </p>
             <Button variant="secondary" size="sm" onClick={onClearSelection}>
-              Back to live run
+              {t('actionFlow.backToLive')}
             </Button>
           </div>
         </Card>

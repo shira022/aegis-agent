@@ -1,5 +1,13 @@
-import type { Task } from '@aegis/shared';
-import { Button, Card, Badge } from '@aegis/ui';
+import type { Task, TaskStatus } from '@aegis/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  Icon,
+  formatDate,
+  taskStatusIcons,
+  useAppTranslation,
+} from '@aegis/ui';
 
 interface TaskListProps {
   tasks: Task[];
@@ -8,15 +16,7 @@ interface TaskListProps {
   onDelete: (taskId: string) => void;
 }
 
-const statusIcons: Record<string, string> = {
-  idle: '⏸',
-  running: '▶',
-  completed: '✓',
-  failed: '✗',
-  paused: '⏸',
-};
-
-const statusVariant: Record<string, 'default' | 'success' | 'danger' | 'warning'> = {
+const statusVariant: Record<TaskStatus, 'default' | 'success' | 'danger' | 'warning'> = {
   idle: 'default',
   running: 'warning',
   completed: 'success',
@@ -24,22 +24,26 @@ const statusVariant: Record<string, 'default' | 'success' | 'danger' | 'warning'
   paused: 'default',
 };
 
-const statusLabel: Record<string, string> = {
-  idle: 'Idle',
-  running: 'Running',
-  completed: 'Completed',
-  failed: 'Failed',
-  paused: 'Paused',
-};
+const STATUS_LABEL_KEYS = {
+  idle: 'tasks.status.idle',
+  running: 'tasks.status.running',
+  completed: 'tasks.status.completed',
+  failed: 'tasks.status.failed',
+  paused: 'tasks.status.paused',
+} as const;
 
 export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
+  const { t, i18n } = useAppTranslation();
+
   if (tasks.length === 0) {
     return (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-100">Task List</h2>
+        <h2 className="text-lg font-semibold text-fg">{t('tasks.title')}</h2>
         <Card className="text-center py-8">
-          <p className="text-neutral-400 mb-3">No tasks yet</p>
-          <Button variant="primary" size="sm">Create first task</Button>
+          <p className="text-muted mb-3">{t('tasks.empty')}</p>
+          <Button variant="primary" size="sm">
+            {t('tasks.createFirst')}
+          </Button>
         </Card>
       </div>
     );
@@ -47,35 +51,44 @@ export function TaskList({ tasks, onRun, onEdit, onDelete }: TaskListProps) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-neutral-100">Task List</h2>
-      {tasks.map((task) => (
-        <Card key={task.id}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{statusIcons[task.status]}</span>
-              <div>
-                <p className="text-sm font-medium text-neutral-200">{task.name}</p>
-                <p className="text-xs text-neutral-500">
-                  <Badge variant={statusVariant[task.status]}>{statusLabel[task.status]}</Badge>
-                  {' · '}
-                  <time>{new Date(task.updatedAt).toLocaleString('en-US')}</time>
-                </p>
+      <h2 className="text-lg font-semibold text-fg">{t('tasks.title')}</h2>
+      {tasks.map((task) => {
+        const StatusIcon = taskStatusIcons[task.status];
+        return (
+          <Card key={task.id}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Icon
+                  icon={StatusIcon}
+                  size={18}
+                  className={task.status === 'running' ? 'animate-spin text-warning' : 'text-muted'}
+                />
+                <div>
+                  <p className="text-sm font-medium text-fg">{task.name}</p>
+                  <p className="text-xs text-muted flex items-center gap-1">
+                    <Badge variant={statusVariant[task.status]}>
+                      {t(STATUS_LABEL_KEYS[task.status])}
+                    </Badge>
+                    {' · '}
+                    <time>{formatDate(new Date(task.updatedAt), i18n.language)}</time>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="primary" size="sm" onClick={() => onRun(task.id)}>
+                  {t('common.run')}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => onEdit(task.id)}>
+                  {t('common.edit')}
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => onDelete(task.id)}>
+                  {t('common.delete')}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="primary" size="sm" onClick={() => onRun(task.id)}>
-                Run
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => onEdit(task.id)}>
-                Edit
-              </Button>
-              <Button variant="danger" size="sm" onClick={() => onDelete(task.id)}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -2,12 +2,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { PROVIDER_REGISTRY } from '@aegis/shared';
 import type { ProviderId, ProviderSettings } from '@aegis/shared';
 import {
-  ProviderSelector,
-  TaskCards,
-  SetupWizard,
-  Toast,
   Button,
+  Icon,
+  LanguageSwitcher,
+  ProviderSelector,
+  SetupWizard,
+  TaskCards,
+  ThemeToggle,
+  Toast,
+  brandIcon,
+  navIcons,
+  useAppTranslation,
 } from '@aegis/ui';
+import type { AppView } from '@aegis/ui';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ActionFlowView } from './components/ActionFlow/ActionFlowView';
 import { TaskList } from './components/TaskList/TaskList';
@@ -23,14 +30,12 @@ import { useRecorder } from './hooks/useRecorder';
 import { useSetup } from './hooks/useSetup';
 import type { SetupActions, SetupStoreState } from './stores/setupStore';
 
-type View = 'dashboard' | 'tasks' | 'timeline' | 'review' | 'recorder';
-
-const navItems: { id: View; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'tasks', label: 'Tasks', icon: '📋' },
-  { id: 'timeline', label: 'Action Flow', icon: '🔗' },
-  { id: 'review', label: 'Code Review', icon: '🔍' },
-  { id: 'recorder', label: 'Recorder', icon: '⏺' },
+const NAV_ITEMS: { id: AppView; labelKey: 'nav.dashboard' | 'nav.tasks' | 'nav.timeline' | 'nav.review' | 'nav.recorder' }[] = [
+  { id: 'dashboard', labelKey: 'nav.dashboard' },
+  { id: 'tasks', labelKey: 'nav.tasks' },
+  { id: 'timeline', labelKey: 'nav.timeline' },
+  { id: 'review', labelKey: 'nav.review' },
+  { id: 'recorder', labelKey: 'nav.recorder' },
 ];
 
 type ToastType = 'success' | 'error' | 'info';
@@ -42,8 +47,8 @@ interface ToastState {
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <div role="status" className="flex items-center justify-center py-12 text-neutral-400">
-      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-600 border-t-indigo-400" />
+    <div role="status" className="flex items-center justify-center py-12 text-muted">
+      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
       {label}
     </div>
   );
@@ -55,6 +60,7 @@ interface SetupScreenProps {
 }
 
 function SetupScreen({ state, actions }: SetupScreenProps) {
+  const { t } = useAppTranslation();
   const [providerId, setProviderId] = useState<ProviderId | undefined>(undefined);
   const [settings, setSettings] = useState<ProviderSettings | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -84,7 +90,7 @@ function SetupScreen({ state, actions }: SetupScreenProps) {
   if (state.dependencies.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoadingState label="Checking dependencies..." />
+        <LoadingState label={t('app.loadingDependencies')} />
       </div>
     );
   }
@@ -100,12 +106,10 @@ function SetupScreen({ state, actions }: SetupScreenProps) {
           }}
         />
 
-        <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
+        <div className="space-y-4 rounded-2xl border border-border bg-surface p-6">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-100">AI Provider</h2>
-            <p className="text-xs text-neutral-500">
-              Configure the model provider used by the AI engine.
-            </p>
+            <h2 className="text-lg font-semibold text-fg">{t('settings.provider.title')}</h2>
+            <p className="text-xs text-muted">{t('settings.provider.description')}</p>
           </div>
           <ProviderSelector
             selectedProvider={providerId}
@@ -120,7 +124,7 @@ function SetupScreen({ state, actions }: SetupScreenProps) {
               void handleSaveKey();
             }}
           >
-            {saving ? 'Saving...' : 'Save API Key'}
+            {saving ? t('settings.provider.saving') : t('settings.provider.saveKey')}
           </Button>
         </div>
       </div>
@@ -129,6 +133,7 @@ function SetupScreen({ state, actions }: SetupScreenProps) {
 }
 
 export default function App() {
+  const { t } = useAppTranslation();
   const tasks = useTasks();
   const run = useRun();
   const approvals = useApprovals();
@@ -136,7 +141,7 @@ export default function App() {
   const recorder = useRecorder();
   const setup = useSetup();
 
-  const [view, setView] = useState<View>('dashboard');
+  const [view, setView] = useState<AppView>('dashboard');
   const [timelineMode, setTimelineMode] = useState<'timeline' | 'flowchart'>('timeline');
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -171,10 +176,10 @@ export default function App() {
     const name = `New Task ${tasks.state.tasks.length + 1}`;
     void tasks.actions.create({ name }).then((task) => {
       if (task) {
-        showToast(`Created "${task.name}"`, 'success');
+        showToast(t('toast.created', { name: task.name }), 'success');
       }
     });
-  }, [tasks.actions, tasks.state.tasks.length, showToast]);
+  }, [tasks.actions, tasks.state.tasks.length, showToast, t]);
 
   const handleRun = useCallback(
     async (taskId: string): Promise<void> => {
@@ -194,16 +199,16 @@ export default function App() {
 
   const handleDelete = useCallback(
     (taskId: string): void => {
-      void tasks.actions.remove(taskId).then(() => showToast('Task deleted', 'info'));
+      void tasks.actions.remove(taskId).then(() => showToast(t('toast.taskDeleted'), 'info'));
     },
-    [tasks.actions, showToast],
+    [tasks.actions, showToast, t],
   );
 
   const handleEdit = useCallback(
     (taskId: string): void => {
-      showToast(`Editing "${taskId}" is not available yet`, 'info');
+      showToast(t('toast.editUnavailable', { taskId }), 'info');
     },
-    [showToast],
+    [showToast, t],
   );
 
   const handleApprove = useCallback(
@@ -211,11 +216,11 @@ export default function App() {
       setDialogOpen(false);
       void approvals.actions.decide(requestId, 'approved').then((updated) => {
         if (updated) {
-          showToast(`Approved ${requestId}`, 'success');
+          showToast(t('toast.approved', { requestId }), 'success');
         }
       });
     },
-    [approvals.actions, showToast],
+    [approvals.actions, showToast, t],
   );
 
   const handleReject = useCallback(
@@ -223,11 +228,11 @@ export default function App() {
       setDialogOpen(false);
       void approvals.actions.decide(requestId, 'rejected', reason).then((updated) => {
         if (updated) {
-          showToast(`Rejected ${requestId}`, 'error');
+          showToast(t('toast.rejected', { requestId }), 'error');
         }
       });
     },
-    [approvals.actions, showToast],
+    [approvals.actions, showToast, t],
   );
 
   const healingEvents = healing.state.events.filter((event) => !event.resolved);
@@ -249,7 +254,7 @@ export default function App() {
 
   if (!setup.state.completed) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="min-h-screen bg-canvas text-fg">
         {toastNode}
         {notifier}
         <SetupScreen state={setup.state} actions={setup.actions} />
@@ -262,32 +267,41 @@ export default function App() {
     run.state.activity.find((log) => log.id === run.state.selectedLogId) ?? null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen bg-canvas text-fg">
       {toastNode}
       {notifier}
 
       <div className="flex min-h-screen">
-        <nav className="w-56 border-r border-neutral-800 bg-neutral-900 p-4">
+        <nav className="flex w-56 flex-col border-r border-border bg-surface p-4">
           <div className="mb-8">
-            <h1 className="text-lg font-bold text-indigo-400">🛡️ Aegis Agent</h1>
-            <p className="mt-1 text-xs text-neutral-500">Workflow Automation</p>
+            <h1 className="flex items-center gap-2 text-lg font-bold text-primary">
+              <Icon icon={brandIcon} size={20} />
+              {t('app.name')}
+            </h1>
+            <p className="mt-1 text-xs text-muted">{t('app.tagline')}</p>
           </div>
 
           <div className="space-y-1">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => setView(item.id)}
                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                   view === item.id
-                    ? 'bg-indigo-600/20 text-indigo-300'
-                    : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted hover:bg-surface-raised hover:text-fg'
                 }`}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <Icon icon={navIcons[item.id]} size={16} />
+                <span>{t(item.labelKey)}</span>
               </button>
             ))}
+          </div>
+
+          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+            <LanguageSwitcher />
+            <ThemeToggle />
           </div>
         </nav>
 
@@ -310,7 +324,7 @@ export default function App() {
           {view === 'tasks' && (
             <div className="space-y-6">
               {tasks.state.loading && tasks.state.tasks.length === 0 ? (
-                <LoadingState label="Loading tasks..." />
+                <LoadingState label={t('tasks.loading')} />
               ) : (
                 <>
                   <TaskList
@@ -320,7 +334,7 @@ export default function App() {
                     onDelete={handleDelete}
                   />
                   <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-neutral-200">Card view</h3>
+                    <h3 className="text-sm font-semibold text-fg">{t('tasks.cardView')}</h3>
                     <TaskCards
                       tasks={tasks.state.tasks}
                       onRun={handleRun}
@@ -337,7 +351,7 @@ export default function App() {
           {view === 'timeline' && (
             <div>
               {run.state.loading && run.state.steps.length === 0 ? (
-                <LoadingState label="Loading action flow..." />
+                <LoadingState label={t('actionFlow.loading')} />
               ) : (
                 <ActionFlowView
                   steps={run.state.steps}
@@ -359,7 +373,7 @@ export default function App() {
           {view === 'review' && (
             <div className="space-y-4">
               {approvals.state.loading && approvals.state.requests.length === 0 ? (
-                <LoadingState label="Loading approvals..." />
+                <LoadingState label={t('review.loading')} />
               ) : pendingRequest ? (
                 <>
                   <CodeReviewPanel
@@ -376,8 +390,8 @@ export default function App() {
                   />
                 </>
               ) : (
-                <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-8 text-center text-neutral-400">
-                  No pending approvals
+                <div className="rounded-xl border border-border bg-surface p-8 text-center text-muted">
+                  {t('review.noPending')}
                 </div>
               )}
             </div>

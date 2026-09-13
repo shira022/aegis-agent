@@ -91,8 +91,8 @@ describe('CodeReviewPanel', () => {
       ],
     });
     render(<CodeReviewPanel request={request} {...defaultProps} />);
-    expect(screen.getAllByText('✅')).toHaveLength(1);
-    expect(screen.getAllByText('❌')).toHaveLength(1);
+    expect(screen.getAllByRole('img', { name: 'Passed' })).toHaveLength(1);
+    expect(screen.getAllByRole('img', { name: 'Failed' })).toHaveLength(1);
   });
 
   // ── Exception handlers ─────────────────────────────────────────────
