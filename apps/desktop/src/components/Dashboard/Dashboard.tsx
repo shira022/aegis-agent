@@ -6,9 +6,16 @@ interface DashboardProps {
   recentActivity: OperationLog[];
   onNewTask: () => void;
   onRunAll: () => void;
+  onSelectActivity: (logId: string) => void;
 }
 
-export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: DashboardProps) {
+export function Dashboard({
+  tasks,
+  recentActivity,
+  onNewTask,
+  onRunAll,
+  onSelectActivity,
+}: DashboardProps) {
   const completedCount = tasks.filter((t) => t.status === 'completed').length;
   const runningCount = tasks.filter((t) => t.status === 'running').length;
   const totalFinished = tasks.filter((t) => t.status === 'completed' || t.status === 'failed').length;
@@ -73,17 +80,28 @@ export function Dashboard({ tasks, recentActivity, onNewTask, onRunAll }: Dashbo
         ) : (
           <div className="space-y-2">
             {recentActivity.map((log) => (
-              <Card key={log.id}>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="info">{log.source}</Badge>
-                    <span className="text-neutral-300">{log.steps.length} step(s)</span>
+              <button
+                key={log.id}
+                type="button"
+                aria-label={`View actions for ${log.source} run (${log.steps.length} steps)`}
+                onClick={() => onSelectActivity(log.id)}
+                className="block w-full text-left"
+              >
+                <Card className="transition-colors hover:border-indigo-500">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="info">{log.source}</Badge>
+                      <span className="text-neutral-300">{log.steps.length} step(s)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-indigo-400">View actions →</span>
+                      <time className="text-xs text-neutral-500">
+                        {new Date(log.recordedAt).toLocaleString('en-US')}
+                      </time>
+                    </div>
                   </div>
-                  <time className="text-xs text-neutral-500">
-                    {new Date(log.recordedAt).toLocaleString('en-US')}
-                  </time>
-                </div>
-              </Card>
+                </Card>
+              </button>
             ))}
           </div>
         )}
