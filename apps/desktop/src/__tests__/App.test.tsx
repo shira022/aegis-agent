@@ -95,4 +95,27 @@ describe('App integration', () => {
     const created = await screen.findAllByText('New Task 4');
     expect(created.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('opens a recorded run from the dashboard in the Action Flow view', async () => {
+    renderApp();
+    await completeSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: /Action Flow/ }));
+    expect(await screen.findByText('No actions recorded yet.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Dashboard/ }));
+    const browserCard = await screen.findByRole('button', {
+      name: 'View actions for browser run (6 steps)',
+    });
+    fireEvent.click(browserCard);
+
+    expect(
+      await screen.findByText('Viewing recorded run from browser · 6 step(s)'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Navigate: https://portal.example.com')).toBeInTheDocument();
+    expect(screen.queryByText('No actions recorded yet.')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to live run' }));
+    expect(await screen.findByText('No actions recorded yet.')).toBeInTheDocument();
+  });
 });
