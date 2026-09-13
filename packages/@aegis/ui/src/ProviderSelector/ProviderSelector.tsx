@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ProviderId, ProviderSettings, ProviderCategory } from '@aegis/shared';
 import { PROVIDER_REGISTRY } from '@aegis/shared';
+import { useAppTranslation } from '../i18n';
 
 export interface ProviderSelectorProps {
   selectedProvider?: ProviderId;
@@ -9,123 +10,16 @@ export interface ProviderSelectorProps {
   onSettingsChange: (settings: ProviderSettings) => void;
 }
 
-const CATEGORY_LABELS: Record<ProviderCategory, string> = {
-  cloud: 'Cloud Providers',
-  local: 'Local Providers',
-  compatible: 'Custom / Compatible',
-};
-
 const CATEGORY_ORDER: ProviderCategory[] = ['cloud', 'local', 'compatible'];
 
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '20px',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-  },
-  categorySection: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-  },
-  categoryLabel: {
-    fontSize: '13px',
-    fontWeight: 600 as const,
-    color: '#6b7280',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-    paddingLeft: '4px',
-  },
-  providerGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '12px',
-  },
-  card: {
-    padding: '16px',
-    borderRadius: '8px',
-    border: '2px solid #e0e0e0',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    backgroundColor: '#fafafa',
-  },
-  cardSelected: {
-    padding: '16px',
-    borderRadius: '8px',
-    border: '2px solid #2563eb',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    backgroundColor: '#eff6ff',
-  },
-  cardName: {
-    fontSize: '16px',
-    fontWeight: 600 as const,
-    marginBottom: '4px',
-    color: '#111827',
-  },
-  indicator: {
-    fontSize: '12px',
-    color: '#6b7280',
-    marginTop: '4px',
-  },
-  formSection: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-    padding: '16px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: 500 as const,
-    color: '#374151',
-    marginBottom: '4px',
-  },
-  input: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box' as const,
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    width: '100%',
-    backgroundColor: '#ffffff',
-  },
-  apiKeyRow: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-  },
-  apiKeyInput: {
-    flex: 1,
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    fontFamily: 'monospace',
-  },
-  toggleBtn: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '12px',
-    cursor: 'pointer',
-    backgroundColor: '#f3f4f6',
-    whiteSpace: 'nowrap' as const,
-  },
+const CATEGORY_LABEL_KEYS = {
+  cloud: 'settings.provider.categories.cloud',
+  local: 'settings.provider.categories.local',
+  compatible: 'settings.provider.categories.compatible',
 } as const;
+
+const inputClassName =
+  'w-full rounded-md border border-border bg-surface-raised px-3 py-2 text-sm text-fg outline-none focus:ring-2 focus:ring-primary';
 
 export function ProviderSelector({
   selectedProvider,
@@ -133,6 +27,7 @@ export function ProviderSelector({
   onProviderChange,
   onSettingsChange,
 }: ProviderSelectorProps) {
+  const { t } = useAppTranslation();
   const [showApiKey, setShowApiKey] = useState(false);
 
   const handleProviderClick = useCallback(
@@ -194,25 +89,24 @@ export function ProviderSelector({
     [selectedProvider, onSettingsChange, buildSettings],
   );
 
-  const selectedConfig = selectedProvider
-    ? PROVIDER_REGISTRY[selectedProvider]
-    : null;
+  const selectedConfig = selectedProvider ? PROVIDER_REGISTRY[selectedProvider] : null;
 
-  // Group providers by category
   const grouped = CATEGORY_ORDER.map((category) => ({
     category,
-    label: CATEGORY_LABELS[category],
+    label: t(CATEGORY_LABEL_KEYS[category]),
     providers: (Object.keys(PROVIDER_REGISTRY) as ProviderId[]).filter(
       (id) => PROVIDER_REGISTRY[id].category === category,
     ),
-  })).filter((g) => g.providers.length > 0);
+  })).filter((group) => group.providers.length > 0);
 
   return (
-    <div style={styles.container}>
+    <div className="flex flex-col gap-5">
       {grouped.map(({ category, label, providers }) => (
-        <div key={category} style={styles.categorySection} data-testid={`category-${category}`}>
-          <div style={styles.categoryLabel}>{label}</div>
-          <div style={styles.providerGrid}>
+        <div key={category} className="flex flex-col gap-2" data-testid={`category-${category}`}>
+          <div className="pl-1 text-xs font-semibold uppercase tracking-wider text-muted">
+            {label}
+          </div>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
             {providers.map((id) => {
               const config = PROVIDER_REGISTRY[id];
               const isSelected = selectedProvider === id;
@@ -220,7 +114,11 @@ export function ProviderSelector({
                 <div
                   key={id}
                   data-testid={`provider-card-${id}`}
-                  style={isSelected ? styles.cardSelected : styles.card}
+                  className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                    isSelected
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-surface hover:border-primary/50'
+                  }`}
                   onClick={() => handleProviderClick(id)}
                   role="button"
                   tabIndex={0}
@@ -230,15 +128,21 @@ export function ProviderSelector({
                     }
                   }}
                 >
-                  <div style={styles.cardName}>{config.displayName}</div>
+                  <div className="mb-1 text-base font-semibold text-fg">{config.displayName}</div>
                   {config.requiresRegion && (
-                    <div style={styles.indicator}>Region required</div>
+                    <div className="mt-1 text-xs text-muted">
+                      {t('settings.provider.regionRequired')}
+                    </div>
                   )}
                   {config.requiresProjectId && (
-                    <div style={styles.indicator}>Project ID required</div>
+                    <div className="mt-1 text-xs text-muted">
+                      {t('settings.provider.projectIdRequired')}
+                    </div>
                   )}
                   {config.category !== 'cloud' && (
-                    <div style={styles.indicator}>Custom endpoint</div>
+                    <div className="mt-1 text-xs text-muted">
+                      {t('settings.provider.customEndpoint')}
+                    </div>
                   )}
                 </div>
               );
@@ -248,15 +152,18 @@ export function ProviderSelector({
       ))}
 
       {selectedConfig && (
-        <div style={styles.formSection} data-testid="provider-form">
+        <div
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+          data-testid="provider-form"
+        >
           <div>
-            <label style={styles.label} htmlFor="model-select">
-              Model
+            <label className="mb-1 block text-sm font-medium text-fg" htmlFor="model-select">
+              {t('settings.provider.model')}
             </label>
             <select
               id="model-select"
               data-testid="model-select"
-              style={styles.select}
+              className={inputClassName}
               value={settings?.model ?? selectedConfig.defaultModel}
               onChange={(e) => handleModelChange(e.target.value)}
             >
@@ -269,77 +176,80 @@ export function ProviderSelector({
           </div>
 
           <div>
-            <div style={styles.label}>API Key</div>
-            <div style={styles.apiKeyRow}>
+            <label className="mb-1 block text-sm font-medium text-fg" htmlFor="api-key-input">
+              {t('settings.provider.apiKey')}
+            </label>
+            <div className="flex items-center gap-2">
               <input
+                id="api-key-input"
                 data-testid="api-key-input"
-                style={styles.apiKeyInput}
+                className={`${inputClassName} flex-1 font-mono`}
                 type={showApiKey ? 'text' : 'password'}
                 value={settings?.apiKey ?? ''}
                 onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="Enter API key"
+                placeholder={t('settings.provider.apiKeyPlaceholder')}
               />
               <button
                 data-testid="api-key-toggle"
-                style={styles.toggleBtn}
+                className="whitespace-nowrap rounded-md border border-border bg-surface-raised px-3 py-2 text-xs text-fg transition-colors hover:bg-border"
                 onClick={() => setShowApiKey((prev) => !prev)}
                 type="button"
               >
-                {showApiKey ? 'Hide' : 'Show'}
+                {showApiKey ? t('settings.provider.hide') : t('settings.provider.show')}
               </button>
             </div>
           </div>
 
           {selectedConfig.requiresRegion && (
             <div>
-              <label style={styles.label} htmlFor="region-input">
-                Region
+              <label className="mb-1 block text-sm font-medium text-fg" htmlFor="region-input">
+                {t('settings.provider.region')}
               </label>
               <input
                 id="region-input"
                 data-testid="region-input"
-                style={styles.input}
+                className={inputClassName}
                 type="text"
                 value={settings?.region ?? ''}
                 onChange={(e) => handleRegionChange(e.target.value)}
-                placeholder="e.g. us-east-1"
+                placeholder={t('settings.provider.regionPlaceholder')}
               />
             </div>
           )}
 
           {selectedConfig.requiresProjectId && (
             <div>
-              <label style={styles.label} htmlFor="project-id-input">
-                Project ID
+              <label className="mb-1 block text-sm font-medium text-fg" htmlFor="project-id-input">
+                {t('settings.provider.projectId')}
               </label>
               <input
                 id="project-id-input"
                 data-testid="project-id-input"
-                style={styles.input}
+                className={inputClassName}
                 type="text"
                 value={settings?.projectId ?? ''}
                 onChange={(e) => handleProjectIdChange(e.target.value)}
-                placeholder="Enter GCP project ID"
+                placeholder={t('settings.provider.projectIdPlaceholder')}
               />
             </div>
           )}
 
           {selectedConfig.category !== 'cloud' && (
             <div>
-              <label style={styles.label} htmlFor="base-url-input">
-                Base URL
+              <label className="mb-1 block text-sm font-medium text-fg" htmlFor="base-url-input">
+                {t('settings.provider.baseUrl')}
               </label>
               <input
                 id="base-url-input"
                 data-testid="base-url-input"
-                style={styles.input}
+                className={inputClassName}
                 type="text"
                 value={settings?.baseUrl ?? ''}
                 onChange={(e) => handleBaseUrlChange(e.target.value)}
                 placeholder={
                   selectedConfig.category === 'local'
-                    ? 'e.g. http://localhost:11434/v1'
-                    : 'e.g. https://your-api.com/v1'
+                    ? t('settings.provider.localBaseUrlPlaceholder')
+                    : t('settings.provider.customBaseUrlPlaceholder')
                 }
               />
             </div>

@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import type { Task, TaskStatus } from '@aegis/shared';
+import { changeLanguage } from '../i18n';
+import ja from '../i18n/locales/ja.json';
 import { TaskCards } from '../TaskCards/TaskCards';
 
 const makeTask = (
@@ -16,6 +18,12 @@ const makeTask = (
 describe('TaskCards', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await act(async () => {
+      await changeLanguage('en');
+    });
   });
 
   it('renders one card per task', () => {
@@ -42,6 +50,12 @@ describe('TaskCards', () => {
       const label = status.charAt(0).toUpperCase() + status.slice(1);
       expect(screen.getByText(label)).toBeInTheDocument();
     }
+  });
+
+  it('renders the Japanese status label when the locale is ja', async () => {
+    await changeLanguage('ja');
+    render(<TaskCards tasks={[makeTask({ id: '1', name: 'Task', status: 'running' })]} />);
+    expect(screen.getByTestId('task-status')).toHaveTextContent(ja.tasks.status.running);
   });
 
   it('renders the updatedAt timestamp', () => {

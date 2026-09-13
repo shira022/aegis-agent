@@ -24,3 +24,14 @@ export type { SetupWizardProps } from './SetupWizard';
 
 export { Timeline } from './Timeline';
 export type { TimelineProps } from './Timeline';
+
+export * from './icons';
+export * from './theme';
+export * from './i18n';
+export { LanguageSwitcher } from './i18n/LanguageSwitcher';
+export {
+  formatDate,
+  formatNumber,
+  formatTime,
+  localeFor,
+} from './i18n/format';

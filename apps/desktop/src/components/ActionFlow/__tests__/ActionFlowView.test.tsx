@@ -88,7 +88,7 @@ describe('ActionFlowView', () => {
     );
 
     expect(
-      screen.getByText('Viewing recorded run from browser · 2 step(s)'),
+      screen.getByText('Viewing recorded run from browser · 2 steps'),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back to live run' }));
     expect(onClearSelection).toHaveBeenCalledTimes(1);

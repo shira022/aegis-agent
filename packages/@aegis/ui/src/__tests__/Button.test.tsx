@@ -25,13 +25,13 @@ describe('Button', () => {
   it('renders with primary variant by default', () => {
     render(<Button onClick={vi.fn()}>primary</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-indigo-600');
+    expect(btn.className).toContain('bg-primary');
   });
 
   it('renders with danger variant', () => {
     render(<Button onClick={vi.fn()} variant="danger">Delete</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-red-600');
+    expect(btn.className).toContain('bg-danger');
   });
 
   it('renders with ghost variant', () => {

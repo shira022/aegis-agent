@@ -47,7 +47,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'Node.js', status: 'ok' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.getByText('✅')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Ready' })).toBeInTheDocument();
   });
 
   it('shows ❌ icon for missing dependencies', () => {
@@ -55,7 +55,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'pnpm', status: 'missing' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.getByText('❌')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Missing' })).toBeInTheDocument();
   });
 
   it('shows ⚠️ icon for outdated dependencies', () => {
@@ -63,7 +63,7 @@ describe('SetupWizard', () => {
       makeDep({ name: 'Node.js', status: 'outdated' }),
     ];
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Outdated' })).toBeInTheDocument();
   });
 
   // ── Version display ────────────────────────────────────────────────
@@ -187,9 +187,9 @@ describe('SetupWizard', () => {
     render(<SetupWizard dependencies={deps} {...defaultProps} />);
 
     // Icons
-    expect(screen.getByText('✅')).toBeInTheDocument();
-    expect(screen.getByText('❌')).toBeInTheDocument();
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Ready' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Missing' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Outdated' })).toBeInTheDocument();
 
     // No completion
     expect(screen.queryByText('All dependencies are ready')).not.toBeInTheDocument();

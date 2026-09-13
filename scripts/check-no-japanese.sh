@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 # CI check: fail if source files contain CJK characters (Japanese text).
 # Exceptions: .venv, node_modules, dist, target, pnpm-lock, binary files,
-# .agents/skills/ (agent-authored skill files), and files with intentional
-# Japanese regex patterns (documented in CONTRIBUTING.md).
+# .agents/skills/ (agent-authored skill files), files with intentional
+# Japanese regex patterns, and i18n locale resources (documented in
+# CONTRIBUTING.md).
 set -euo pipefail
 
 # Files with legitimate Japanese regex patterns (PII detection etc.)
 # These contain Japanese in regex pattern definitions, not human-readable text.
 EXCLUDE_FILES=(
   "packages/@aegis/security/src/masking/pii-patterns.ts"
+)
+
+# Paths containing intentional non-English data rather than human-readable
+# prose. Translation resources are the canonical example: the locale JSON
+# files ARE the translations, so their CJK content is expected. Every other
+# file (source, tests, docs) must stay English and reference these resources.
+EXCLUDE_PATHS=(
+  "*/i18n/locales/*.json"
 )
 
 EXIT_CODE=0
@@ -25,6 +34,17 @@ while IFS= read -r file; do
       break
     fi
   done
+
+  # Skip intentional non-English data (translation resource files)
+  if ! $SKIP; then
+    for ex in "${EXCLUDE_PATHS[@]}"; do
+      if [[ "$file" == $ex ]]; then
+        SKIP=true
+        break
+      fi
+    done
+  fi
+
   if $SKIP; then continue; fi
 
   FILES_CHECKED=$((FILES_CHECKED + 1))
@@ -54,6 +74,8 @@ if [ $EXIT_CODE -eq 0 ]; then
 else
   echo ""
   echo "✗ Japanese text detected. All human-readable text must be in English."
+  echo "  Only i18n locale resources (*/i18n/locales/*.json) may contain translations;"
+  echo "  every other file must reference those resources instead of embedding CJK text."
   echo "  See CONTRIBUTING.md for the English-Only Policy."
 fi
 

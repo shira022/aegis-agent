@@ -39,28 +39,32 @@ describe('TaskList', () => {
   });
 
   // ── Status icons ───────────────────────────────────────────────────
-  it('shows ⏸ icon for idle tasks', () => {
+  it('shows an idle status icon and label for idle tasks', () => {
     const tasks = [makeTask({ id: '1', name: 'Test', status: 'idle' })];
-    render(<TaskList tasks={tasks} {...defaultProps} />);
-    expect(screen.getByText('⏸')).toBeInTheDocument();
+    const { container } = render(<TaskList tasks={tasks} {...defaultProps} />);
+    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByText('Idle')).toBeInTheDocument();
   });
 
-  it('shows ▶ icon for running tasks', () => {
+  it('shows a running status icon and label for running tasks', () => {
     const tasks = [makeTask({ id: '1', name: 'Test', status: 'running' })];
-    render(<TaskList tasks={tasks} {...defaultProps} />);
-    expect(screen.getByText('▶')).toBeInTheDocument();
+    const { container } = render(<TaskList tasks={tasks} {...defaultProps} />);
+    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByText('Running')).toBeInTheDocument();
   });
 
-  it('shows ✓ icon for completed tasks', () => {
+  it('shows a completed status icon and label for completed tasks', () => {
     const tasks = [makeTask({ id: '1', name: 'Test', status: 'completed' })];
-    render(<TaskList tasks={tasks} {...defaultProps} />);
-    expect(screen.getByText('✓')).toBeInTheDocument();
+    const { container } = render(<TaskList tasks={tasks} {...defaultProps} />);
+    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByText('Completed')).toBeInTheDocument();
   });
 
-  it('shows ✗ icon for failed tasks', () => {
+  it('shows a failed status icon and label for failed tasks', () => {
     const tasks = [makeTask({ id: '1', name: 'Test', status: 'failed' })];
-    render(<TaskList tasks={tasks} {...defaultProps} />);
-    expect(screen.getByText('✗')).toBeInTheDocument();
+    const { container } = render(<TaskList tasks={tasks} {...defaultProps} />);
+    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByText('Failed')).toBeInTheDocument();
   });
 
   // ── Action buttons ─────────────────────────────────────────────────
