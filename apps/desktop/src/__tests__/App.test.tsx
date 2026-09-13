@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, afterEach } from 'vitest';
 import App from '../App';
 import { DesktopProvider } from '../stores/DesktopContext';
@@ -30,7 +30,9 @@ async function completeSetup(): Promise<void> {
 }
 
 afterEach(async () => {
-  await changeLanguage('en');
+  await act(async () => {
+    await changeLanguage('en');
+  });
   window.localStorage.clear();
   document.documentElement.classList.remove('dark');
   document.documentElement.lang = 'en';
@@ -157,5 +159,46 @@ describe('App integration', () => {
     await screen.findByRole('button', { name: i18n.t('nav.dashboard') });
     expect(screen.queryByRole('button', { name: /^Dashboard$/ })).not.toBeInTheDocument();
     expect(document.documentElement.lang).toBe('ja');
+  });
+
+  it('keeps a non-English locale after navigating between views', async () => {
+    renderApp();
+    await completeSetup();
+
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('language-switcher'), {
+        target: { value: 'ja' },
+      });
+    });
+
+    await screen.findByRole('button', { name: i18n.t('nav.dashboard') });
+
+    fireEvent.click(screen.getByRole('button', { name: i18n.t('nav.tasks') }));
+    expect(await screen.findByRole('heading', { name: i18n.t('tasks.title') })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: i18n.t('nav.review') }));
+    expect(await screen.findByRole('heading', { name: i18n.t('review.title') })).toBeInTheDocument();
+
+    expect(i18n.resolvedLanguage).toBe('ja');
+    expect(document.documentElement.lang).toBe('ja');
+  });
+
+  it('persists the theme choice across a remount', async () => {
+    const first = renderApp();
+    await completeSetup();
+
+    expect(document.documentElement).toHaveClass('dark');
+
+    fireEvent.click(screen.getByTestId('theme-toggle'));
+    await waitFor(() => expect(document.documentElement).not.toHaveClass('dark'));
+    expect(window.localStorage.getItem('aegis-theme')).toBe('light');
+
+    first.unmount();
+
+    renderApp();
+    await completeSetup();
+
+    expect(document.documentElement).not.toHaveClass('dark');
+    expect(document.documentElement.style.colorScheme).toBe('light');
   });
 });

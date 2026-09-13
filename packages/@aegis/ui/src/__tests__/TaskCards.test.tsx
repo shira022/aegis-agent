@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import type { Task, TaskStatus } from '@aegis/shared';
 import { changeLanguage } from '../i18n';
 import ja from '../i18n/locales/ja.json';
@@ -21,7 +21,9 @@ describe('TaskCards', () => {
   });
 
   afterEach(async () => {
-    await changeLanguage('en');
+    await act(async () => {
+      await changeLanguage('en');
+    });
   });
 
   it('renders one card per task', () => {
