@@ -15,6 +15,7 @@ describe('Dashboard', () => {
   const defaultProps = {
     onNewTask: vi.fn(),
     onRunAll: vi.fn(),
+    onSelectActivity: vi.fn(),
   };
 
   beforeEach(() => {
@@ -89,14 +90,30 @@ describe('Dashboard', () => {
 
   it('calls onNewTask when new task button clicked', () => {
     const onNewTask = vi.fn();
-    render(<Dashboard tasks={[]} recentActivity={[]} onNewTask={onNewTask} onRunAll={vi.fn()} />);
+    render(
+      <Dashboard
+        tasks={[]}
+        recentActivity={[]}
+        onNewTask={onNewTask}
+        onRunAll={vi.fn()}
+        onSelectActivity={vi.fn()}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: /New Task/ }));
     expect(onNewTask).toHaveBeenCalledTimes(1);
   });
 
   it('calls onRunAll when run all button clicked', () => {
     const onRunAll = vi.fn();
-    render(<Dashboard tasks={[]} recentActivity={[]} onNewTask={vi.fn()} onRunAll={onRunAll} />);
+    render(
+      <Dashboard
+        tasks={[]}
+        recentActivity={[]}
+        onNewTask={vi.fn()}
+        onRunAll={onRunAll}
+        onSelectActivity={vi.fn()}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: /Run All/ }));
     expect(onRunAll).toHaveBeenCalledTimes(1);
   });
@@ -119,6 +136,42 @@ describe('Dashboard', () => {
       />,
     );
     expect(screen.getByText('Recent Activity')).toBeInTheDocument();
+  });
+
+  it('calls onSelectActivity with the log id when an activity entry is clicked', () => {
+    const onSelectActivity = vi.fn();
+    render(
+      <Dashboard
+        tasks={[]}
+        recentActivity={[
+          { id: 'log-9', taskId: 't1', steps: [], recordedAt: '2025-01-01T00:00:00Z', source: 'browser' },
+        ]}
+        onNewTask={vi.fn()}
+        onRunAll={vi.fn()}
+        onSelectActivity={onSelectActivity}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'View actions for browser run (0 steps)' }),
+    );
+
+    expect(onSelectActivity).toHaveBeenCalledTimes(1);
+    expect(onSelectActivity).toHaveBeenCalledWith('log-9');
+  });
+
+  it('exposes an accessible name mentioning the activity source', () => {
+    render(
+      <Dashboard
+        tasks={[]}
+        recentActivity={[
+          { id: 'log-2', taskId: 't2', steps: [], recordedAt: '2025-01-01T00:00:01Z', source: 'desktop' },
+        ]}
+        {...defaultProps}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /desktop run/ })).toBeInTheDocument();
   });
 
   // ── Stats with running tasks ───────────────────────────────────────

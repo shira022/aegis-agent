@@ -5,11 +5,11 @@ import {
   ProviderSelector,
   TaskCards,
   SetupWizard,
-  Timeline,
   Toast,
   Button,
 } from '@aegis/ui';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { ActionFlowView } from './components/ActionFlow/ActionFlowView';
 import { TaskList } from './components/TaskList/TaskList';
 import { CodeReviewPanel } from './components/CodeReviewPanel/CodeReviewPanel';
 import { ApprovalDialog } from './components/ApprovalDialog/ApprovalDialog';
@@ -258,6 +258,8 @@ export default function App() {
   }
 
   const pendingRequest = approvals.state.pending[0] ?? null;
+  const selectedLog =
+    run.state.activity.find((log) => log.id === run.state.selectedLogId) ?? null;
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
@@ -298,6 +300,10 @@ export default function App() {
               onRunAll={() => {
                 void handleRunAll();
               }}
+              onSelectActivity={(logId) => {
+                run.actions.selectLog(logId);
+                setView('timeline');
+              }}
             />
           )}
 
@@ -333,12 +339,18 @@ export default function App() {
               {run.state.loading && run.state.steps.length === 0 ? (
                 <LoadingState label="Loading action flow..." />
               ) : (
-                <Timeline
+                <ActionFlowView
                   steps={run.state.steps}
                   mode={timelineMode}
+                  selectedLog={selectedLog}
                   onToggleMode={() =>
                     setTimelineMode((mode) => (mode === 'timeline' ? 'flowchart' : 'timeline'))
                   }
+                  onClearSelection={run.actions.clearSelection}
+                  onRunIdleTasks={() => {
+                    void handleRunAll();
+                  }}
+                  onGoToTasks={() => setView('tasks')}
                 />
               )}
             </div>
