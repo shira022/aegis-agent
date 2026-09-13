@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { Task } from '@aegis/shared';
 import { changeLanguage, i18n } from '@aegis/ui';
@@ -24,7 +24,9 @@ describe('Dashboard', () => {
   });
 
   afterEach(async () => {
-    await changeLanguage('en');
+    await act(async () => {
+      await changeLanguage('en');
+    });
   });
 
   // ── Rendering ──────────────────────────────────────────────────────
