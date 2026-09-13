@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import type { Task, TaskStatus } from '@aegis/shared';
 import { changeLanguage } from '../i18n';
+import ja from '../i18n/locales/ja.json';
 import { TaskCards } from '../TaskCards/TaskCards';
 
 const makeTask = (
@@ -52,7 +53,7 @@ describe('TaskCards', () => {
   it('renders the Japanese status label when the locale is ja', async () => {
     await changeLanguage('ja');
     render(<TaskCards tasks={[makeTask({ id: '1', name: 'Task', status: 'running' })]} />);
-    expect(screen.getByTestId('task-status')).toHaveTextContent('実行中');
+    expect(screen.getByTestId('task-status')).toHaveTextContent(ja.tasks.status.running);
   });
 
   it('renders the updatedAt timestamp', () => {

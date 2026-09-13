@@ -1,4 +1,7 @@
 {
+  "locale": {
+    "self": "English"
+  },
   "app": {
     "name": "Aegis Agent",
     "tagline": "Workflow Automation",

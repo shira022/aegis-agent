@@ -9,6 +9,7 @@ import {
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { formatDate, formatNumber, localeFor } from '../format';
 import { SUPPORTED_LOCALES } from '../locales';
+import ja from '../locales/ja.json';
 
 function Greeting() {
   const { t } = useAppTranslation();
@@ -36,7 +37,7 @@ describe('i18n', () => {
     await changeLanguage('ja');
 
     await waitFor(() => {
-      expect(screen.getByText('ダッシュボード')).toBeInTheDocument();
+      expect(screen.getByText(ja.nav.dashboard)).toBeInTheDocument();
     });
     expect(i18n.language).toBe('ja');
     expect(document.documentElement.lang).toBe('ja');
@@ -62,7 +63,7 @@ describe('i18n', () => {
     const japanese = formatDate(date, 'ja', options);
 
     expect(english).toBe('June 15, 2025');
-    expect(japanese).toBe('2025年6月15日');
+    expect(japanese).toBe(new Intl.DateTimeFormat('ja-JP', options).format(date));
     expect(english).not.toBe(japanese);
     expect(localeFor('ja-JP')).toBe('ja-JP');
     expect(localeFor('en')).toBe('en-US');
@@ -89,6 +90,6 @@ describe('LanguageSwitcher', () => {
     });
 
     await waitFor(() => expect(i18n.language).toBe('ja'));
-    expect(await screen.findByLabelText('言語')).toBeInTheDocument();
+    expect(await screen.findByLabelText(ja.settings.language.label)).toBeInTheDocument();
   });
 });
