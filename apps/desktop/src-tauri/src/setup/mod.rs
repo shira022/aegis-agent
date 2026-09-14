@@ -99,11 +99,8 @@ fn find_workspace_runtime_dir() -> Option<String> {
 pub fn resolve_python(explicit: Option<&str>) -> (Option<String>, &'static str) {
     let env_path = std::env::var("AEGIS_PYTHON_PATH").ok();
     let venv_path = find_workspace_venv_python();
-    let (choice, source) = choose_python_source(
-        explicit,
-        env_path.as_deref(),
-        venv_path.as_deref(),
-    );
+    let (choice, source) =
+        choose_python_source(explicit, env_path.as_deref(), venv_path.as_deref());
     if choice.is_some() {
         return (choice, source);
     }
@@ -174,8 +171,7 @@ mod tests {
 
     #[test]
     fn venv_is_used_when_no_explicit_or_env() {
-        let (choice, source) =
-            choose_python_source(None, None, Some("/repo/.venv/bin/python3"));
+        let (choice, source) = choose_python_source(None, None, Some("/repo/.venv/bin/python3"));
         assert_eq!(choice.as_deref(), Some("/repo/.venv/bin/python3"));
         assert_eq!(source, "workspace-venv");
     }

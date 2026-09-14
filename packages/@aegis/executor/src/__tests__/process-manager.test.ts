@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { join } from 'node:path';
 import { ProcessManager } from '../process-manager';
 import type { ExecutionConfig } from '../types';
 import { spawn } from 'child_process';
@@ -87,16 +88,18 @@ describe('ProcessManager', () => {
       const mockProc = createMockChildProcess();
       vi.mocked(spawn).mockReturnValue(mockProc);
 
+      // Workspace-relative so the test never embeds a machine-specific path.
+      const workingDir = join('workspace', 'project');
       const config: ExecutionConfig = {
         scriptPath: '/tmp/test.py',
-        workingDir: '/home/user/project',
+        workingDir,
       };
       manager.spawn(config);
 
       expect(spawn).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Array),
-        expect.objectContaining({ cwd: '/home/user/project' }),
+        expect.objectContaining({ cwd: workingDir }),
       );
     });
 

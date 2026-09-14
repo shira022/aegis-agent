@@ -108,10 +108,7 @@ pub fn get_api_key(provider: String) -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-pub fn has_api_key(
-    provider: String,
-    state: tauri::State<'_, AppState>,
-) -> Result<bool, String> {
+pub fn has_api_key(provider: String, state: tauri::State<'_, AppState>) -> Result<bool, String> {
     let store = state
         .keychain
         .lock()
@@ -120,10 +117,7 @@ pub fn has_api_key(
 }
 
 #[tauri::command]
-pub fn delete_api_key(
-    provider: String,
-    state: tauri::State<'_, AppState>,
-) -> Result<(), String> {
+pub fn delete_api_key(provider: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
     let mut store = state
         .keychain
         .lock()
@@ -133,9 +127,7 @@ pub fn delete_api_key(
 }
 
 #[tauri::command]
-pub fn list_api_key_providers(
-    state: tauri::State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+pub fn list_api_key_providers(state: tauri::State<'_, AppState>) -> Result<Vec<String>, String> {
     let store = state
         .keychain
         .lock()

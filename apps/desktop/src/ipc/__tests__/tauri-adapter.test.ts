@@ -29,6 +29,16 @@ describe('createTauriAdapter', () => {
     expect(invokeFn).toHaveBeenCalledWith('create_task', { input: { name: 'New Flow' } });
   });
 
+  it('updateTask invokes update_task with the flattened input payload', async () => {
+    const { invokeFn, api } = setup();
+    const sentinel = { id: 'task-1', name: 'Renamed' };
+    invokeFn.mockResolvedValue(sentinel);
+    await expect(api.updateTask('task-1', { name: 'Renamed' })).resolves.toBe(sentinel);
+    expect(invokeFn).toHaveBeenCalledWith('update_task', {
+      input: { taskId: 'task-1', name: 'Renamed' },
+    });
+  });
+
   it('deleteTask invokes delete_task with taskId', async () => {
     const { invokeFn, api } = setup();
     invokeFn.mockResolvedValue(undefined);
@@ -120,12 +130,22 @@ describe('createTauriAdapter', () => {
     expect(invokeFn).toHaveBeenCalledWith('stop_recording');
   });
 
-  it('takeScreenshot invokes take_screenshot with the label', async () => {
+  it('takeScreenshot captures then returns the recorded reference', async () => {
     const { invokeFn, api } = setup();
-    const sentinel = { id: 'shot-1' };
-    invokeFn.mockResolvedValue(sentinel);
-    await expect(api.takeScreenshot('home')).resolves.toBe(sentinel);
+    const shot = { id: 'shot-1', label: 'home', capturedAt: 1 };
+    invokeFn.mockImplementation((cmd: string) => {
+      if (cmd === 'take_screenshot') {
+        return Promise.resolve('base64-png');
+      }
+      if (cmd === 'get_recorder') {
+        return Promise.resolve({ status: 'recording', screenshots: [shot] });
+      }
+      return Promise.resolve(undefined);
+    });
+
+    await expect(api.takeScreenshot('home')).resolves.toEqual(shot);
     expect(invokeFn).toHaveBeenCalledWith('take_screenshot', { label: 'home' });
+    expect(invokeFn).toHaveBeenCalledWith('get_recorder');
   });
 
   it('getSetup invokes get_setup', async () => {

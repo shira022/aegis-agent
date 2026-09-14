@@ -87,6 +87,29 @@ function SetupScreen({ state, actions }: SetupScreenProps) {
     setSaving(false);
   };
 
+  if (state.error !== null && state.dependencies.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div
+          role="alert"
+          className="w-full max-w-md space-y-3 rounded-2xl border border-border bg-surface p-6 text-center"
+        >
+          <h2 className="text-lg font-semibold text-fg">{t('app.setupErrorTitle')}</h2>
+          <p className="text-sm text-muted">{t('app.setupErrorHint')}</p>
+          <p className="break-words text-xs text-danger">{state.error}</p>
+          <Button
+            variant="primary"
+            onClick={() => {
+              void actions.load();
+            }}
+          >
+            {t('app.retry')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (state.dependencies.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">

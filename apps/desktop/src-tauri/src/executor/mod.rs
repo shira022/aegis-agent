@@ -320,7 +320,10 @@ mod tests {
 
     #[test]
     fn empty_args_produce_two_elements() {
-        assert_eq!(build_argv(&config("s.py", None), "python"), vec!["python", "s.py"]);
+        assert_eq!(
+            build_argv(&config("s.py", None), "python"),
+            vec!["python", "s.py"]
+        );
         assert_eq!(
             build_argv(&config("s.py", Some(vec![])), "python"),
             vec!["python", "s.py"]

@@ -3,8 +3,8 @@
 //! All region arithmetic lives in the pure [`clamp_region`] helper so it can be
 //! unit tested without a display.
 
-use base64::engine::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::engine::Engine as _;
 
 use crate::ipc::{BoundingBox, CapturedSize};
 
@@ -37,8 +37,7 @@ pub fn clamp_region(
 }
 
 fn primary_monitor() -> Result<xcap::Monitor, String> {
-    let monitors =
-        xcap::Monitor::all().map_err(|e| format!("failed to capture screen: {e}"))?;
+    let monitors = xcap::Monitor::all().map_err(|e| format!("failed to capture screen: {e}"))?;
     if monitors.is_empty() {
         return Err("no display monitor available".to_string());
     }

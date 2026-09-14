@@ -60,10 +60,7 @@ fn prompt_comment(prompt: &str) -> String {
 
 fn mock_generate(req: &AiGenerationRequest) -> AiGenerationResponse {
     let hash = prompt_hash(&req.prompt);
-    let model = req
-        .model
-        .clone()
-        .unwrap_or_else(|| MOCK_MODEL.to_string());
+    let model = req.model.clone().unwrap_or_else(|| MOCK_MODEL.to_string());
 
     let script = format!(
         "# Aegis Agent mock-generated script\n# prompt: {comment}\n\n\ndef main():\n    print(\"Aegis Agent mock script\")\n    print(\"prompt-hash: {hash}\")\n\n\nif __name__ == \"__main__\":\n    main()\n",
@@ -87,9 +84,7 @@ fn mock_generate(req: &AiGenerationRequest) -> AiGenerationResponse {
 // keep AiGenerationResponse's shape unchanged so the TypeScript side keeps working.
 // Today this function performs no I/O and never touches the network.
 #[tauri::command]
-pub fn ai_generate_script(
-    request: AiGenerationRequest,
-) -> Result<AiGenerationResponse, String> {
+pub fn ai_generate_script(request: AiGenerationRequest) -> Result<AiGenerationResponse, String> {
     Ok(mock_generate(&request))
 }
 

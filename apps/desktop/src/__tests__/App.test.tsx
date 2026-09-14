@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import App from '../App';
 import { DesktopProvider } from '../stores/DesktopContext';
 import { createMockAdapter } from '../ipc/mock-adapter';
+import type { DesktopApi } from '../ipc/types';
 import { I18nProvider, ThemeProvider, changeLanguage, i18n } from '@aegis/ui';
 
 function renderApp() {
@@ -49,6 +50,29 @@ describe('App integration', () => {
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.queryByText('Aegis Agent Setup')).not.toBeInTheDocument();
+  });
+
+  it('shows an error state instead of an infinite spinner when the setup probe fails', async () => {
+    const base = createMockAdapter();
+    const api: DesktopApi = {
+      ...base,
+      getSetup: () => Promise.reject(new Error('backend unavailable')),
+    };
+
+    render(
+      <ThemeProvider>
+        <I18nProvider>
+          <DesktopProvider api={api}>
+            <App />
+          </DesktopProvider>
+        </I18nProvider>
+      </ThemeProvider>,
+    );
+
+    expect(await screen.findByText('Setup could not be loaded')).toBeInTheDocument();
+    expect(screen.getAllByText('backend unavailable').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByText('Checking dependencies...')).not.toBeInTheDocument();
   });
 
   it('renders the tasks seeded by the adapter, not hardcoded sample data', async () => {

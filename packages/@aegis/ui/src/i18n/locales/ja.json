@@ -5,7 +5,10 @@
   "app": {
     "name": "Aegis Agent",
     "tagline": "ワークフロー自動化",
-    "loadingDependencies": "依存関係を確認しています..."
+    "loadingDependencies": "依存関係を確認しています...",
+    "setupErrorTitle": "セットアップを読み込めませんでした",
+    "setupErrorHint": "デスクトップバックエンドから応答がありません。アプリが正しく動作しているか確認して、もう一度お試しください。",
+    "retry": "再試行"
   },
   "nav": {
     "dashboard": "ダッシュボード",

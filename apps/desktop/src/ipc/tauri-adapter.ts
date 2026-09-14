@@ -4,6 +4,7 @@ import type { ApprovalRequest } from '@aegis/approval';
 import type {
   DesktopApi,
   NewTaskInput,
+  UpdateTaskInput,
   ProviderKeyInput,
   ApprovalDecisionInput,
   TaskRun,
@@ -28,6 +29,9 @@ export function createTauriAdapter(invokeFn: InvokeFn = invoke): DesktopApi {
 
     createTask: (input: NewTaskInput) => invokeFn<Task>('create_task', { input }),
 
+    updateTask: (taskId: string, patch: UpdateTaskInput) =>
+      invokeFn<Task>('update_task', { input: { taskId, name: patch.name } }),
+
     deleteTask: (taskId: string) => invokeFn<void>('delete_task', { taskId }),
 
     runTask: (taskId: string) => invokeFn<TaskRun>('run_task', { taskId }),
@@ -45,15 +49,39 @@ export function createTauriAdapter(invokeFn: InvokeFn = invoke): DesktopApi {
 
     getRecorder: () => invokeFn<RecorderSession>('get_recorder'),
 
-    startRecording: () => invokeFn<RecorderSession>('start_recording'),
+    // The recorder state machine exposes its transitions as separate commands
+    // whose return shapes are owned by `@aegis/recorder`. The desktop contract
+    // is the projected `RecorderSession`, so every mutation is followed by a
+    // `get_recorder` read.
+    startRecording: async () => {
+      await invokeFn<unknown>('start_recording');
+      return invokeFn<RecorderSession>('get_recorder');
+    },
 
-    pauseRecording: () => invokeFn<RecorderSession>('pause_recording'),
+    pauseRecording: async () => {
+      await invokeFn<unknown>('pause_recording');
+      return invokeFn<RecorderSession>('get_recorder');
+    },
 
-    resumeRecording: () => invokeFn<RecorderSession>('resume_recording'),
+    resumeRecording: async () => {
+      await invokeFn<unknown>('resume_recording');
+      return invokeFn<RecorderSession>('get_recorder');
+    },
 
-    stopRecording: () => invokeFn<RecorderSession>('stop_recording'),
+    stopRecording: async () => {
+      await invokeFn<unknown>('stop_recording');
+      return invokeFn<RecorderSession>('get_recorder');
+    },
 
-    takeScreenshot: (label?: string) => invokeFn<ScreenshotRef>('take_screenshot', { label }),
+    takeScreenshot: async (label?: string): Promise<ScreenshotRef> => {
+      await invokeFn<string>('take_screenshot', { label });
+      const session = await invokeFn<RecorderSession>('get_recorder');
+      const captured = session.screenshots[session.screenshots.length - 1];
+      if (captured === undefined) {
+        throw new Error('Screenshot was captured but not recorded in the session');
+      }
+      return captured;
+    },
 
     getSetup: () => invokeFn<SetupState>('get_setup'),
 
