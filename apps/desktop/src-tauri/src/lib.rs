@@ -26,9 +26,11 @@ pub fn run() {
             // must never prevent the window from opening.
             if let Ok(data_dir) = app.path().app_data_dir() {
                 let state = app.state::<AppState>();
-                if let Ok(mut domain) = state.domain.lock() {
-                    *domain = tasks::load_from_dir(&data_dir);
-                }
+                let mut domain = match state.domain.lock() {
+                    Ok(d) => d,
+                    Err(p) => p.into_inner(),
+                };
+                *domain = tasks::load_from_dir(&data_dir);
             }
             Ok(())
         })
