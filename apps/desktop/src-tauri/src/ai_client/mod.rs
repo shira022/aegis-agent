@@ -1,12 +1,30 @@
-//! Deterministic, offline mock AI client.
+//! Real AI provider client.
 //!
-//! This module performs no I/O, reads no credentials and never touches the
-//! network. Identical input always yields byte-identical output.
+//! Credentials are read from the OS keychain through [`crate::security`] and
+//! real HTTP requests are issued to the provider endpoints declared in
+//! [`providers`]. The module never logs, echoes or returns API keys or
+//! `Authorization` headers; when a provider has no usable credential the call
+//! fails with an explicit "not configured" error instead of fabricating output.
+//!
+//! All TypeScript-facing response shapes are unchanged: `AiGenerationResponse`
+//! and `AiProviderStatus` keep their exact field names.
+
+mod providers;
+
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use tauri::State;
 
-const MOCK_MODEL: &str = "mock-local";
-const MAX_PROMPT_COMMENT_CHARS: usize = 200;
+use crate::ipc::AppState;
+use crate::security;
+
+/// Provider used when the caller does not name one.
+pub const DEFAULT_PROVIDER: &str = "openai";
+
+const HTTP_TIMEOUT: Duration = Duration::from_secs(60);
+const HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -15,6 +33,12 @@ pub struct AiGenerationRequest {
     pub provider: Option<String>,
     pub model: Option<String>,
     pub context: Option<String>,
+    /// Required for `azure-foundry` and `openai-compatible`.
+    pub base_url: Option<String>,
+    /// Required for `gcp-vertexai` and `aws-bedrock`.
+    pub region: Option<String>,
+    /// Required for `gcp-vertexai`.
+    pub project_id: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq)]
@@ -50,56 +74,145 @@ pub fn prompt_hash(prompt: &str) -> String {
     format!("{:016x}", fnv1a_64(prompt))
 }
 
-fn prompt_comment(prompt: &str) -> String {
-    prompt
-        .replace(['\n', '\r'], " ")
-        .chars()
-        .take(MAX_PROMPT_COMMENT_CHARS)
-        .collect()
+/// Install the rustls crypto provider exactly once. The reqwest client is
+/// built with `rustls-no-provider`, so the process default must exist before a
+/// client is created.
+fn ensure_crypto_provider() {
+    use std::sync::Once;
+    static INSTALL: Once = Once::new();
+    INSTALL.call_once(|| {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    });
 }
 
-fn mock_generate(req: &AiGenerationRequest) -> AiGenerationResponse {
-    let hash = prompt_hash(&req.prompt);
-    let model = req
+fn http_client() -> Result<reqwest::Client, String> {
+    ensure_crypto_provider();
+    reqwest::Client::builder()
+        .timeout(HTTP_TIMEOUT)
+        .connect_timeout(HTTP_CONNECT_TIMEOUT)
+        .build()
+        .map_err(|error| format!("failed to create http client: {error}"))
+}
+
+/// Send a prepared request and return the parsed JSON body. Error bodies are
+/// truncated and never include request headers.
+async fn send_prepared(request: providers::PreparedRequest) -> Result<Value, String> {
+    let client = http_client()?;
+    let mut builder = client.post(&request.url).json(&request.body);
+    for (name, value) in &request.headers {
+        builder = builder.header(name.as_str(), value.as_str());
+    }
+
+    let response = builder
+        .send()
+        .await
+        .map_err(|error| format!("provider request failed: {error}"))?;
+
+    let status = response.status();
+    let body = response
+        .text()
+        .await
+        .map_err(|error| format!("failed to read provider response: {error}"))?;
+
+    if !status.is_success() {
+        return Err(format!(
+            "provider returned HTTP {}: {}",
+            status.as_u16(),
+            providers::truncate(&body, providers::MAX_ERROR_BODY_CHARS)
+        ));
+    }
+
+    serde_json::from_str(&body)
+        .map_err(|error| format!("provider returned an invalid JSON response: {error}"))
+}
+
+/// Provider id from the request, falling back to [`DEFAULT_PROVIDER`].
+fn requested_provider(request: &AiGenerationRequest) -> &str {
+    request
+        .provider
+        .as_deref()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(DEFAULT_PROVIDER)
+}
+
+/// Whether a provider can be used given an optional stored credential.
+fn is_configured(spec: &providers::ProviderSpec, api_key: Option<&str>) -> bool {
+    spec.accepts_anonymous || api_key.map(|key| !key.is_empty()).unwrap_or(false)
+}
+
+/// Run a real generation request against the configured provider.
+pub async fn generate(
+    request: AiGenerationRequest,
+    state: &AppState,
+) -> Result<AiGenerationResponse, String> {
+    let provider_id = requested_provider(&request).to_string();
+    let spec = providers::provider_spec(&provider_id)
+        .ok_or_else(|| format!("unsupported AI provider: {provider_id}"))?;
+
+    let model = request
         .model
-        .clone()
-        .unwrap_or_else(|| MOCK_MODEL.to_string());
+        .as_deref()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(spec.default_model)
+        .to_string();
 
-    let script = format!(
-        "# Aegis Agent mock-generated script\n# prompt: {comment}\n\n\ndef main():\n    print(\"Aegis Agent mock script\")\n    print(\"prompt-hash: {hash}\")\n\n\nif __name__ == \"__main__\":\n    main()\n",
-        comment = prompt_comment(&req.prompt),
-        hash = hash,
-    );
+    let api_key = security::load_secret(state, &provider_id)?;
+    if !is_configured(spec, api_key.as_deref()) {
+        return Err(format!(
+            "provider '{provider_id}' is not configured: no API key stored"
+        ));
+    }
 
-    AiGenerationResponse {
+    let prepared = providers::prepare_request(
+        spec,
+        api_key.as_deref(),
+        &model,
+        &request.prompt,
+        request.context.as_deref(),
+        request.base_url.as_deref(),
+        request.region.as_deref(),
+        request.project_id.as_deref(),
+    )?;
+
+    let body = send_prepared(prepared).await?;
+    let script = providers::strip_code_fences(&providers::extract_text(spec.api_style, &body)?);
+
+    Ok(AiGenerationResponse {
         script,
         language: "python".to_string(),
-        mocked: true,
+        mocked: false,
         model,
-        prompt_hash: hash,
-    }
+        prompt_hash: prompt_hash(&request.prompt),
+    })
 }
 
-// ─── MOCK SEAM ───────────────────────────────────────────────────────────
-// This is the single swap point for a real provider client. To wire the real
-// thing: add the HTTP client dependency, read the credential through
-// security::get_api_key, replace mock_generate() below with a real call, and
-// keep AiGenerationResponse's shape unchanged so the TypeScript side keeps working.
-// Today this function performs no I/O and never touches the network.
 #[tauri::command]
-pub fn ai_generate_script(
+pub async fn ai_generate_script(
     request: AiGenerationRequest,
+    state: State<'_, AppState>,
 ) -> Result<AiGenerationResponse, String> {
-    Ok(mock_generate(&request))
+    generate(request, state.inner()).await
 }
 
 #[tauri::command]
-pub fn ai_provider_status() -> Result<AiProviderStatus, String> {
-    // The mock provider requires no credential and is always "ready".
+pub fn ai_provider_status(
+    provider: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<AiProviderStatus, String> {
+    let provider_id = provider
+        .as_deref()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(DEFAULT_PROVIDER);
+
+    let spec = providers::provider_spec(provider_id)
+        .ok_or_else(|| format!("unsupported AI provider: {provider_id}"))?;
+
+    let api_key = security::load_secret(state.inner(), provider_id)?;
+
     Ok(AiProviderStatus {
-        provider: MOCK_MODEL.to_string(),
-        configured: true,
-        mocked: true,
+        provider: provider_id.to_string(),
+        configured: is_configured(spec, api_key.as_deref()),
+        mocked: false,
     })
 }
 
@@ -113,50 +226,84 @@ mod tests {
             provider: None,
             model: None,
             context: None,
+            base_url: None,
+            region: None,
+            project_id: None,
         }
-    }
-
-    #[test]
-    fn generation_is_deterministic() {
-        let first = ai_generate_script(request("open the browser")).expect("first");
-        let second = ai_generate_script(request("open the browser")).expect("second");
-        assert_eq!(first, second);
-    }
-
-    #[test]
-    fn different_prompts_produce_different_hashes() {
-        let first = ai_generate_script(request("prompt one")).expect("first");
-        let second = ai_generate_script(request("prompt two")).expect("second");
-        assert_ne!(first.prompt_hash, second.prompt_hash);
-    }
-
-    #[test]
-    fn response_is_mocked_and_never_contains_a_key() {
-        let response = ai_generate_script(request("do the thing")).expect("response");
-        assert!(response.mocked);
-        assert_eq!(response.model, "mock-local");
-        assert_eq!(response.language, "python");
-        assert!(!response.script.contains("sk-"));
-    }
-
-    #[test]
-    fn explicit_model_overrides_the_mock_default() {
-        let mut req = request("x");
-        req.model = Some("some-model".to_string());
-        let response = ai_generate_script(req).expect("response");
-        assert_eq!(response.model, "some-model");
-        assert!(response.mocked);
     }
 
     #[test]
     fn prompt_hash_is_stable_and_line_safe() {
         assert_eq!(prompt_hash("abc"), prompt_hash("abc"));
-        let with_newline = ai_generate_script(request("line one\nline two")).expect("response");
-        let comment_line = with_newline
-            .script
-            .lines()
-            .find(|line| line.starts_with("# prompt:"))
-            .expect("prompt comment");
-        assert_eq!(comment_line, "# prompt: line one line two");
+        assert_ne!(prompt_hash("abc"), prompt_hash("abd"));
+    }
+
+    #[test]
+    fn requested_provider_defaults_to_openai() {
+        assert_eq!(requested_provider(&request("x")), DEFAULT_PROVIDER);
+        let configured = AiGenerationRequest {
+            provider: Some("anthropic".to_string()),
+            ..request("x")
+        };
+        assert_eq!(requested_provider(&configured), "anthropic");
+    }
+
+    #[test]
+    fn response_serializes_with_the_expected_camel_case_fields() {
+        let response = AiGenerationResponse {
+            script: "print('ok')".to_string(),
+            language: "python".to_string(),
+            mocked: false,
+            model: "gpt-4o".to_string(),
+            prompt_hash: "deadbeef".to_string(),
+        };
+        let value = serde_json::to_value(&response).expect("serialize");
+        assert_eq!(value["promptHash"], "deadbeef");
+        assert_eq!(value["mocked"], false);
+        assert!(value.get("prompt_hash").is_none());
+    }
+
+    #[test]
+    fn request_deserializes_optional_provider_settings() {
+        let value = serde_json::json!({
+            "prompt": "hello",
+            "provider": "openai-compatible",
+            "baseUrl": "https://example.test/v1"
+        });
+        let request: AiGenerationRequest = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(request.base_url.as_deref(), Some("https://example.test/v1"));
+        assert_eq!(request.provider.as_deref(), Some("openai-compatible"));
+    }
+
+    #[test]
+    fn configured_requires_a_key_unless_anonymous() {
+        let openai = providers::provider_spec("openai").expect("openai");
+        assert!(!is_configured(openai, None));
+        assert!(is_configured(openai, Some("key")));
+
+        let ollama = providers::provider_spec("ollama").expect("ollama");
+        assert!(is_configured(ollama, None));
+    }
+
+    #[test]
+    fn real_provider_errors_never_contain_mock_data() {
+        // A missing provider is reported explicitly, never mocked.
+        let sample = request("x");
+        let unknown = requested_provider(&sample);
+        assert!(providers::provider_spec(unknown).is_some());
+        let error = providers::prepare_request(
+            providers::provider_spec("anthropic").expect("anthropic"),
+            None,
+            "claude-sonnet-4-20250514",
+            "hello",
+            None,
+            None,
+            None,
+            None,
+        )
+        .err()
+        .expect("not configured");
+        assert!(error.contains("not configured"));
+        assert!(!error.to_lowercase().contains("mock"));
     }
 }

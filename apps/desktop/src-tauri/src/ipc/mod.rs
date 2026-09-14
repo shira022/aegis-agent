@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
 use base64::engine::Engine as _;
 
-use crate::security::KeyMask;
+use crate::security::{default_secret_backend, KeyMask, SecretBackend};
 
 // ─── Time helper ────────────────────────────────────────────────────────────
 
@@ -153,6 +153,8 @@ pub struct AppState {
     pub recorder: Mutex<RecorderState>,
     pub executor: Mutex<ExecutorState>,
     pub keychain: Mutex<KeychainStore>,
+    /// Raw-secret storage (OS keychain by default; in-memory in tests).
+    pub secrets: Arc<dyn SecretBackend>,
 }
 
 impl Default for AppState {
@@ -161,6 +163,7 @@ impl Default for AppState {
             recorder: Mutex::new(RecorderState::idle()),
             executor: Mutex::new(ExecutorState::default()),
             keychain: Mutex::new(KeychainStore::default()),
+            secrets: default_secret_backend(),
         }
     }
 }
