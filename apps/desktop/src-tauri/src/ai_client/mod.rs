@@ -140,6 +140,28 @@ fn is_configured(spec: &providers::ProviderSpec, api_key: Option<&str>) -> bool 
     spec.accepts_anonymous || api_key.map(|key| !key.is_empty()).unwrap_or(false)
 }
 
+/// Resolve the model for a request (ADR-009(a)).
+///
+/// The registry's `default_model` is only a UI suggestion: a request that
+/// carries no resolvable model is an actionable error, never silently served
+/// by the suggestion.
+fn resolve_model(
+    request_model: Option<&str>,
+    spec: &providers::ProviderSpec,
+) -> Result<String, String> {
+    request_model
+        .map(str::trim)
+        .filter(|model| !model.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| {
+            format!(
+                "no model specified for provider '{}': set a model in AI settings \
+                 (registry suggestion: {})",
+                spec.id, spec.default_model
+            )
+        })
+}
+
 /// Run a real generation request against the configured provider.
 pub async fn generate(
     request: AiGenerationRequest,
@@ -149,12 +171,7 @@ pub async fn generate(
     let spec = providers::provider_spec(&provider_id)
         .ok_or_else(|| format!("unsupported AI provider: {provider_id}"))?;
 
-    let model = request
-        .model
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or(spec.default_model)
-        .to_string();
+    let model = resolve_model(request.model.as_deref(), spec)?;
 
     let api_key = security::load_secret(state, &provider_id)?;
     if !is_configured(spec, api_key.as_deref()) {
@@ -175,7 +192,9 @@ pub async fn generate(
     )?;
 
     let body = send_prepared(prepared).await?;
-    let script = providers::strip_code_fences(&providers::extract_text(spec.api_style, &body)?);
+    let script = providers::strip_code_fences(
+        &providers::extract_text(spec.api_style, &body).map_err(|e| e.to_string())?,
+    );
 
     Ok(AiGenerationResponse {
         script,
@@ -283,6 +302,30 @@ mod tests {
 
         let ollama = providers::provider_spec("ollama").expect("ollama");
         assert!(is_configured(ollama, None));
+    }
+
+    #[test]
+    fn resolve_model_uses_the_requested_model() {
+        let spec = providers::provider_spec("openai").expect("openai");
+        assert_eq!(
+            resolve_model(Some("my-local-model"), spec).expect("model"),
+            "my-local-model"
+        );
+        assert_eq!(
+            resolve_model(Some("  my-local-model  "), spec).expect("model"),
+            "my-local-model"
+        );
+    }
+
+    #[test]
+    fn resolve_model_rejects_requests_without_a_usable_model() {
+        let spec = providers::provider_spec("openai").expect("openai");
+        for missing in [None, Some(""), Some("   ")] {
+            let error = resolve_model(missing, spec).expect_err("must fail");
+            assert!(error.contains("no model specified for provider 'openai'"));
+            assert!(error.contains("set a model in AI settings"));
+            assert!(error.contains(spec.default_model));
+        }
     }
 
     #[test]

@@ -5,18 +5,24 @@ import type { OperationLog } from '@aegis/shared';
 
 // ─── Mock Vercel AI SDK ─────────────────────────────────────────
 
-const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
+const { mockGenerateText, mockCreateProviderModel } = vi.hoisted(() => ({
+  mockGenerateText: vi.fn(),
+  mockCreateProviderModel: vi.fn(() => ({ modelId: 'mock', provider: 'mock' })),
+}));
+
 vi.mock('ai', () => ({ generateText: mockGenerateText }));
 vi.mock('../provider-adapter', () => ({
-  createProviderModel: vi.fn(() => ({ modelId: 'mock', provider: 'mock' })),
+  createProviderModel: mockCreateProviderModel,
 }));
 
 // ─── Fixtures ───────────────────────────────────────────────────
 
+const TEST_MODEL = 'test-model';
+
 const sampleConfig: AIConfig = {
   providerId: 'openai',
   apiKey: 'test-key',
-  model: 'gpt-4o',
+  model: TEST_MODEL,
   maxTokens: 1000,
   temperature: 0,
 };
@@ -83,8 +89,28 @@ describe('AiEngine.generateCode', () => {
     expect(response.code).toContain('selenium');
     expect(response.explanation).toContain('example.com');
     expect(response.exceptionHandlers).toHaveLength(1);
-    expect(response.metadata.model).toBe('gpt-4o');
+    expect(response.metadata.model).toBe(TEST_MODEL);
     expect(response.metadata.tokensUsed).toBe(150);
+  });
+
+  it('forwards the configured model to the provider adapter', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: 'print(1)',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    await engine.generateCode({ operationLog: sampleOperationLog });
+
+    expect(mockCreateProviderModel).toHaveBeenCalledWith(
+      sampleConfig.providerId,
+      {
+        apiKey: sampleConfig.apiKey,
+        baseUrl: sampleConfig.baseUrl,
+        region: sampleConfig.region,
+      },
+      sampleConfig.model,
+    );
   });
 
   it('handles non-JSON response gracefully', async () => {

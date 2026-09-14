@@ -388,31 +388,97 @@ pub fn prepare_request(
     Ok(PreparedRequest { url, headers, body })
 }
 
-/// Extract the generated text from a provider response body.
-pub fn extract_text(style: ApiStyle, body: &Value) -> Result<String, String> {
-    let text: Option<String> = match style {
-        ApiStyle::OpenAiChat => body
-            .pointer("/choices/0/message/content")
+/// Typed failure modes when a provider response carries no generated text.
+///
+/// Reasoning ("thinking") output is never a source of generated text: a
+/// response that contains only reasoning yields
+/// [`TextExtractionError::ReasoningOnly`] with the reasoning preserved so it
+/// can be surfaced as the model's explanation, and the caller receives an
+/// explicit error instead of the model's internal monologue.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum TextExtractionError {
+    /// The response contained neither generated text nor reasoning text.
+    Missing,
+    /// The response contained reasoning text but no generated text. The
+    /// reasoning is kept so it can be shown to the user as the explanation.
+    ReasoningOnly(String),
+}
+
+impl std::fmt::Display for TextExtractionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TextExtractionError::Missing => {
+                write!(f, "provider response did not contain generated text")
+            }
+            TextExtractionError::ReasoningOnly(_) => write!(
+                f,
+                "provider returned reasoning only (no generated text); \
+                 disable thinking mode for this model if it supports it"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for TextExtractionError {}
+
+/// Read the reasoning text an OpenAI-compatible response may carry next to
+/// `content`. It is the model's explanation, never generated output.
+fn reasoning_text(body: &Value) -> Option<String> {
+    [
+        "/choices/0/message/reasoning",
+        "/choices/0/message/reasoning_content",
+    ]
+    .into_iter()
+    .find_map(|pointer| {
+        body.pointer(pointer)
             .and_then(Value::as_str)
-            .map(str::to_string),
-        ApiStyle::AnthropicMessages | ApiStyle::BedrockInvoke => {
-            body.get("content").and_then(Value::as_array).map(|parts| {
+            .filter(|value| !value.trim().is_empty())
+            .map(str::to_string)
+    })
+}
+
+/// Extract the generated text from a provider response body.
+///
+/// Generated text is extracted only from the provider's `content` field. When
+/// an OpenAI-compatible model returns only reasoning, the result is
+/// [`TextExtractionError::ReasoningOnly`]; reasoning text is never returned as
+/// generated text.
+pub fn extract_text(style: ApiStyle, body: &Value) -> Result<String, TextExtractionError> {
+    match style {
+        ApiStyle::OpenAiChat => {
+            let content = body
+                .pointer("/choices/0/message/content")
+                .and_then(Value::as_str)
+                .filter(|value| !value.trim().is_empty())
+                .map(|value| value.trim().to_string());
+            match content {
+                Some(content) => Ok(content),
+                None => match reasoning_text(body) {
+                    Some(reasoning) => Err(TextExtractionError::ReasoningOnly(reasoning)),
+                    None => Err(TextExtractionError::Missing),
+                },
+            }
+        }
+        ApiStyle::AnthropicMessages | ApiStyle::BedrockInvoke => body
+            .get("content")
+            .and_then(Value::as_array)
+            .map(|parts| {
                 parts
                     .iter()
                     .filter_map(|part| part.get("text").and_then(Value::as_str))
                     .collect::<Vec<_>>()
                     .join("")
             })
-        }
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+            .ok_or(TextExtractionError::Missing),
         ApiStyle::GeminiGenerateContent => body
             .pointer("/candidates/0/content/parts/0/text")
             .and_then(Value::as_str)
-            .map(str::to_string),
-    };
-
-    text.map(|value| value.trim().to_string())
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| "provider response did not contain generated text".to_string())
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+            .ok_or(TextExtractionError::Missing),
+    }
 }
 
 /// Remove a single surrounding markdown code fence, if present.
@@ -683,6 +749,89 @@ mod tests {
     fn extract_text_rejects_empty_responses() {
         let empty = json!({ "choices": [] });
         assert!(extract_text(ApiStyle::OpenAiChat, &empty).is_err());
+    }
+
+    #[test]
+    fn extract_text_returns_content_with_and_without_reasoning() {
+        let with_reasoning = json!({
+            "choices": [{
+                "message": {
+                    "content": "print('from content')",
+                    "reasoning": "print('from reasoning')"
+                }
+            }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &with_reasoning).unwrap(),
+            "print('from content')"
+        );
+
+        let without_reasoning = json!({
+            "choices": [{ "message": { "content": "print('only content')" } }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &without_reasoning).unwrap(),
+            "print('only content')"
+        );
+    }
+
+    #[test]
+    fn extract_text_errors_reasoning_only_when_content_is_empty() {
+        let body = json!({
+            "choices": [{ "message": { "content": "", "reasoning": "the model's explanation" } }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &body).unwrap_err(),
+            TextExtractionError::ReasoningOnly("the model's explanation".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_text_errors_reasoning_only_for_whitespace_content() {
+        let body = json!({
+            "choices": [{
+                "message": { "content": "   ", "reasoning_content": "alternate explanation" }
+            }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &body).unwrap_err(),
+            TextExtractionError::ReasoningOnly("alternate explanation".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_text_reports_missing_when_reasoning_is_whitespace_only() {
+        let body = json!({
+            "choices": [{ "message": { "content": "", "reasoning": "   " } }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &body).unwrap_err(),
+            TextExtractionError::Missing
+        );
+    }
+
+    #[test]
+    fn extract_text_reports_missing_for_null_content_without_reasoning() {
+        let body = json!({
+            "choices": [{ "message": { "content": null } }]
+        });
+        assert_eq!(
+            extract_text(ApiStyle::OpenAiChat, &body).unwrap_err(),
+            TextExtractionError::Missing
+        );
+    }
+
+    #[test]
+    fn text_extraction_error_display_messages() {
+        assert_eq!(
+            TextExtractionError::Missing.to_string(),
+            "provider response did not contain generated text"
+        );
+        assert_eq!(
+            TextExtractionError::ReasoningOnly("ignored".to_string()).to_string(),
+            "provider returned reasoning only (no generated text); \
+             disable thinking mode for this model if it supports it"
+        );
     }
 
     #[test]

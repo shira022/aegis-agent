@@ -133,7 +133,7 @@ describe('ProviderSelector', () => {
     expect(screen.queryByTestId('base-url-input')).toBeNull();
   });
 
-  it('model dropdown shows correct models for selected provider', () => {
+  it('model dropdown renders one option per availableModels entry', () => {
     render(
       <ProviderSelector
         {...defaultProps}
@@ -141,8 +141,41 @@ describe('ProviderSelector', () => {
       />,
     );
     const select = screen.getByTestId('model-select') as HTMLSelectElement;
-    expect(select.value).toBe('claude-sonnet-4-20250514');
-    expect(select.options.length).toBe(3);
+    const optionValues = Array.from(select.options).map((option) => option.value);
+    expect(optionValues).toEqual(PROVIDER_REGISTRY.anthropic.availableModels);
+  });
+
+  it('model dropdown defaults to the registry suggestion', () => {
+    render(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="anthropic"
+      />,
+    );
+    const select = screen.getByTestId('model-select') as HTMLSelectElement;
+    expect(select.value).toBe(PROVIDER_REGISTRY.anthropic.defaultModel);
+  });
+
+  it('shows the configured model and propagates model selection to the provider', () => {
+    const { availableModels } = PROVIDER_REGISTRY.anthropic;
+    const configuredModel = availableModels[0];
+    const nextModel = availableModels[availableModels.length - 1];
+    expect(nextModel).not.toBe(configuredModel);
+
+    render(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="anthropic"
+        settings={{ providerId: 'anthropic', apiKey: '', model: configuredModel }}
+      />,
+    );
+    const select = screen.getByTestId('model-select') as HTMLSelectElement;
+    expect(select.value).toBe(configuredModel);
+
+    fireEvent.change(select, { target: { value: nextModel } });
+    expect(defaultProps.onSettingsChange).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'anthropic', model: nextModel }),
+    );
   });
 
   it('API key input has mask toggle', () => {

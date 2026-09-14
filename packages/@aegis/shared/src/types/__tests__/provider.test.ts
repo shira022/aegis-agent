@@ -5,6 +5,8 @@ import {
   type ProviderSettings,
 } from '../provider';
 
+const TEST_MODEL = 'test-model';
+
 describe('PROVIDER_REGISTRY', () => {
   const providerIds: ProviderId[] = [
     'openai', 'anthropic', 'google', 'aws-bedrock', 'azure-foundry',
@@ -71,14 +73,12 @@ describe('PROVIDER_REGISTRY', () => {
     expect(PROVIDER_REGISTRY['openai-compatible'].requiresProjectId).toBe(false);
   });
 
-  it('has correct default models', () => {
-    expect(PROVIDER_REGISTRY.openai.defaultModel).toBe('gpt-4o');
-    expect(PROVIDER_REGISTRY.anthropic.defaultModel).toBe('claude-sonnet-4-20250514');
-    expect(PROVIDER_REGISTRY.google.defaultModel).toBe('gemini-2.5-flash');
-    expect(PROVIDER_REGISTRY['aws-bedrock'].defaultModel).toBe('anthropic.claude-sonnet-4-20250514');
-    expect(PROVIDER_REGISTRY['azure-foundry'].defaultModel).toBe('gpt-4o');
-    expect(PROVIDER_REGISTRY['gcp-vertexai'].defaultModel).toBe('gemini-2.5-flash');
-    expect(PROVIDER_REGISTRY.ollama.defaultModel).toBe('llama3.1');
+  it('suggests a non-empty default model drawn from availableModels', () => {
+    for (const id of providerIds) {
+      const config = PROVIDER_REGISTRY[id];
+      expect(config.defaultModel.length).toBeGreaterThan(0);
+      expect(config.availableModels).toContain(config.defaultModel);
+    }
   });
 
   it('each provider has at least one available model', () => {
@@ -87,6 +87,9 @@ describe('PROVIDER_REGISTRY', () => {
       expect(config.availableModels).toBeDefined();
       expect(Array.isArray(config.availableModels)).toBe(true);
       expect(config.availableModels.length).toBeGreaterThanOrEqual(1);
+      for (const model of config.availableModels) {
+        expect(model.length).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -114,10 +117,11 @@ describe('ProviderSettings type', () => {
     const settings: ProviderSettings = {
       providerId: 'gcp-vertexai',
       apiKey: 'test-key',
-      model: 'gemini-2.5-pro',
+      model: TEST_MODEL,
       region: 'us-central1',
       projectId: 'my-project',
     };
+    expect(settings.model).toBe(TEST_MODEL);
     expect(settings.region).toBe('us-central1');
     expect(settings.projectId).toBe('my-project');
   });
