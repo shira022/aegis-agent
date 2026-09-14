@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
+use tauri::Manager;
 
 use crate::ipc::{now_ms, AppState};
 use crate::setup;
@@ -105,6 +106,7 @@ fn lines_for(stream: &str, content: &str) -> Vec<OutputLine> {
 #[tauri::command]
 pub fn run_python_script(
     config: ExecutionConfig,
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<ExecutionResult, String> {
     if config.script_path.is_empty() {
@@ -144,8 +146,11 @@ pub fn run_python_script(
 
     if let Some(dir) = config.working_dir.as_deref() {
         cmd.current_dir(dir);
-    } else if let Some(runtime_dir) = setup::resolve_runtime_dir() {
-        cmd.current_dir(runtime_dir);
+    } else {
+        let resource_dir = app.path().resource_dir().ok();
+        if let Some(runtime_dir) = setup::resolve_runtime_dir(resource_dir.as_deref()).dir {
+            cmd.current_dir(runtime_dir);
+        }
     }
 
     if let Some(env) = &config.env {
