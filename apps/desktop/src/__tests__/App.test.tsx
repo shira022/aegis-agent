@@ -110,6 +110,27 @@ describe('App integration', () => {
     expect(created.length).toBeGreaterThanOrEqual(1);
   });
 
+  it('edits a task from the list and reflects the new name in both views', async () => {
+    renderApp();
+    await completeSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: /Tasks/ }));
+    await screen.findByRole('heading', { name: 'Task List' });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    const input = await screen.findByTestId('task-name-input');
+    expect(input).toHaveValue('Invoice Download');
+
+    fireEvent.change(input, { target: { value: 'Invoice Archive' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Updated "Invoice Archive"')).toBeInTheDocument();
+    expect(screen.queryByText('Invoice Download')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('Invoice Archive').length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   it('opens a recorded run from the dashboard in the Action Flow view', async () => {
     renderApp();
     await completeSetup();

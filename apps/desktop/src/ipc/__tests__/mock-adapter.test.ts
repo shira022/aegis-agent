@@ -52,6 +52,34 @@ describe('createMockAdapter', () => {
     expect(tasks.map((task) => task.id)).not.toContain(first.id);
   });
 
+  it('updates an existing task name and bumps updatedAt', async () => {
+    const api = createMockAdapter();
+    const before = (await api.listTasks()).find((task) => task.id === 'task-1');
+    expect(before).toBeDefined();
+
+    const updated = await api.updateTask('task-1', { name: 'Invoice Archive' });
+
+    expect(updated.id).toBe('task-1');
+    expect(updated.name).toBe('Invoice Archive');
+    expect(updated.scriptPath).toBe(before?.scriptPath);
+
+    const after = (await api.listTasks()).find((task) => task.id === 'task-1');
+    expect(after?.name).toBe('Invoice Archive');
+    expect(after?.updatedAt).not.toBe(before?.updatedAt);
+  });
+
+  it('leaves other tasks untouched when updating one', async () => {
+    const api = createMockAdapter();
+    await api.updateTask('task-1', { name: 'Renamed' });
+    const tasks = await api.listTasks();
+    expect(tasks.find((task) => task.id === 'task-2')?.name).toBe('CRM Contact Sync');
+  });
+
+  it('throws when updating an unknown task', async () => {
+    const api = createMockAdapter();
+    await expect(api.updateTask('missing', { name: 'Nope' })).rejects.toThrow();
+  });
+
   it('runs a task and returns generated steps', async () => {
     const api = createMockAdapter();
     const run = await api.runTask('task-3');

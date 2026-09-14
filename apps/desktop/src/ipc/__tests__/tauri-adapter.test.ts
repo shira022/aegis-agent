@@ -29,6 +29,14 @@ describe('createTauriAdapter', () => {
     expect(invokeFn).toHaveBeenCalledWith('create_task', { input: { name: 'New Flow' } });
   });
 
+  it('updateTask is explicitly unimplemented and does not invent a command', async () => {
+    const { invokeFn, api } = setup();
+    await expect(api.updateTask('task-1', { name: 'Renamed' })).rejects.toThrow(
+      /does not expose a task update command yet/,
+    );
+    expect(invokeFn).not.toHaveBeenCalled();
+  });
+
   it('deleteTask invokes delete_task with taskId', async () => {
     const { invokeFn, api } = setup();
     invokeFn.mockResolvedValue(undefined);

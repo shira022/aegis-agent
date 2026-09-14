@@ -1,5 +1,5 @@
 import type { Task } from '@aegis/shared';
-import type { DesktopApi, NewTaskInput } from '../ipc/types';
+import type { DesktopApi, NewTaskInput, UpdateTaskInput } from '../ipc/types';
 import { createStore, toErrorMessage, type Store } from './createStore';
 
 export interface TasksState {
@@ -11,6 +11,7 @@ export interface TasksState {
 export interface TasksActions {
   load(): Promise<void>;
   create(input: NewTaskInput): Promise<Task | null>;
+  update(id: string, patch: UpdateTaskInput): Promise<Task | null>;
   remove(id: string): Promise<void>;
   run(id: string): Promise<void>;
 }
@@ -37,6 +38,21 @@ export function createTasksStore(api: DesktopApi): TasksStore {
     try {
       const task = await api.createTask(input);
       state.setState((prev) => ({ ...prev, tasks: [...prev.tasks, task], error: null }));
+      return task;
+    } catch (error) {
+      state.setState((prev) => ({ ...prev, error: toErrorMessage(error) }));
+      return null;
+    }
+  };
+
+  const update = async (id: string, patch: UpdateTaskInput): Promise<Task | null> => {
+    try {
+      const task = await api.updateTask(id, patch);
+      state.setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((candidate) => (candidate.id === id ? task : candidate)),
+        error: null,
+      }));
       return task;
     } catch (error) {
       state.setState((prev) => ({ ...prev, error: toErrorMessage(error) }));
@@ -72,5 +88,5 @@ export function createTasksStore(api: DesktopApi): TasksStore {
     }
   };
 
-  return { state, actions: { load, create, remove, run } };
+  return { state, actions: { load, create, update, remove, run } };
 }

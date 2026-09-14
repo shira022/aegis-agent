@@ -64,6 +64,10 @@ export interface NewTaskInput {
   name: string;
 }
 
+export interface UpdateTaskInput {
+  name: string;
+}
+
 export interface ProviderKeyInput {
   providerId: string;
   apiKey: string;
@@ -82,6 +86,7 @@ export interface DesktopApi {
   isTauri(): boolean;
   listTasks(): Promise<Task[]>;
   createTask(input: NewTaskInput): Promise<Task>;
+  updateTask(taskId: string, patch: UpdateTaskInput): Promise<Task>;
   deleteTask(taskId: string): Promise<void>;
   runTask(taskId: string): Promise<TaskRun>;
   getActiveRun(): Promise<TaskRun | null>;
