@@ -96,9 +96,14 @@ describe('HealingNotifier', () => {
       />,
     );
 
-    const japanese =
-      'セレクター「#contacts」が変更されたため、テキストベースのフォールバックを試行しています。';
-    const english = 'Selector "#contacts" changed, attempting text-based fallback.';
+    const japanese = i18n.t('healing.messages.selectorChanged', {
+      selector: '#contacts',
+      lng: 'ja',
+    }) as string;
+    const english = i18n.t('healing.messages.selectorChanged', {
+      selector: '#contacts',
+      lng: 'en',
+    }) as string;
     expect(japanese).not.toBe(english);
     expect(screen.getByText(japanese)).toBeInTheDocument();
     expect(screen.queryByText(english)).not.toBeInTheDocument();

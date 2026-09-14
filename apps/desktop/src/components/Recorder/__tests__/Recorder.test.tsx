@@ -146,7 +146,15 @@ describe('Recorder', () => {
     });
     render(<Recorder session={session} {...handlers} />);
 
-    expect(screen.getByText('スクリーンショット 1')).toBeInTheDocument();
-    expect(screen.queryByText('Screenshot 1')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        i18n.t('recorder.screenshotLabel', { index: 1, lng: 'ja' }) as string,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        i18n.t('recorder.screenshotLabel', { index: 1, lng: 'en' }) as string,
+      ),
+    ).not.toBeInTheDocument();
   });
 });
