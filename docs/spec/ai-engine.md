@@ -134,7 +134,7 @@ suite specified in [ADR-010](../adr/010-real-model-e2e-verification.md).
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `CodeGenerator` | ✅ Complete | Shared library; not called by the desktop app |
+| `CodeGenerator` | ✅ Complete | Shared library; no importer anywhere in this repository (`@aegis/ai-engine` has 0 references from `apps/` or `packages/`) |
 | `PromptBuilder` | ✅ Complete | Safety prompt + JSON output contract |
 | `InputValidator` | ✅ Complete | Dangerous pattern detection (`validators.ts:6-84`) |
 | `CodeValidator` | ✅ Complete | Syntax, dangerous-op and determinism checks (`validators.ts:32-115`) |
