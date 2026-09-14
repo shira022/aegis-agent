@@ -130,7 +130,8 @@ function seedHealing(): HealingEvent[] {
       id: 'heal-1',
       taskId: 'task-2',
       type: 'healing',
-      message: 'Selector "#contacts" changed, attempting text-based fallback.',
+      messageKey: 'healing.messages.selectorChanged',
+      messageParams: { selector: '#contacts' },
       strategy: 'text-fallback',
       timestamp: new Date('2025-06-15T11:00:07Z').getTime(),
       resolved: false,
@@ -139,7 +140,7 @@ function seedHealing(): HealingEvent[] {
       id: 'heal-2',
       taskId: 'task-1',
       type: 'healed',
-      message: 'Recovered from a slow page load after a retry.',
+      messageKey: 'healing.messages.recoveredAfterRetry',
       strategy: 'retry',
       timestamp: new Date('2025-06-15T10:30:06Z').getTime(),
       resolved: true,
@@ -318,7 +319,8 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
       await delay();
       const screenshot: ScreenshotRef = {
         id: createId('shot'),
-        label: label ?? `Screenshot ${recorder.screenshots.length + 1}`,
+        ...(label === undefined ? {} : { label }),
+        index: recorder.screenshots.length + 1,
         capturedAt: Date.now(),
       };
       recorder = { ...recorder, screenshots: [...recorder.screenshots, screenshot] };

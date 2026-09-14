@@ -27,7 +27,13 @@ export interface HealingEvent {
   id: string;
   taskId: string;
   type: HealingEventType;
-  message: string;
+  /**
+   * Translation key for the event body. The renderer resolves it against the
+   * active locale so the message is never baked into the payload as English.
+   */
+  messageKey: string;
+  /** Interpolation values for {@link HealingEvent.messageKey}. */
+  messageParams?: Record<string, string | number>;
   strategy?: string;
   timestamp: number;
   resolved: boolean;
@@ -39,7 +45,10 @@ export type RecorderStatus = 'idle' | 'recording' | 'paused' | 'stopped';
 
 export interface ScreenshotRef {
   id: string;
-  label: string;
+  /** User-supplied label (user content, rendered verbatim when present). */
+  label?: string;
+  /** 1-based sequence number used to render the localized default label. */
+  index: number;
   capturedAt: number;
 }
 

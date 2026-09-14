@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { changeLanguage, i18n } from '@aegis/ui';
 import type { RecorderSession, RecorderStatus } from '../../../ipc';
 import { Recorder } from '../Recorder';
 
@@ -21,6 +22,12 @@ describe('Recorder', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await act(async () => {
+      await changeLanguage('en');
+    });
   });
 
   const expectMatrix = (status: RecorderStatus): void => {
@@ -97,8 +104,8 @@ describe('Recorder', () => {
         { type: 'type', timestamp: '2025-01-01T00:00:01Z', target: {} },
       ],
       screenshots: [
-        { id: 'shot-1', label: 'After login', capturedAt: Date.now() },
-        { id: 'shot-2', label: 'On dashboard', capturedAt: Date.now() },
+        { id: 'shot-1', label: 'After login', index: 1, capturedAt: Date.now() },
+        { id: 'shot-2', label: 'On dashboard', index: 2, capturedAt: Date.now() },
       ],
     });
     render(<Recorder session={session} {...handlers} />);
@@ -106,5 +113,40 @@ describe('Recorder', () => {
     expect(screen.getByTestId('recorder-screenshot-count')).toHaveTextContent('2');
     expect(screen.getByText('After login')).toBeInTheDocument();
     expect(screen.getByText('On dashboard')).toBeInTheDocument();
+  });
+
+  it('localizes the default screenshot label from its index', () => {
+    const session = makeSession({
+      status: 'recording',
+      startedAt: Date.now(),
+      screenshots: [
+        { id: 'shot-1', index: 1, capturedAt: Date.now() },
+        { id: 'shot-2', index: 2, capturedAt: Date.now() },
+      ],
+    });
+    render(<Recorder session={session} {...handlers} />);
+
+    expect(
+      screen.getByText(i18n.t('recorder.screenshotLabel', { index: 1 }) as string),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(i18n.t('recorder.screenshotLabel', { index: 2 }) as string),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the default screenshot label in Japanese', async () => {
+    await act(async () => {
+      await changeLanguage('ja');
+    });
+
+    const session = makeSession({
+      status: 'recording',
+      startedAt: Date.now(),
+      screenshots: [{ id: 'shot-1', index: 1, capturedAt: Date.now() }],
+    });
+    render(<Recorder session={session} {...handlers} />);
+
+    expect(screen.getByText('スクリーンショット 1')).toBeInTheDocument();
+    expect(screen.queryByText('Screenshot 1')).not.toBeInTheDocument();
   });
 });

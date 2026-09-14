@@ -49,35 +49,38 @@ export function HealingNotifier({ events, onDismiss, onDismissAll }: HealingNoti
         </div>
       )}
 
-      {events.map((event) => (
-        <div
-          key={event.id}
-          data-testid="healing-event"
-          data-type={event.type}
-          className={`flex items-start gap-3 rounded-lg border px-3 py-2 shadow-lg ${HEALING_CLASSES[event.type]}`}
-        >
-          <span data-testid="healing-icon" className="pt-0.5">
-            <Icon
-              icon={healingIcons[event.type]}
-              size={16}
-              label={t(HEALING_LABEL_KEYS[event.type])}
-            />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">{t(HEALING_LABEL_KEYS[event.type])}</p>
-            <p className="text-xs break-words">{event.message}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-wide opacity-70">{event.taskId}</p>
-          </div>
-          <button
-            type="button"
-            aria-label={t('healing.dismiss', { message: event.message })}
-            onClick={() => onDismiss(event.id)}
-            className="inline-flex h-6 w-6 items-center justify-center text-current opacity-60 hover:opacity-100"
+      {events.map((event) => {
+        const message = t(event.messageKey, event.messageParams);
+        return (
+          <div
+            key={event.id}
+            data-testid="healing-event"
+            data-type={event.type}
+            className={`flex items-start gap-3 rounded-lg border px-3 py-2 shadow-lg ${HEALING_CLASSES[event.type]}`}
           >
-            <Icon icon={X} size={16} />
-          </button>
-        </div>
-      ))}
+            <span data-testid="healing-icon" className="pt-0.5">
+              <Icon
+                icon={healingIcons[event.type]}
+                size={16}
+                label={t(HEALING_LABEL_KEYS[event.type])}
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{t(HEALING_LABEL_KEYS[event.type])}</p>
+              <p className="text-xs break-words">{message}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-wide opacity-70">{event.taskId}</p>
+            </div>
+            <button
+              type="button"
+              aria-label={t('healing.dismiss', { message })}
+              onClick={() => onDismiss(event.id)}
+              className="inline-flex h-6 w-6 items-center justify-center text-current opacity-60 hover:opacity-100"
+            >
+              <Icon icon={X} size={16} />
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

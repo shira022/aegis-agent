@@ -153,6 +153,7 @@
     "started": "開始時刻",
     "actions": "アクション",
     "screenshots": "スクリーンショット",
+    "screenshotLabel": "スクリーンショット {{index}}",
     "status": {
       "idle": "待機中",
       "recording": "記録中",
@@ -183,7 +184,11 @@
     "failed": "失敗",
     "fallback": "フォールバック",
     "dismissAll": "すべて閉じる",
-    "dismiss": "{{message}}を閉じる"
+    "dismiss": "{{message}}を閉じる",
+    "messages": {
+      "selectorChanged": "セレクター「{{selector}}」が変更されたため、テキストベースのフォールバックを試行しています。",
+      "recoveredAfterRetry": "再試行後、ページの読み込み遅延から復旧しました。"
+    }
   },
   "toast": {
     "success": "成功",

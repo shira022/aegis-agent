@@ -154,6 +154,7 @@
     "started": "Started",
     "actions": "Actions",
     "screenshots": "Screenshots",
+    "screenshotLabel": "Screenshot {{index}}",
     "status": {
       "idle": "Idle",
       "recording": "Recording",
@@ -184,7 +185,11 @@
     "failed": "Failed",
     "fallback": "Fallback",
     "dismissAll": "Dismiss all",
-    "dismiss": "Dismiss {{message}}"
+    "dismiss": "Dismiss {{message}}",
+    "messages": {
+      "selectorChanged": "Selector \"{{selector}}\" changed, attempting text-based fallback.",
+      "recoveredAfterRetry": "Recovered from a slow page load after a retry."
+    }
   },
   "toast": {
     "success": "Success",

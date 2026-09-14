@@ -109,7 +109,10 @@ export function Recorder({
               key={screenshot.id}
               className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
-              <span className="text-fg">{screenshot.label}</span>
+              <span className="text-fg">
+                {screenshot.label ??
+                  t('recorder.screenshotLabel', { index: screenshot.index })}
+              </span>
               <time className="text-xs text-muted">
                 {formatTimestamp(screenshot.capturedAt)}
               </time>
