@@ -79,11 +79,15 @@ export class AiEngine {
   // ─── Private ────────────────────────────────────────────────────
 
   private createModel() {
-    return createProviderModel(this.config.providerId, {
-      apiKey: this.config.apiKey,
-      baseUrl: this.config.baseUrl,
-      region: this.config.region,
-    });
+    return createProviderModel(
+      this.config.providerId,
+      {
+        apiKey: this.config.apiKey,
+        baseUrl: this.config.baseUrl,
+        region: this.config.region,
+      },
+      this.config.model,
+    );
   }
 
   private parseCodeResponse(

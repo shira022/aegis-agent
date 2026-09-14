@@ -59,6 +59,8 @@ import { createProviderModel, requiresApiKey } from '../provider-adapter';
 import { AiEngine } from '../generator';
 import type { ProviderId } from '@aegis/shared';
 
+const TEST_MODEL = 'test-model';
+
 describe('Provider Adapter — 9 providers', () => {
   const DUMMY_CREDENTIALS = {
     apiKey: 'test-api-key-xxxxx',
@@ -72,7 +74,7 @@ describe('Provider Adapter — 9 providers', () => {
       { id: 'anthropic', desc: 'Anthropic' },
       { id: 'google', desc: 'Google' },
       { id: 'aws-bedrock', desc: 'AWS Bedrock', credOverrides: { region: 'us-west-2' } },
-      { id: 'azure-foundry', desc: 'Azure Foundry', credOverrides: { baseUrl: 'https://my-resource.openai.azure.com/openai/deployments/gpt-4o' } },
+      { id: 'azure-foundry', desc: 'Azure Foundry', credOverrides: { baseUrl: 'https://my-resource.openai.azure.com/openai/deployments/my-deployment' } },
       { id: 'gcp-vertexai', desc: 'GCP Vertex AI' },
       { id: 'ollama', desc: 'Ollama (Local)', credOverrides: { baseUrl: 'http://localhost:11434/v1' } },
       { id: 'lm-studio', desc: 'LM Studio (Local)', credOverrides: { baseUrl: 'http://localhost:1234/v1' } },
@@ -81,15 +83,27 @@ describe('Provider Adapter — 9 providers', () => {
 
     it.each(providers)('creates model for $id ($desc)', ({ id, credOverrides }) => {
       const creds = { ...DUMMY_CREDENTIALS, ...credOverrides };
-      const model = createProviderModel(id, creds);
+      const model = createProviderModel(id, creds, TEST_MODEL);
       expect(model).toBeDefined();
-      expect(model).toHaveProperty('modelId');
+      expect(model).toHaveProperty('modelId', TEST_MODEL);
     });
 
     it('throws for unknown provider', () => {
       expect(() =>
-        createProviderModel('unknown' as ProviderId, DUMMY_CREDENTIALS),
+        createProviderModel('unknown' as ProviderId, DUMMY_CREDENTIALS, TEST_MODEL),
       ).toThrow('Unsupported provider');
+    });
+
+    it('throws when the model is empty', () => {
+      expect(() =>
+        createProviderModel('openai', DUMMY_CREDENTIALS, ''),
+      ).toThrow('model is required');
+    });
+
+    it('throws when the model is only whitespace', () => {
+      expect(() =>
+        createProviderModel('openai', DUMMY_CREDENTIALS, '   '),
+      ).toThrow('model is required');
     });
   });
 
@@ -144,7 +158,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
     const engine = new AiEngine({
       providerId: id,
       apiKey: id === 'aws-bedrock' ? '' : 'test-key',
-      model: 'test-model',
+      model: TEST_MODEL,
       baseUrl,
     });
 
@@ -172,7 +186,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
     const engine = new AiEngine({
       providerId: id,
       apiKey: id === 'aws-bedrock' ? '' : 'test-key',
-      model: 'test-model',
+      model: TEST_MODEL,
       baseUrl,
     });
 
@@ -197,7 +211,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
     const engine = new AiEngine({
       providerId: id,
       apiKey: id === 'aws-bedrock' ? '' : 'test-key',
-      model: 'test-model',
+      model: TEST_MODEL,
       baseUrl,
     });
 
@@ -214,7 +228,7 @@ describe('AiEngine — provider integration (mocked SDK)', () => {
     const engine = new AiEngine({
       providerId: 'openai',
       apiKey: 'test-key',
-      model: 'test-model',
+      model: TEST_MODEL,
     });
 
     const result = await engine.generateCode({
