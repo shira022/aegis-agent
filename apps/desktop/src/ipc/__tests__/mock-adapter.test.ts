@@ -52,6 +52,19 @@ describe('createMockAdapter', () => {
     expect(tasks.map((task) => task.id)).not.toContain(first.id);
   });
 
+  it('updates a task name and rejects unknown ids', async () => {
+    const api = createMockAdapter();
+    const [first] = await api.listTasks();
+    const renamed = await api.updateTask(first.id, { name: 'Renamed Flow' });
+    expect(renamed.id).toBe(first.id);
+    expect(renamed.name).toBe('Renamed Flow');
+    expect((await api.listTasks()).find((task) => task.id === first.id)?.name).toBe(
+      'Renamed Flow',
+    );
+
+    await expect(api.updateTask('missing', { name: 'x' })).rejects.toThrow();
+  });
+
   it('runs a task and returns generated steps', async () => {
     const api = createMockAdapter();
     const run = await api.runTask('task-3');

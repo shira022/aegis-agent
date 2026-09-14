@@ -3,8 +3,9 @@
 pub mod screenshot;
 
 use crate::ipc::{
-    now_ms, AppState, BoundingBox, RecorderState, RecordingSession, RecordingState,
-    SessionMetadata,
+    iso8601_from_ms, now_ms, AppState, BoundingBox, OperationStep, RecordedAction, RecorderSession,
+    RecorderState, RecorderStatus, RecordingSession, RecordingState, ScreenshotRef,
+    SessionMetadata, StepTarget, StepType,
 };
 
 const USER_AGENT: &str = "Aegis Agent Desktop/0.1.0";
@@ -35,7 +36,9 @@ pub enum RecorderTransition {
     /// Begin a new session. The caller builds the fully-populated session.
     Start(RecordingSession),
     /// Finalise the current session at `now` (epoch ms).
-    Stop { now: u64 },
+    Stop {
+        now: u64,
+    },
     Pause,
     Resume,
 }
@@ -105,6 +108,87 @@ pub fn apply_transition(
     }
 }
 
+/// Map the internal state machine enum onto the TypeScript `RecorderStatus` union.
+pub fn recorder_status(state: RecordingState) -> RecorderStatus {
+    match state {
+        RecordingState::Idle => RecorderStatus::Idle,
+        RecordingState::Recording => RecorderStatus::Recording,
+        RecordingState::Paused => RecorderStatus::Paused,
+        RecordingState::Stopped => RecorderStatus::Stopped,
+    }
+}
+
+fn step_type(kind: &str) -> StepType {
+    match kind {
+        "click" => StepType::Click,
+        "type" => StepType::Type,
+        "navigate" => StepType::Navigate,
+        "screenshot" => StepType::Screenshot,
+        _ => StepType::Wait,
+    }
+}
+
+fn recorded_action_to_step(action: &RecordedAction) -> OperationStep {
+    let selector = action
+        .selector
+        .css_selector
+        .clone()
+        .or_else(|| action.selector.xpath.clone())
+        .or_else(|| action.selector.text.clone());
+    let text = action
+        .selector
+        .text
+        .clone()
+        .or_else(|| action.metadata.value.clone());
+    OperationStep {
+        step_type: step_type(&action.action_type),
+        target: StepTarget {
+            selector,
+            text,
+            screenshot: action.screenshot.clone(),
+        },
+        timestamp: iso8601_from_ms(action.timestamp),
+    }
+}
+
+/// Project the internal recorder state onto the TypeScript `RecorderSession`.
+///
+/// Screenshot references are supplied by the caller because they are tracked in
+/// the domain store; the internal `RecordingSession` does not carry them.
+pub fn session_view(state: &RecorderState, screenshots: Vec<ScreenshotRef>) -> RecorderSession {
+    match &state.session {
+        Some(session) => RecorderSession {
+            status: recorder_status(session.state),
+            started_at: Some(session.start_time),
+            stopped_at: session.end_time,
+            actions: session
+                .actions
+                .iter()
+                .map(recorded_action_to_step)
+                .collect(),
+            screenshots,
+        },
+        None => RecorderSession {
+            status: recorder_status(state.state),
+            started_at: None,
+            stopped_at: None,
+            actions: Vec::new(),
+            screenshots,
+        },
+    }
+}
+
+/// Return the TypeScript-shaped recorder session (see [`session_view`]).
+#[tauri::command]
+pub fn get_recorder(state: tauri::State<'_, AppState>) -> Result<RecorderSession, String> {
+    let recorder = lock_recorder(&state)?;
+    let domain = state
+        .domain
+        .lock()
+        .map_err(|e| format!("domain state lock poisoned: {e}"))?;
+    Ok(session_view(&recorder, domain.screenshots.clone()))
+}
+
 fn lock_recorder<'a>(
     state: &'a tauri::State<'_, AppState>,
 ) -> Result<std::sync::MutexGuard<'a, RecorderState>, String> {
@@ -170,16 +254,36 @@ pub fn resume_recording(state: tauri::State<'_, AppState>) -> Result<(), String>
 }
 
 #[tauri::command]
-pub fn get_recording_state(
-    state: tauri::State<'_, AppState>,
-) -> Result<RecordingState, String> {
+pub fn get_recording_state(state: tauri::State<'_, AppState>) -> Result<RecordingState, String> {
     let guard = lock_recorder(&state)?;
     Ok(guard.state)
 }
 
+/// Capture the screen and return the base64 PNG.
+///
+/// The desktop frontend only needs a [`ScreenshotRef`], so a reference is
+/// recorded in the domain store as a side effect; the `@aegis/recorder`
+/// package still receives the raw base64 string it expects.
 #[tauri::command]
-pub fn take_screenshot(region: Option<BoundingBox>) -> Result<String, String> {
-    screenshot::capture_base64(region)
+pub fn take_screenshot(
+    region: Option<BoundingBox>,
+    label: Option<String>,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let encoded = screenshot::capture_base64(region)?;
+
+    let mut domain = state
+        .domain
+        .lock()
+        .map_err(|e| format!("domain state lock poisoned: {e}"))?;
+    let fallback_label = format!("Screenshot {}", domain.screenshots.len() + 1);
+    domain.screenshots.push(ScreenshotRef {
+        id: uuid::Uuid::new_v4().to_string(),
+        label: label.filter(|l| !l.is_empty()).unwrap_or(fallback_label),
+        captured_at: now_ms(),
+    });
+
+    Ok(encoded)
 }
 
 #[cfg(test)]

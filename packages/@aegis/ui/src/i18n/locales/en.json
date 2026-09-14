@@ -5,7 +5,10 @@
   "app": {
     "name": "Aegis Agent",
     "tagline": "Workflow Automation",
-    "loadingDependencies": "Checking dependencies..."
+    "loadingDependencies": "Checking dependencies...",
+    "setupErrorTitle": "Setup could not be loaded",
+    "setupErrorHint": "The desktop backend did not respond. Make sure the app is running correctly and try again.",
+    "retry": "Retry"
   },
   "nav": {
     "dashboard": "Dashboard",

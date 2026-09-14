@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
+use tauri::Manager;
 
 use crate::ipc::{now_ms, AppState};
 use crate::setup;
@@ -105,13 +106,19 @@ fn lines_for(stream: &str, content: &str) -> Vec<OutputLine> {
 #[tauri::command]
 pub fn run_python_script(
     config: ExecutionConfig,
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<ExecutionResult, String> {
     if config.script_path.is_empty() {
         return Err("scriptPath must not be empty".to_string());
     }
 
-    let (python_opt, _source) = setup::resolve_python(config.python_path.as_deref());
+    let resource_dir = app.path().resource_dir().ok();
+    let runtime_dir = setup::resolve_runtime_dir(resource_dir.as_deref()).dir;
+    let (python_opt, _source) = setup::resolve_python(
+        config.python_path.as_deref(),
+        runtime_dir.as_deref().map(std::path::Path::new),
+    );
     let python = python_opt.ok_or_else(|| {
         "python interpreter not found; set AEGIS_PYTHON_PATH or add python3 to PATH".to_string()
     })?;
@@ -144,7 +151,7 @@ pub fn run_python_script(
 
     if let Some(dir) = config.working_dir.as_deref() {
         cmd.current_dir(dir);
-    } else if let Some(runtime_dir) = setup::resolve_runtime_dir() {
+    } else if let Some(runtime_dir) = runtime_dir {
         cmd.current_dir(runtime_dir);
     }
 
@@ -320,7 +327,10 @@ mod tests {
 
     #[test]
     fn empty_args_produce_two_elements() {
-        assert_eq!(build_argv(&config("s.py", None), "python"), vec!["python", "s.py"]);
+        assert_eq!(
+            build_argv(&config("s.py", None), "python"),
+            vec!["python", "s.py"]
+        );
         assert_eq!(
             build_argv(&config("s.py", Some(vec![])), "python"),
             vec!["python", "s.py"]

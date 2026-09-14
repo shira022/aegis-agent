@@ -1,7 +1,13 @@
-//! In-memory mock keychain.
+//! API key masking and OS-keychain persistence.
 //!
-//! The raw secret is never persisted, not even inside the map value: the store
-//! only ever holds a [`KeyMask`]. `get_api_key` always returns `None`.
+//! The in-memory [`KeychainStore`] only ever holds a [`KeyMask`]; the raw secret
+//! is persisted separately in the platform credential store (Windows
+//! Credential Manager, macOS Keychain, Secret Service on Linux) through the
+//! [`SecretBackend`] abstraction. `get_api_key` intentionally never returns
+//! secret material to the webview; Rust-side callers use [`load_secret`].
+
+use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +16,119 @@ use crate::ipc::{now_ms, AppState, KeychainStore};
 const MIN_KEY_CHARS: usize = 4;
 const MASK_PREFIX_CHARS: usize = 4;
 const ELLIPSIS: char = '…';
+
+/// Service name used for every entry in the platform credential store.
+pub const KEYCHAIN_SERVICE: &str = "com.aegis.agent";
+
+/// Storage abstraction for raw secrets. Kept behind a trait so Rust tests can
+/// use an in-memory backend instead of the real OS keychain.
+pub trait SecretBackend: Send + Sync {
+    fn store(&self, provider: &str, secret: &str) -> Result<(), String>;
+    fn retrieve(&self, provider: &str) -> Result<Option<String>, String>;
+    fn remove(&self, provider: &str) -> Result<(), String>;
+}
+
+/// Platform keychain backed by the `keyring` crate.
+pub struct KeyringBackend {
+    service: String,
+}
+
+impl KeyringBackend {
+    pub fn new() -> Self {
+        KeyringBackend {
+            service: KEYCHAIN_SERVICE.to_string(),
+        }
+    }
+
+    fn entry(&self, provider: &str) -> Result<keyring::Entry, String> {
+        keyring::Entry::new(&self.service, provider)
+            .map_err(|error| format!("failed to open the OS keychain: {error}"))
+    }
+}
+
+impl Default for KeyringBackend {
+    fn default() -> Self {
+        KeyringBackend::new()
+    }
+}
+
+impl SecretBackend for KeyringBackend {
+    fn store(&self, provider: &str, secret: &str) -> Result<(), String> {
+        self.entry(provider)?
+            .set_password(secret)
+            .map_err(|error| format!("failed to store the API key in the OS keychain: {error}"))
+    }
+
+    fn retrieve(&self, provider: &str) -> Result<Option<String>, String> {
+        match self.entry(provider)?.get_password() {
+            Ok(secret) => Ok(Some(secret)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(error) => Err(format!(
+                "failed to read the API key from the OS keychain: {error}"
+            )),
+        }
+    }
+
+    fn remove(&self, provider: &str) -> Result<(), String> {
+        match self.entry(provider)?.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(error) => Err(format!(
+                "failed to delete the API key from the OS keychain: {error}"
+            )),
+        }
+    }
+}
+
+/// In-memory backend used by tests and as a safe fallback when no platform
+/// keychain is available.
+#[derive(Default)]
+pub struct MemoryBackend {
+    entries: Mutex<BTreeMap<String, String>>,
+}
+
+impl MemoryBackend {
+    pub fn new() -> Self {
+        MemoryBackend::default()
+    }
+}
+
+impl SecretBackend for MemoryBackend {
+    fn store(&self, provider: &str, secret: &str) -> Result<(), String> {
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|error| format!("secret store lock poisoned: {error}"))?;
+        entries.insert(provider.to_string(), secret.to_string());
+        Ok(())
+    }
+
+    fn retrieve(&self, provider: &str) -> Result<Option<String>, String> {
+        let entries = self
+            .entries
+            .lock()
+            .map_err(|error| format!("secret store lock poisoned: {error}"))?;
+        Ok(entries.get(provider).cloned())
+    }
+
+    fn remove(&self, provider: &str) -> Result<(), String> {
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|error| format!("secret store lock poisoned: {error}"))?;
+        entries.remove(provider);
+        Ok(())
+    }
+}
+
+/// Default backend for the running app: the OS keychain.
+pub fn default_secret_backend() -> Arc<dyn SecretBackend> {
+    Arc::new(KeyringBackend::new())
+}
+
+/// Release the raw secret for a provider to trusted Rust callers only.
+pub fn load_secret(state: &AppState, provider: &str) -> Result<Option<String>, String> {
+    state.secrets.retrieve(provider)
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -80,18 +199,21 @@ pub fn list_providers(store: &KeychainStore) -> Vec<String> {
     store.entries.keys().cloned().collect()
 }
 
-// ─── MOCK SEAM ───────────────────────────────────────────────────────────
-// To persist real credentials, plug the `keyring` crate in here (Windows
-// Credential Manager / macOS Keychain / Secret Service on Linux). Keep the
-// command signatures unchanged: store_api_key still returns a KeyMask and
-// get_api_key is the only place that material is released. The mock below
-// intentionally performs no OS calls and returns no material.
+// ─── Tauri commands ──────────────────────────────────────────────────────
+// The raw secret is persisted in the platform credential store through the
+// injected [`SecretBackend`]. The command still only returns a [`KeyMask`];
+// `get_api_key` never releases secret material to the webview.
 #[tauri::command]
 pub fn store_api_key(
     provider: String,
     key: String,
     state: tauri::State<'_, AppState>,
 ) -> Result<KeyMask, String> {
+    validate(&provider, &key)?;
+    // Persist to the OS keychain first: never record a mask for a key the
+    // backend did not accept.
+    state.secrets.store(&provider, &key)?;
+
     let mut store = state
         .keychain
         .lock()
@@ -101,17 +223,17 @@ pub fn store_api_key(
 
 #[tauri::command]
 pub fn get_api_key(provider: String) -> Result<Option<String>, String> {
-    // The mock never returns secret material, by design. A future real
-    // implementation would fetch the value from the OS keychain here.
+    // Secret material is never returned across the IPC boundary. Trusted
+    // Rust callers use `load_secret` instead.
     let _ = provider;
     Ok(None)
 }
 
 #[tauri::command]
-pub fn has_api_key(
-    provider: String,
-    state: tauri::State<'_, AppState>,
-) -> Result<bool, String> {
+pub fn has_api_key(provider: String, state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    if state.secrets.retrieve(&provider)?.is_some() {
+        return Ok(true);
+    }
     let store = state
         .keychain
         .lock()
@@ -120,10 +242,8 @@ pub fn has_api_key(
 }
 
 #[tauri::command]
-pub fn delete_api_key(
-    provider: String,
-    state: tauri::State<'_, AppState>,
-) -> Result<(), String> {
+pub fn delete_api_key(provider: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    state.secrets.remove(&provider)?;
     let mut store = state
         .keychain
         .lock()
@@ -133,9 +253,7 @@ pub fn delete_api_key(
 }
 
 #[tauri::command]
-pub fn list_api_key_providers(
-    state: tauri::State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+pub fn list_api_key_providers(state: tauri::State<'_, AppState>) -> Result<Vec<String>, String> {
     let store = state
         .keychain
         .lock()
@@ -154,7 +272,6 @@ mod tests {
         let mask = store_key(&mut store, "openai", secret, 123).expect("store");
 
         assert!(has_key(&store, "openai"));
-        assert_eq!(get_mock_value(), None);
         assert!(!mask.masked.contains(secret));
         assert!(!mask.masked.contains(&secret[secret.len() - 4..]));
         assert_eq!(mask.length, secret.chars().count());
@@ -192,8 +309,18 @@ mod tests {
         assert_eq!(list_providers(&store), vec!["alpha", "zeta"]);
     }
 
-    fn get_mock_value() -> Option<String> {
-        // Mirrors get_api_key without needing a Tauri State.
-        None
+    #[test]
+    fn memory_backend_round_trips_but_never_masks_the_secret() {
+        let backend = MemoryBackend::new();
+        assert_eq!(backend.retrieve("openai").expect("retrieve"), None);
+
+        backend.store("openai", "secret-value").expect("store");
+        assert_eq!(
+            backend.retrieve("openai").expect("retrieve"),
+            Some("secret-value".to_string())
+        );
+
+        backend.remove("openai").expect("remove");
+        assert_eq!(backend.retrieve("openai").expect("retrieve"), None);
     }
 }
