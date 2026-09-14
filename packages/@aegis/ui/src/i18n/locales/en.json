@@ -23,6 +23,8 @@
     "reject": "Reject",
     "install": "Install",
     "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
     "loading": "Loading..."
   },
   "settings": {
@@ -87,6 +89,12 @@
     "empty": "No tasks yet",
     "createFirst": "Create first task",
     "loading": "Loading tasks...",
+    "edit": {
+      "title": "Edit Task",
+      "name": "Name",
+      "nameRequired": "Name is required",
+      "nameTooLong": "Name must be {{max}} characters or fewer"
+    },
     "status": {
       "idle": "Idle",
       "running": "Running",
@@ -192,7 +200,7 @@
     "info": "Info",
     "created": "Created \"{{name}}\"",
     "taskDeleted": "Task deleted",
-    "editUnavailable": "Editing \"{{taskId}}\" is not available yet",
+    "taskUpdated": "Updated \"{{name}}\"",
     "approved": "Approved {{requestId}}",
     "rejected": "Rejected {{requestId}}"
   }

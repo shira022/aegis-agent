@@ -8,6 +8,7 @@ import type { ApprovalRequest } from '@aegis/approval';
 import type {
   DesktopApi,
   NewTaskInput,
+  UpdateTaskInput,
   ProviderKeyInput,
   ApprovalDecisionInput,
   TaskRun,
@@ -197,6 +198,17 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
         updatedAt: nowIso(),
       };
       tasks = [...tasks, task];
+      return clone(task);
+    },
+
+    async updateTask(taskId: string, patch: UpdateTaskInput): Promise<Task> {
+      await delay();
+      const task = tasks.find((candidate) => candidate.id === taskId);
+      if (!task) {
+        throw new Error(`Task ${taskId} not found`);
+      }
+      task.name = patch.name;
+      task.updatedAt = nowIso();
       return clone(task);
     },
 

@@ -25,6 +25,28 @@ describe('tasksStore', () => {
     expect(store.state.getState().tasks.map((task) => task.name)).toContain('Payslip Download');
   });
 
+  it('updates a task name in place', async () => {
+    const store = createTasksStore(createMockAdapter());
+    await store.actions.load();
+
+    const updated = await store.actions.update('task-1', { name: 'Invoice Archive' });
+
+    expect(updated?.name).toBe('Invoice Archive');
+    const task = store.state.getState().tasks.find((candidate) => candidate.id === 'task-1');
+    expect(task?.name).toBe('Invoice Archive');
+    expect(store.state.getState().tasks).toHaveLength(3);
+  });
+
+  it('surfaces an update error for an unknown task', async () => {
+    const store = createTasksStore(createMockAdapter());
+    await store.actions.load();
+
+    const updated = await store.actions.update('missing', { name: 'Nope' });
+
+    expect(updated).toBeNull();
+    expect(store.state.getState().error).toContain('not found');
+  });
+
   it('removes a task from the list', async () => {
     const store = createTasksStore(createMockAdapter());
     await store.actions.load();

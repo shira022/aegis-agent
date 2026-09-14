@@ -4,6 +4,7 @@ import type { ApprovalRequest } from '@aegis/approval';
 import type {
   DesktopApi,
   NewTaskInput,
+  UpdateTaskInput,
   ProviderKeyInput,
   ApprovalDecisionInput,
   TaskRun,
@@ -27,6 +28,15 @@ export function createTauriAdapter(invokeFn: InvokeFn = invoke): DesktopApi {
     listTasks: () => invokeFn<Task[]>('list_tasks'),
 
     createTask: (input: NewTaskInput) => invokeFn<Task>('create_task', { input }),
+
+    updateTask: (taskId: string, patch: UpdateTaskInput): Promise<Task> => {
+      void patch;
+      return Promise.reject(
+        new Error(
+          `Task ${taskId} cannot be updated: the Tauri backend does not expose a task update command yet.`,
+        ),
+      );
+    },
 
     deleteTask: (taskId: string) => invokeFn<void>('delete_task', { taskId }),
 

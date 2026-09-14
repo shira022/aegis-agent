@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { useEffect, useCallback } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import { useEffect, useCallback, useId, useRef } from 'react';
 import { Icon, X } from '../icons';
 import { useAppTranslation } from '../i18n';
 
@@ -8,10 +8,14 @@ export interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  initialFocusRef?: RefObject<HTMLElement | null>;
 }
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, initialFocusRef }: ModalProps) {
   const { t } = useAppTranslation();
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -27,6 +31,19 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     }
   }, [open, handleKeyDown]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    previouslyFocused.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const target = initialFocusRef?.current ?? dialogRef.current;
+    target?.focus();
+    return () => {
+      previouslyFocused.current?.focus();
+    };
+  }, [open, initialFocusRef]);
+
   if (!open) return null;
 
   return (
@@ -36,11 +53,18 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="relative w-full max-w-lg rounded-xl border border-border bg-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-fg">{title}</h2>
+          <h2 id={titleId} className="text-lg font-semibold text-fg">
+            {title}
+          </h2>
           <button
             type="button"
             aria-label={t('common.close')}

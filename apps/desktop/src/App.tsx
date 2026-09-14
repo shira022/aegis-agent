@@ -18,6 +18,7 @@ import type { AppView } from '@aegis/ui';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { ActionFlowView } from './components/ActionFlow/ActionFlowView';
 import { TaskList } from './components/TaskList/TaskList';
+import { TaskEditDialog } from './components/TaskEditDialog/TaskEditDialog';
 import { CodeReviewPanel } from './components/CodeReviewPanel/CodeReviewPanel';
 import { ApprovalDialog } from './components/ApprovalDialog/ApprovalDialog';
 import { HealingNotifier } from './components/HealingNotifier/HealingNotifier';
@@ -29,6 +30,7 @@ import { useHealing } from './hooks/useHealing';
 import { useRecorder } from './hooks/useRecorder';
 import { useSetup } from './hooks/useSetup';
 import type { SetupActions, SetupStoreState } from './stores/setupStore';
+import type { UpdateTaskInput } from './ipc/types';
 
 const NAV_ITEMS: { id: AppView; labelKey: 'nav.dashboard' | 'nav.tasks' | 'nav.timeline' | 'nav.review' | 'nav.recorder' }[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard' },
@@ -144,6 +146,7 @@ export default function App() {
   const [view, setView] = useState<AppView>('dashboard');
   const [timelineMode, setTimelineMode] = useState<'timeline' | 'flowchart'>('timeline');
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -204,11 +207,20 @@ export default function App() {
     [tasks.actions, showToast, t],
   );
 
-  const handleEdit = useCallback(
-    (taskId: string): void => {
-      showToast(t('toast.editUnavailable', { taskId }), 'info');
+  const handleEdit = useCallback((taskId: string): void => {
+    setEditingTaskId(taskId);
+  }, []);
+
+  const handleSaveEdit = useCallback(
+    (taskId: string, patch: UpdateTaskInput): void => {
+      void tasks.actions.update(taskId, patch).then((task) => {
+        if (task) {
+          setEditingTaskId(null);
+          showToast(t('toast.taskUpdated', { name: task.name }), 'success');
+        }
+      });
     },
-    [showToast, t],
+    [tasks.actions, showToast, t],
   );
 
   const handleApprove = useCallback(
@@ -263,6 +275,7 @@ export default function App() {
   }
 
   const pendingRequest = approvals.state.pending[0] ?? null;
+  const editingTask = tasks.state.tasks.find((task) => task.id === editingTaskId) ?? null;
   const selectedLog =
     run.state.activity.find((log) => log.id === run.state.selectedLogId) ?? null;
 
@@ -343,6 +356,12 @@ export default function App() {
                       selectedId={selectedTaskId}
                     />
                   </div>
+                  <TaskEditDialog
+                    task={editingTask}
+                    open={editingTask !== null}
+                    onSave={handleSaveEdit}
+                    onClose={() => setEditingTaskId(null)}
+                  />
                 </>
               )}
             </div>

@@ -23,6 +23,8 @@
     "reject": "却下",
     "install": "インストール",
     "back": "戻る",
+    "save": "保存",
+    "cancel": "キャンセル",
     "loading": "読み込み中..."
   },
   "settings": {
@@ -86,6 +88,12 @@
     "empty": "タスクがありません",
     "createFirst": "最初のタスクを作成",
     "loading": "タスクを読み込んでいます...",
+    "edit": {
+      "title": "タスクを編集",
+      "name": "名前",
+      "nameRequired": "名前を入力してください",
+      "nameTooLong": "名前は{{max}}文字以内で入力してください"
+    },
     "status": {
       "idle": "待機中",
       "running": "実行中",
@@ -191,7 +199,7 @@
     "info": "情報",
     "created": "「{{name}}」を作成しました",
     "taskDeleted": "タスクを削除しました",
-    "editUnavailable": "「{{taskId}}」の編集はまだ利用できません",
+    "taskUpdated": "「{{name}}」を更新しました",
     "approved": "{{requestId}}を承認しました",
     "rejected": "{{requestId}}を却下しました"
   }
