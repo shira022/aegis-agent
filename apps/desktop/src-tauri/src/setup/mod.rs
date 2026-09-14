@@ -1,8 +1,9 @@
 //! Python interpreter and runtime-directory resolution.
 //!
 //! No absolute paths are ever hard-coded. Resolution order for the interpreter:
-//! explicit caller path -> `AEGIS_PYTHON_PATH` -> workspace virtualenv found by
-//! walking up from the cwd -> bare `python3`/`python` found on `PATH`.
+//! explicit caller path -> `AEGIS_PYTHON_PATH` -> interpreter inside the
+//! resolved bundled runtime directory -> workspace virtualenv found by walking
+//! up from the cwd -> bare `python3`/`python` found on `PATH`.
 //!
 //! The runtime directory (bundled with the app) resolves in this order:
 //! 1. explicit `AEGIS_PYTHON_RUNTIME` environment override,
@@ -48,13 +49,16 @@ pub fn interpreter_candidates() -> [&'static str; 2] {
     ["python3", "python"]
 }
 
-/// Pure selection between the explicit, environment and workspace-venv choices.
+/// Pure selection between the explicit, environment, bundled-runtime and
+/// workspace-venv choices.
 ///
 /// Empty strings are treated as "not provided" so an empty explicit path falls
-/// through to the environment variable.
+/// through to the environment variable. The bundled runtime is preferred over
+/// the development-only workspace venv and the bare `PATH` candidates.
 pub fn choose_python_source(
     explicit: Option<&str>,
     env_path: Option<&str>,
+    runtime_path: Option<&str>,
     venv_path: Option<&str>,
 ) -> (Option<String>, &'static str) {
     if let Some(path) = explicit.filter(|p| !p.is_empty()) {
@@ -63,10 +67,28 @@ pub fn choose_python_source(
     if let Some(path) = env_path.filter(|p| !p.is_empty()) {
         return (Some(path.to_string()), "env");
     }
+    if let Some(path) = runtime_path.filter(|p| !p.is_empty()) {
+        return (Some(path.to_string()), "resource");
+    }
     if let Some(path) = venv_path.filter(|p| !p.is_empty()) {
         return (Some(path.to_string()), "workspace-venv");
     }
     (None, "path")
+}
+
+/// Windows Store "App Execution Alias" stub directories.
+///
+/// `python.exe`/`python3.exe` under `...\WindowsApps\...` (notably
+/// `Microsoft\WindowsApps`) are reparse points that merely print an install
+/// prompt. They must never be treated as a working interpreter.
+fn is_store_alias_path(path: &Path) -> bool {
+    path.to_string_lossy()
+        .to_ascii_lowercase()
+        .contains("windowsapps")
+}
+
+fn is_store_alias(path: &str) -> bool {
+    is_store_alias_path(Path::new(path))
 }
 
 fn is_on_path(name: &str, path_var: Option<&std::ffi::OsStr>) -> bool {
@@ -74,6 +96,9 @@ fn is_on_path(name: &str, path_var: Option<&std::ffi::OsStr>) -> bool {
         return false;
     };
     std::env::split_paths(paths).any(|dir| {
+        if is_store_alias_path(&dir) {
+            return false;
+        }
         if dir.join(name).is_file() {
             return true;
         }
@@ -85,6 +110,25 @@ fn is_on_path(name: &str, path_var: Option<&std::ffi::OsStr>) -> bool {
         }
         false
     })
+}
+
+/// Locate a usable interpreter inside a bundled runtime directory.
+///
+/// Windows ships `.venv\Scripts\python.exe` or `python.exe`; Unix ships
+/// `bin/python3` or `.venv/bin/python3`. Returns `None` when the directory has
+/// no interpreter so callers can fall back to `PATH`.
+pub fn runtime_interpreter(runtime_dir: Option<&Path>) -> Option<String> {
+    let dir = runtime_dir?;
+    let candidates = [
+        dir.join(".venv").join("Scripts").join("python.exe"),
+        dir.join("python.exe"),
+        dir.join("bin").join("python3"),
+        dir.join(".venv").join("bin").join("python3"),
+    ];
+    candidates
+        .into_iter()
+        .find(|candidate| candidate.is_file())
+        .map(|candidate| candidate.to_string_lossy().into_owned())
 }
 
 fn find_workspace_venv_python() -> Option<String> {
@@ -183,11 +227,26 @@ pub fn choose_runtime_dir(
 }
 
 /// Resolve the Python interpreter path and the source it came from.
-pub fn resolve_python(explicit: Option<&str>) -> (Option<String>, &'static str) {
+///
+/// `runtime_dir` is the resolved bundled-runtime directory. When it actually
+/// contains an interpreter it is preferred over the development-only workspace
+/// venv and the bare `PATH` candidates, so a packaged app uses the runtime it
+/// ships with. Explicit and environment overrides still win, and Windows Store
+/// alias paths are never accepted.
+pub fn resolve_python(
+    explicit: Option<&str>,
+    runtime_dir: Option<&Path>,
+) -> (Option<String>, &'static str) {
     let env_path = std::env::var("AEGIS_PYTHON_PATH").ok();
+    let runtime_path = runtime_interpreter(runtime_dir);
     let venv_path = find_workspace_venv_python();
-    let (choice, source) =
-        choose_python_source(explicit, env_path.as_deref(), venv_path.as_deref());
+
+    let explicit = explicit.filter(|path| !is_store_alias(path));
+    let env_path = env_path.as_deref().filter(|path| !is_store_alias(path));
+    let runtime_path = runtime_path.as_deref().filter(|path| !is_store_alias(path));
+    let venv_path = venv_path.as_deref().filter(|path| !is_store_alias(path));
+
+    let (choice, source) = choose_python_source(explicit, env_path, runtime_path, venv_path);
     if choice.is_some() {
         return (choice, source);
     }
@@ -217,9 +276,9 @@ pub fn resolve_runtime_dir(resource_dir: Option<&Path>) -> RuntimeResolution {
 
 #[tauri::command]
 pub fn get_python_runtime_info(app: tauri::AppHandle) -> Result<PythonRuntimeInfo, String> {
-    let (python_path, source) = resolve_python(None);
     let resource_dir = app.path().resource_dir().ok();
     let runtime = resolve_runtime_dir(resource_dir.as_deref());
+    let (python_path, source) = resolve_python(None, runtime.dir.as_deref().map(Path::new));
     let available = python_path.is_some();
 
     Ok(PythonRuntimeInfo {
@@ -250,30 +309,84 @@ mod tests {
     #[test]
     fn explicit_path_wins_over_env() {
         let (choice, source) =
-            choose_python_source(Some("/opt/custom/python"), Some("/env/python"), None);
+            choose_python_source(Some("/opt/custom/python"), Some("/env/python"), None, None);
         assert_eq!(choice.as_deref(), Some("/opt/custom/python"));
         assert_eq!(source, "explicit");
     }
 
     #[test]
     fn empty_explicit_falls_through_to_env() {
-        let (choice, source) = choose_python_source(Some(""), Some("/env/python"), None);
+        let (choice, source) = choose_python_source(Some(""), Some("/env/python"), None, None);
         assert_eq!(choice.as_deref(), Some("/env/python"));
         assert_eq!(source, "env");
     }
 
     #[test]
-    fn venv_is_used_when_no_explicit_or_env() {
-        let (choice, source) = choose_python_source(None, None, Some("/repo/.venv/bin/python3"));
+    fn bundled_runtime_wins_over_venv_and_path() {
+        let (choice, source) = choose_python_source(
+            None,
+            None,
+            Some("/app/resources/python-runtime/bin/python3"),
+            Some("/repo/.venv/bin/python3"),
+        );
+        assert_eq!(
+            choice.as_deref(),
+            Some("/app/resources/python-runtime/bin/python3")
+        );
+        assert_eq!(source, "resource");
+    }
+
+    #[test]
+    fn venv_is_used_when_no_explicit_env_or_runtime() {
+        let (choice, source) =
+            choose_python_source(None, None, None, Some("/repo/.venv/bin/python3"));
         assert_eq!(choice.as_deref(), Some("/repo/.venv/bin/python3"));
         assert_eq!(source, "workspace-venv");
     }
 
     #[test]
     fn nothing_provided_reports_path_source() {
-        let (choice, source) = choose_python_source(None, None, None);
+        let (choice, source) = choose_python_source(None, None, None, None);
         assert_eq!(choice, None);
         assert_eq!(source, "path");
+    }
+
+    #[test]
+    fn store_alias_paths_are_recognized() {
+        assert!(is_store_alias(
+            r"C:\Users\me\AppData\Local\Microsoft\WindowsApps\python3.exe"
+        ));
+        assert!(is_store_alias(
+            r"C:\Program Files\WindowsApps\python\python.exe"
+        ));
+        assert!(!is_store_alias(r"C:\Python313\python.exe"));
+    }
+
+    #[test]
+    fn runtime_interpreter_finds_a_unix_layout() {
+        let base = std::env::temp_dir().join(format!("aegis-runtime-test-{}", std::process::id()));
+        let runtime = base.join(RUNTIME_RESOURCE_DIR);
+        std::fs::create_dir_all(runtime.join("bin")).expect("create runtime bin dir");
+        let python = runtime.join("bin").join("python3");
+        std::fs::write(&python, b"").expect("create interpreter placeholder");
+
+        assert_eq!(
+            runtime_interpreter(Some(runtime.as_path())),
+            Some(python.to_string_lossy().into_owned())
+        );
+
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
+    fn runtime_interpreter_ignores_a_runtime_without_an_interpreter() {
+        let base = std::env::temp_dir().join(format!("aegis-runtime-empty-{}", std::process::id()));
+        std::fs::create_dir_all(&base).expect("create empty temp dir");
+
+        assert_eq!(runtime_interpreter(Some(base.as_path())), None);
+        assert_eq!(runtime_interpreter(None), None);
+
+        std::fs::remove_dir_all(&base).ok();
     }
 
     #[test]

@@ -147,9 +147,12 @@ pub fn list_healing_events(state: tauri::State<'_, AppState>) -> Result<Vec<Heal
 }
 
 #[tauri::command]
-pub fn get_setup(state: tauri::State<'_, AppState>) -> Result<SetupState, String> {
+pub fn get_setup(state: tauri::State<'_, AppState>, app: AppHandle) -> Result<SetupState, String> {
     let completed = lock_domain(&state)?.completed_setup;
-    let (python, _source) = crate::setup::resolve_python(None);
+    let resource_dir = app.path().resource_dir().ok();
+    let runtime_dir = crate::setup::resolve_runtime_dir(resource_dir.as_deref()).dir;
+    let (python, _source) =
+        crate::setup::resolve_python(None, runtime_dir.as_deref().map(std::path::Path::new));
     Ok(SetupState {
         dependencies: detect_dependencies(python.as_deref()),
         completed,

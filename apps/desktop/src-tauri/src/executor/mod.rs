@@ -113,7 +113,12 @@ pub fn run_python_script(
         return Err("scriptPath must not be empty".to_string());
     }
 
-    let (python_opt, _source) = setup::resolve_python(config.python_path.as_deref());
+    let resource_dir = app.path().resource_dir().ok();
+    let runtime_dir = setup::resolve_runtime_dir(resource_dir.as_deref()).dir;
+    let (python_opt, _source) = setup::resolve_python(
+        config.python_path.as_deref(),
+        runtime_dir.as_deref().map(std::path::Path::new),
+    );
     let python = python_opt.ok_or_else(|| {
         "python interpreter not found; set AEGIS_PYTHON_PATH or add python3 to PATH".to_string()
     })?;
@@ -146,11 +151,8 @@ pub fn run_python_script(
 
     if let Some(dir) = config.working_dir.as_deref() {
         cmd.current_dir(dir);
-    } else {
-        let resource_dir = app.path().resource_dir().ok();
-        if let Some(runtime_dir) = setup::resolve_runtime_dir(resource_dir.as_deref()).dir {
-            cmd.current_dir(runtime_dir);
-        }
+    } else if let Some(runtime_dir) = runtime_dir {
+        cmd.current_dir(runtime_dir);
     }
 
     if let Some(env) = &config.env {

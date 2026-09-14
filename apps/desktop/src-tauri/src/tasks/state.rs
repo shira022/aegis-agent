@@ -263,16 +263,43 @@ fn python_version(path: &str) -> Option<String> {
         .arg("--version")
         .output()
         .ok()?;
-    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let text = if stdout.is_empty() {
-        String::from_utf8_lossy(&output.stderr).trim().to_string()
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let text = if stdout.trim().is_empty() {
+        stderr.trim().to_string()
     } else {
-        stdout
+        stdout.trim().to_string()
     };
-    // Typical output: "Python 3.14.7".
-    text.split_whitespace()
-        .nth(1)
-        .map(|version| version.to_string())
+    parse_python_version(&text)
+}
+
+/// Extract a strict `major.minor[.patch]` version from interpreter output.
+///
+/// The Microsoft Store execution-alias stub prints
+/// `Python was not found; run without arguments to install ...`. Taking the
+/// second whitespace token (the old behaviour) yielded `"was"` and reported a
+/// broken interpreter as healthy, so only a fully numeric `major.minor[.patch]`
+/// token is accepted.
+fn parse_python_version(text: &str) -> Option<String> {
+    text.split_whitespace().find_map(|token| {
+        let token = token.trim_start_matches('v');
+        let mut parts = token.split('.');
+        let major = parts.next()?;
+        let minor = parts.next()?;
+        let patch = parts.next();
+        if parts.next().is_some() {
+            return None;
+        }
+        let numeric = |part: &str| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit());
+        if !numeric(major) || !numeric(minor) {
+            return None;
+        }
+        match patch {
+            Some(patch) if numeric(patch) => Some(format!("{major}.{minor}.{patch}")),
+            Some(_) => None,
+            None => Some(format!("{major}.{minor}")),
+        }
+    })
 }
 
 #[cfg(test)]
@@ -467,6 +494,30 @@ mod tests {
         assert_eq!(deps[0].name, "Python Runtime");
         assert_eq!(deps[0].status, DependencyStatus::Missing);
         assert!(deps[0].installed.is_empty());
+    }
+
+    #[test]
+    fn python_version_rejects_the_microsoft_store_stub() {
+        let stub = "Python was not found; run without arguments to install from the \
+                    Microsoft Store, or disable this shortcut from Settings > Manage App \
+                    Execution Aliases.";
+        assert_eq!(parse_python_version(stub), None);
+    }
+
+    #[test]
+    fn python_version_parses_a_strict_major_minor_patch() {
+        assert_eq!(
+            parse_python_version("Python 3.13.15"),
+            Some("3.13.15".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_dependencies_errors_when_the_interpreter_cannot_be_probed() {
+        let deps = detect_dependencies(Some("/definitely/not/a/python"));
+        assert_eq!(deps[0].status, DependencyStatus::Error);
+        assert!(deps[0].installed.is_empty());
+        assert!(deps[0].version.is_empty());
     }
 
     #[test]
