@@ -73,14 +73,54 @@ Approved code → ScriptGenerator → Python subprocess launch
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `ProcessManager` | ✅ Complete | Subprocess management |
-| `ExecutionEngine` | ✅ Complete | Orchestration |
+| `ProcessManager` | ✅ Complete | Shared library (TypeScript) |
+| `ExecutionEngine` | ✅ Complete | Shared library (TypeScript) |
 | `LogCollector` | ✅ Complete | Log collection & formatting |
-| `ScriptGenerator` | ✅ Complete | Script generation |
+| `ScriptGenerator` | ✅ Complete | Script generation and template injection |
 | `types.ts` | ✅ Complete | All type definitions |
+| Rust executor (`executor::run_python_script`) | ✅ Implemented | Real subprocess with timeout, cancellation and stdout/stderr capture (`apps/desktop/src-tauri/src/executor/mod.rs:106-265`) |
+| Executor reachable from the UI | ❌ Not implemented | No TypeScript file references `run_python_script`; `packages/@aegis/executor/src/tauri-bridge.ts` is unused by `apps/desktop` |
+| Task script execution | ❌ Not implemented | `run_task` does not execute (`tasks/mod.rs:17-33`); see below |
+| Completed / failed run outcomes | ❌ Not implemented | Nothing writes a terminal status or `finishedAt` |
+| Resource monitoring (EXE-02) | ❌ Not implemented | `ExecutionResult.memoryUsage` is always `None` (`executor/mod.rs:51`, `:262`); CPU and disk are not measured at all |
+| Automatic `requirements.txt` generation (EXE-07) | ❌ Not implemented | `detect_dependencies` reports the Python runtime only (`tasks/state.rs:242-258`) |
+
+### Where execution stands today
+
+Two halves exist and neither calls the other:
+
+- **The engine is real.** `executor::run_python_script` spawns the script through
+  the bundled Python runtime, enforces a timeout, supports idempotent
+  cancellation (`executor/mod.rs:268-281`) and returns a truthful
+  `ExecutionResult { exit_code, stdout, stderr, duration, timed_out,
+  output_lines, memory_usage }`.
+- **The command that a user can reach does not execute anything.** `run_task`
+  states its own scope in its module documentation: it marks the task `running`,
+  creates a `TaskRun` with `status = running` and replays the task's most recent
+  activity steps; it spawns no process, and it explicitly notes that "a future
+  execution engine is expected to transition the stored run to `completed` or
+  `failed` and set `finishedAt`" (`tasks/mod.rs:17-33`).
+
+The consequence is user-visible: because nothing can ever reach a terminal state,
+the dashboard's success rate is always the placeholder dash and "last run" is
+derived from `task.updatedAt` rather than from an execution
+(`apps/desktop/src/components/Dashboard/Dashboard.tsx:34-39`).
+
+**Target behaviour** (contract C4 of
+[ADR-011](../adr/011-agentic-rpa-pipeline.md)): execution is permitted only for a
+`TaskRun` whose approval state is `approved`, the code executed is the code that
+was approved (locked, read-only, after approval), the executor's real result is
+mapped onto run and task state (`running → completed | failed`, `finishedAt` set
+from the real end time), and the activity log receives the run record. Only that
+stage may write a terminal outcome, which is what turns the dashboard figures into
+measurements instead of placeholders.
 
 ### Not Yet Implemented
 
+- Wiring approved code to `run_python_script` from the UI
+- Terminal run/task transitions and `finishedAt`
+- Resource monitoring: memory (field exists but is never populated), CPU and disk
+- Surfacing `ExecutionResult` (stdout, stderr, duration, exit code) and metrics in the run view
 - Process pool (concurrent execution management)
 - Execution queuing
 - Execution result persistence

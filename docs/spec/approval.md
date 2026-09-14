@@ -75,13 +75,50 @@ AI code generation → Safety analysis → User review → Approve/Reject
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `ApprovalManager` | ✅ Complete | Approve, reject, history recording |
-| `SafetyAnalyzer` | ✅ Complete | Dangerous operation detection, risk assessment |
+| `ApprovalManager` | ✅ Complete | Approve, reject, history recording (shared library) |
+| `SafetyAnalyzer` | ✅ Complete | Dangerous operation detection, risk assessment (`safety-analyzer.ts:112-125`) |
 | `CodeDisplay` | ✅ Complete | Syntax highlighting |
 | `types.ts` | ✅ Complete | All type definitions |
+| Rust approval state machine | ✅ Implemented | `list_approvals` / `decide_approval` with the `pending`/`reviewing` → `approved`/`rejected` transition (`tasks/mod.rs:131-145`, `tasks/state.rs:208-241`) |
+| Request generation | ❌ Not implemented | Nothing creates an `ApprovalRequest`; see below |
+| Approval history durability (APR-05) | ❌ Not implemented | Approvals are not persisted; history is lost on restart |
+| Locking approved code (APR-04) | ❌ Not implemented | No write path exists that could enforce read-only |
+| Code diff display (APR-07) | ❌ Not implemented | `CodeDisplay` shows a single version; nothing produces two versions to diff |
+
+### Where approvals stand today
+
+The review stage is a complete, tested skeleton with no producer:
+
+- **No request is ever created.** There is no non-test `approvals.push` anywhere in
+  `apps/desktop/src-tauri/src`. `list_approvals` simply clones the store
+  (`tasks/mod.rs:131-133`), so the review screen can only ever render its empty
+  state (`packages/@aegis/ui/src/i18n/locales/en.json:138`), and
+  `App.tsx:288-289` always computes `pendingRequest = null`.
+- **Decisions cannot be reached.** The state machine in `tasks/state.rs:208-241`
+  is implemented and guards against a second decision, but with no `pending`
+  request in existence there is nothing for a user to approve or reject.
+- **Approval history is volatile.** `PersistedState` (`tasks/state.rs:30-36`)
+  deliberately stores only tasks, the activity log, the setup flag and the
+  per-provider model selection; `approvals` and `healing_events` are session-only
+  fields of the in-memory `DomainStore`. A restart therefore discards the entire
+  approval history.
+
+**Target behaviour** (contracts C2 and C3 of
+[ADR-011](../adr/011-agentic-rpa-pipeline.md)): the generation command
+(`generate_task_script`) is the single producer, creating exactly one `pending`
+request per invocation together with the script it wrote to
+`scripts/<slug>.py`, including the failed safety checks so the human can see why
+code is risky. Generation never approves, executes or deletes anything; approvals
+become persisted state with a version bump so a request cannot vanish while its
+script remains on disk, and execution is permitted only for a request whose state
+is `approved`, running exactly the code that was approved.
 
 ### Not Yet Implemented
 
+- A producer for approval requests (`generate_task_script`)
+- Persisted approval history (and the `STATE_VERSION` bump it requires)
+- Expiry handling for stale `pending` requests (`expiresAt` exists but is unused)
+- Read-only locking of approved scripts
 - Team approval (multi-person approval workflow)
 - Approval rule customization
 - Approval email notifications
