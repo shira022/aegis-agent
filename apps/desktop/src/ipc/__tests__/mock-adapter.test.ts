@@ -130,10 +130,35 @@ describe('createMockAdapter', () => {
       const api = createMockAdapter();
       const shot = await api.takeScreenshot('home');
       expect(shot.label).toBe('home');
+      expect(shot.index).toBe(1);
       const session = await api.getRecorder();
       expect(session.screenshots).toHaveLength(1);
       expect(session.screenshots[0].id).toBe(shot.id);
     });
+
+    it('generates screenshot indexes and keeps auto labels out of the payload', async () => {
+      const api = createMockAdapter();
+      const first = await api.takeScreenshot();
+      expect(first.label).toBeUndefined();
+      expect(first.index).toBe(1);
+
+      const second = await api.takeScreenshot('checkout');
+      expect(second.label).toBe('checkout');
+      expect(second.index).toBe(2);
+    });
+  });
+
+  it('seeds healing events with translatable keys, not English prose', async () => {
+    const api = createMockAdapter();
+    const events = await api.listHealingEvents();
+
+    const selectorEvent = events.find((event) => event.id === 'heal-1');
+    expect(selectorEvent?.messageKey).toBe('healing.messages.selectorChanged');
+    expect(selectorEvent?.messageParams).toEqual({ selector: '#contacts' });
+    expect(events.find((event) => event.id === 'heal-2')?.messageKey).toBe(
+      'healing.messages.recoveredAfterRetry',
+    );
+    expect(events.every((event) => !('message' in event))).toBe(true);
   });
 
   it('completes setup', async () => {

@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { changeLanguage, i18n } from '@aegis/ui';
 import type { HealingEvent, HealingEventType } from '../../../ipc';
 import { HealingNotifier } from '../HealingNotifier';
 
@@ -10,7 +11,7 @@ const makeEvent = (
   id: `heal-${type}`,
   taskId: 'task-1',
   type,
-  message: `Message for ${type}`,
+  messageKey: 'healing.messages.recoveredAfterRetry',
   timestamp: Date.now(),
   resolved: false,
   ...overrides,
@@ -19,6 +20,12 @@ const makeEvent = (
 describe('HealingNotifier', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await act(async () => {
+      await changeLanguage('en');
+    });
   });
 
   it('renders nothing when there are no events', () => {
@@ -44,10 +51,62 @@ describe('HealingNotifier', () => {
         throw new Error(`Missing healing entry for type "${type}"`);
       }
       expect(entry).toHaveClass(className);
-      expect(entry).toHaveTextContent(`Message for ${type}`);
+      expect(entry).toHaveTextContent(
+        i18n.t('healing.messages.recoveredAfterRetry') as string,
+      );
       const iconNode = entry.querySelector('[data-testid="healing-icon"]');
       expect(iconNode?.querySelector('svg')).not.toBeNull();
     }
+  });
+
+  it('interpolates message parameters into the body text', () => {
+    render(
+      <HealingNotifier
+        events={[
+          makeEvent('healing', {
+            messageKey: 'healing.messages.selectorChanged',
+            messageParams: { selector: '#contacts' },
+          }),
+        ]}
+        onDismiss={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        i18n.t('healing.messages.selectorChanged', { selector: '#contacts' }) as string,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the healing body text in Japanese', async () => {
+    await act(async () => {
+      await changeLanguage('ja');
+    });
+
+    render(
+      <HealingNotifier
+        events={[
+          makeEvent('healing', {
+            messageKey: 'healing.messages.selectorChanged',
+            messageParams: { selector: '#contacts' },
+          }),
+        ]}
+        onDismiss={vi.fn()}
+      />,
+    );
+
+    const japanese = i18n.t('healing.messages.selectorChanged', {
+      selector: '#contacts',
+      lng: 'ja',
+    }) as string;
+    const english = i18n.t('healing.messages.selectorChanged', {
+      selector: '#contacts',
+      lng: 'en',
+    }) as string;
+    expect(japanese).not.toBe(english);
+    expect(screen.getByText(japanese)).toBeInTheDocument();
+    expect(screen.queryByText(english)).not.toBeInTheDocument();
   });
 
   it('shows the task id for each event', () => {
@@ -64,11 +123,20 @@ describe('HealingNotifier', () => {
     const onDismiss = vi.fn();
     render(
       <HealingNotifier
-        events={[makeEvent('error', { id: 'heal-abc', message: 'Selector changed' })]}
+        events={[
+          makeEvent('error', {
+            id: 'heal-abc',
+            messageKey: 'healing.messages.selectorChanged',
+            messageParams: { selector: '#contacts' },
+          }),
+        ]}
         onDismiss={onDismiss}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss Selector changed' }));
+    const dismissLabel = i18n.t('healing.dismiss', {
+      message: i18n.t('healing.messages.selectorChanged', { selector: '#contacts' }),
+    }) as string;
+    fireEvent.click(screen.getByRole('button', { name: dismissLabel }));
     expect(onDismiss).toHaveBeenCalledWith('heal-abc');
   });
 
