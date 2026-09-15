@@ -147,6 +147,24 @@
       "critical": "Critical"
     }
   },
+  "generate": {
+    "title": "Generate with AI",
+    "task": "Task",
+    "noTask": "No task (draft)",
+    "provider": "Provider",
+    "model": "Model",
+    "modelPlaceholder": "Default: {{model}}",
+    "context": "Context / notes",
+    "contextPlaceholder": "Optional background for the model",
+    "description": "Task description",
+    "descriptionPlaceholder": "Describe the automation you need, step by step",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "running": "Generating a script with {{model}} — {{elapsed}} elapsed. Local models can take a few minutes.",
+    "success": "The generated script was added to the review queue below.",
+    "retry": "Try again",
+    "startOver": "Start over"
+  },
   "recorder": {
     "title": "Recorder",
     "start": "Start",
