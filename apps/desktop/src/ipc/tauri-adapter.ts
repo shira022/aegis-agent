@@ -7,6 +7,10 @@ import type {
   UpdateTaskInput,
   ProviderKeyInput,
   ApprovalDecisionInput,
+  NewApprovalInput,
+  AiGenerationInput,
+  AiGenerationResult,
+  AiProviderStatus,
   TaskRun,
   HealingEvent,
   RecorderSession,
@@ -44,6 +48,9 @@ export function createTauriAdapter(invokeFn: InvokeFn = invoke): DesktopApi {
 
     decideApproval: (input: ApprovalDecisionInput) =>
       invokeFn<ApprovalRequest>('decide_approval', { input }),
+
+    createApproval: (input: NewApprovalInput) =>
+      invokeFn<ApprovalRequest>('create_approval', { input }),
 
     listHealingEvents: () => invokeFn<HealingEvent[]>('list_healing_events'),
 
@@ -87,6 +94,12 @@ export function createTauriAdapter(invokeFn: InvokeFn = invoke): DesktopApi {
 
     saveProviderKey: (input: ProviderKeyInput) =>
       invokeFn<void>('save_provider_key', { input }),
+
+    generateScript: (input: AiGenerationInput) =>
+      invokeFn<AiGenerationResult>('ai_generate_script', { request: input }),
+
+    getAiProviderStatus: (provider?: string) =>
+      invokeFn<AiProviderStatus>('ai_provider_status', { provider }),
 
     completeSetup: () => invokeFn<void>('complete_setup'),
   };

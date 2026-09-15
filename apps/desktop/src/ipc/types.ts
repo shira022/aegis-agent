@@ -58,6 +58,32 @@ export interface SetupState {
   completed: boolean;
 }
 
+// ─── AI Generation ──────────────────────────────────────────────────
+
+export interface AiGenerationInput {
+  prompt: string;
+  provider?: string;
+  model?: string;
+  context?: string;
+  baseUrl?: string;
+  region?: string;
+  projectId?: string;
+}
+
+export interface AiGenerationResult {
+  script: string;
+  language: string;
+  mocked: boolean;
+  model: string;
+  promptHash: string;
+}
+
+export interface AiProviderStatus {
+  provider: string;
+  configured: boolean;
+  mocked: boolean;
+}
+
 // ─── Inputs ─────────────────────────────────────────────────────────
 
 export interface NewTaskInput {
@@ -80,6 +106,13 @@ export interface ApprovalDecisionInput {
   reason?: string;
 }
 
+export type NewApprovalInput = Omit<
+  ApprovalRequest,
+  'id' | 'createdAt' | 'state' | 'taskId'
+> & {
+  taskId?: string;
+};
+
 // ─── Desktop API ────────────────────────────────────────────────────
 
 export interface DesktopApi {
@@ -93,6 +126,7 @@ export interface DesktopApi {
   listActivity(): Promise<OperationLog[]>;
   listApprovals(): Promise<ApprovalRequest[]>;
   decideApproval(input: ApprovalDecisionInput): Promise<ApprovalRequest>;
+  createApproval(input: NewApprovalInput): Promise<ApprovalRequest>;
   listHealingEvents(): Promise<HealingEvent[]>;
   getRecorder(): Promise<RecorderSession>;
   startRecording(): Promise<RecorderSession>;
@@ -102,5 +136,7 @@ export interface DesktopApi {
   takeScreenshot(label?: string): Promise<ScreenshotRef>;
   getSetup(): Promise<SetupState>;
   saveProviderKey(input: ProviderKeyInput): Promise<void>;
+  generateScript(input: AiGenerationInput): Promise<AiGenerationResult>;
+  getAiProviderStatus(provider?: string): Promise<AiProviderStatus>;
   completeSetup(): Promise<void>;
 }
