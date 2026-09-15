@@ -87,6 +87,7 @@ export class AiEngine {
         region: this.config.region,
       },
       this.config.model,
+      { disableThinking: this.config.disableThinking },
     );
   }
 

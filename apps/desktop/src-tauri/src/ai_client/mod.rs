@@ -39,6 +39,9 @@ pub struct AiGenerationRequest {
     pub region: Option<String>,
     /// Required for `gcp-vertexai`.
     pub project_id: Option<String>,
+    /// User-settable capability (ADR-009(d)): skip the model's reasoning
+    /// phase on providers that support it.
+    pub disable_thinking: Option<bool>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq)]
@@ -183,12 +186,15 @@ pub async fn generate(
     let prepared = providers::prepare_request(
         spec,
         api_key.as_deref(),
-        &model,
         &request.prompt,
         request.context.as_deref(),
-        request.base_url.as_deref(),
-        request.region.as_deref(),
-        request.project_id.as_deref(),
+        &providers::RequestOptions {
+            model: model.clone(),
+            disable_thinking: request.disable_thinking.unwrap_or(false),
+            base_url: request.base_url.clone(),
+            region: request.region.clone(),
+            project_id: request.project_id.clone(),
+        },
     )?;
 
     let body = send_prepared(prepared).await?;
@@ -248,6 +254,7 @@ mod tests {
             base_url: None,
             region: None,
             project_id: None,
+            disable_thinking: None,
         }
     }
 
@@ -292,6 +299,25 @@ mod tests {
         let request: AiGenerationRequest = serde_json::from_value(value).expect("deserialize");
         assert_eq!(request.base_url.as_deref(), Some("https://example.test/v1"));
         assert_eq!(request.provider.as_deref(), Some("openai-compatible"));
+        assert_eq!(request.disable_thinking, None);
+    }
+
+    #[test]
+    fn request_deserializes_the_disable_thinking_capability_flag() {
+        let value = serde_json::json!({
+            "prompt": "hello",
+            "provider": "ollama",
+            "disableThinking": true
+        });
+        let request: AiGenerationRequest = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(request.disable_thinking, Some(true));
+
+        let off: AiGenerationRequest = serde_json::from_value(serde_json::json!({
+            "prompt": "hello",
+            "disableThinking": false
+        }))
+        .expect("deserialize");
+        assert_eq!(off.disable_thinking, Some(false));
     }
 
     #[test]
@@ -337,12 +363,15 @@ mod tests {
         let error = providers::prepare_request(
             providers::provider_spec("anthropic").expect("anthropic"),
             None,
-            "claude-sonnet-4-20250514",
             "hello",
             None,
-            None,
-            None,
-            None,
+            &providers::RequestOptions {
+                model: "claude-sonnet-4-20250514".to_string(),
+                disable_thinking: false,
+                base_url: None,
+                region: None,
+                project_id: None,
+            },
         )
         .err()
         .expect("not configured");

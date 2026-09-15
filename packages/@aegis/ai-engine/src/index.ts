@@ -35,7 +35,7 @@ export {
 // ─── Provider Adapter ──────────────────────────────────────────────
 
 export { createProviderModel, requiresApiKey } from './provider-adapter';
-export type { ProviderCredentials } from './provider-adapter';
+export type { ProviderCredentials, ProviderModelOptions } from './provider-adapter';
 
 // ─── Generator ─────────────────────────────────────────────────────
 

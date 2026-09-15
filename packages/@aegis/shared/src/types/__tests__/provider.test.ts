@@ -98,6 +98,20 @@ describe('PROVIDER_REGISTRY', () => {
       expect(PROVIDER_REGISTRY[id].id).toBe(id);
     }
   });
+
+  it('supports thinking toggle only for verified local/compatible providers', () => {
+    const thinkingCapable: ProviderId[] = ['ollama', 'lm-studio', 'openai-compatible'];
+    const thinkingIncapable: ProviderId[] = [
+      'openai', 'anthropic', 'google', 'aws-bedrock', 'azure-foundry', 'gcp-vertexai',
+    ];
+
+    for (const id of thinkingCapable) {
+      expect(PROVIDER_REGISTRY[id].supportsThinkingToggle).toBe(true);
+    }
+    for (const id of thinkingIncapable) {
+      expect(PROVIDER_REGISTRY[id].supportsThinkingToggle).toBe(false);
+    }
+  });
 });
 
 describe('ProviderSettings type', () => {
@@ -111,6 +125,7 @@ describe('ProviderSettings type', () => {
     expect(settings.region).toBeUndefined();
     expect(settings.projectId).toBeUndefined();
     expect(settings.baseUrl).toBeUndefined();
+    expect(settings.disableThinking).toBeUndefined();
   });
 
   it('can be constructed with all optional fields', () => {
@@ -133,5 +148,14 @@ describe('ProviderSettings type', () => {
       baseUrl: 'http://localhost:11434/v1',
     };
     expect(settings.baseUrl).toBe('http://localhost:11434/v1');
+  });
+
+  it('can disable thinking for a reasoning-capable provider', () => {
+    const settings: ProviderSettings = {
+      providerId: 'ollama',
+      apiKey: '',
+      disableThinking: true,
+    };
+    expect(settings.disableThinking).toBe(true);
   });
 });

@@ -54,6 +54,7 @@
       "projectIdRequired": "Project ID required",
       "customEndpoint": "Custom endpoint",
       "model": "Model",
+      "disableThinking": "Disable thinking mode",
       "apiKey": "API Key",
       "apiKeyPlaceholder": "Enter API key",
       "show": "Show",

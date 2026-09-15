@@ -110,6 +110,34 @@ describe('AiEngine.generateCode', () => {
         region: sampleConfig.region,
       },
       sampleConfig.model,
+      { disableThinking: sampleConfig.disableThinking },
+    );
+  });
+
+  it('forwards disableThinking to the provider adapter', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: 'print(1)',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    const config: AIConfig = {
+      ...sampleConfig,
+      providerId: 'ollama',
+      baseUrl: 'http://localhost:11434/v1',
+      disableThinking: true,
+    };
+    const engine = new AiEngine(config);
+    await engine.generateCode({ operationLog: sampleOperationLog });
+
+    expect(mockCreateProviderModel).toHaveBeenCalledWith(
+      config.providerId,
+      {
+        apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
+        region: config.region,
+      },
+      config.model,
+      { disableThinking: true },
     );
   });
 
