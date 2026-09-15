@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::ipc::{
     iso8601_from_ms, ApprovalDecision, ApprovalDecisionInput, ApprovalRequest, ApprovalState,
-    DependencyCheck, DependencyStatus, DomainStore, OperationLog, OperationSource, RunStatus, Task,
-    TaskRun, TaskStatus,
+    DependencyCheck, DependencyStatus, DomainStore, NewApprovalInput, OperationLog,
+    OperationSource, RunStatus, Task, TaskRun, TaskStatus,
 };
 
 /// Name of the JSON file inside the app data directory.
@@ -113,6 +113,10 @@ fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
+fn new_approval_id() -> String {
+    format!("req-{}", uuid::Uuid::new_v4())
+}
+
 // ─── Pure state transitions ──────────────────────────────────────────────────
 
 /// Insert a new task and return a copy.
@@ -202,6 +206,45 @@ pub fn start_run_in(store: &mut DomainStore, task_id: &str, now: u64) -> Result<
         source: OperationSource::Desktop,
     });
     Ok(run)
+}
+
+/// Insert a generated script as a new `pending` approval request.
+///
+/// Approvals are session-scoped ([`DomainStore`] never persists them), so
+/// unlike the task transitions there is no disk-write step.
+pub fn create_approval_in(
+    store: &mut DomainStore,
+    input: &NewApprovalInput,
+    now: u64,
+) -> Result<ApprovalRequest, String> {
+    if input.code.trim().is_empty() {
+        return Err("approval code must not be empty".to_string());
+    }
+
+    let task_id = match input.task_id.as_deref().filter(|id| !id.trim().is_empty()) {
+        Some(id) => {
+            if !store.tasks.iter().any(|task| task.id == id) {
+                return Err(format!("unknown task: {id}"));
+            }
+            id.to_string()
+        }
+        None => String::new(),
+    };
+
+    let request = ApprovalRequest {
+        id: new_approval_id(),
+        task_id,
+        code: input.code.clone(),
+        explanation: input.explanation.clone(),
+        exception_handlers: input.exception_handlers.clone(),
+        safety_checks: input.safety_checks.clone(),
+        created_at: now,
+        expires_at: input.expires_at,
+        risk_level: input.risk_level,
+        state: ApprovalState::Pending,
+    };
+    store.approvals.push(request.clone());
+    Ok(request)
 }
 
 /// Apply an approval decision. Only `pending`/`reviewing` requests may move.
@@ -337,6 +380,28 @@ mod tests {
             request_id: request_id.to_string(),
             decision,
             reason: Some("because".to_string()),
+        }
+    }
+
+    fn new_approval_input(task_id: Option<&str>) -> NewApprovalInput {
+        NewApprovalInput {
+            task_id: task_id.map(str::to_string),
+            code: "print('hi')".to_string(),
+            explanation: "generated script".to_string(),
+            exception_handlers: vec![ExceptionHandler {
+                condition: "ElementNotFound".to_string(),
+                action: "Retry".to_string(),
+                code: "retry(3)".to_string(),
+                risk_level: ExceptionRiskLevel::Low,
+            }],
+            safety_checks: vec![SafetyCheck {
+                id: "check-1".to_string(),
+                name: "Network Access".to_string(),
+                passed: true,
+                message: "local only".to_string(),
+            }],
+            risk_level: RiskLevel::Low,
+            expires_at: Some(1_700_000_000_000),
         }
     }
 
@@ -476,6 +541,76 @@ mod tests {
             decide_approval_in(&mut store, &decision("missing", ApprovalDecision::Approved))
                 .is_err()
         );
+    }
+
+    #[test]
+    fn create_approval_stores_a_pending_request_for_a_known_task() {
+        let mut store = DomainStore::default();
+        let task = create_task_in(&mut store, "Task", 1).unwrap();
+
+        let request =
+            create_approval_in(&mut store, &new_approval_input(Some(&task.id)), 25).unwrap();
+
+        assert_eq!(request.state, ApprovalState::Pending);
+        assert!(request.id.starts_with("req-"));
+        assert!(request.created_at > 0);
+        assert_eq!(request.created_at, 25);
+        assert_eq!(request.task_id, task.id);
+        assert_eq!(request.expires_at, Some(1_700_000_000_000));
+        assert_eq!(request.code, "print('hi')");
+        // The same request must be visible through the `list_approvals` store.
+        assert_eq!(store.approvals.len(), 1);
+        assert_eq!(store.approvals[0], request);
+    }
+
+    #[test]
+    fn create_approval_rejects_empty_and_whitespace_only_code() {
+        let mut store = DomainStore::default();
+        for code in ["", "   \t\n"] {
+            let mut input = new_approval_input(None);
+            input.code = code.to_string();
+            let err = create_approval_in(&mut store, &input, 1).unwrap_err();
+            assert_eq!(err, "approval code must not be empty");
+        }
+        assert!(store.approvals.is_empty());
+    }
+
+    #[test]
+    fn create_approval_errors_for_unknown_task() {
+        let mut store = DomainStore::default();
+        let err =
+            create_approval_in(&mut store, &new_approval_input(Some("missing")), 1).unwrap_err();
+        assert_eq!(err, "unknown task: missing");
+        assert!(store.approvals.is_empty());
+    }
+
+    #[test]
+    fn create_approval_without_task_id_stores_an_empty_task_id() {
+        let mut store = DomainStore::default();
+        let request = create_approval_in(&mut store, &new_approval_input(None), 5).unwrap();
+        assert_eq!(request.task_id, "");
+        assert_eq!(store.approvals[0].task_id, "");
+
+        // A whitespace-only id is treated the same as no id.
+        let blank = create_approval_in(&mut store, &new_approval_input(Some("   ")), 6).unwrap();
+        assert_eq!(blank.task_id, "");
+        assert_ne!(blank.id, request.id);
+    }
+
+    #[test]
+    fn created_approval_is_decidable_through_the_existing_path() {
+        let mut store = DomainStore::default();
+        let request = create_approval_in(&mut store, &new_approval_input(None), 1).unwrap();
+
+        let approved = decide_approval_in(
+            &mut store,
+            &decision(&request.id, ApprovalDecision::Approved),
+        )
+        .unwrap();
+
+        assert_eq!(approved.id, request.id);
+        assert_eq!(approved.state, ApprovalState::Approved);
+        assert_eq!(store.approvals[0].state, ApprovalState::Approved);
     }
 
     #[test]

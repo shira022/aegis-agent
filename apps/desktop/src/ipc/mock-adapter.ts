@@ -11,12 +11,19 @@ import type {
   UpdateTaskInput,
   ProviderKeyInput,
   ApprovalDecisionInput,
+  NewApprovalInput,
+  AiGenerationInput,
+  AiGenerationResult,
+  AiProviderStatus,
   TaskRun,
   HealingEvent,
   RecorderSession,
   ScreenshotRef,
   SetupState,
 } from './types';
+
+const DEFAULT_AI_PROVIDER = 'openai';
+const MOCK_MODEL = 'mock-model';
 
 type PendingApproval = ApprovalRequest & {
   decision?: 'approved' | 'rejected';
@@ -34,6 +41,47 @@ function nowIso(): string {
 
 function createId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function promptHash(prompt: string): string {
+  const bytes = new TextEncoder().encode(prompt);
+  let hash = 0xcbf29ce484222325n;
+  const mask = 0xffffffffffffffffn;
+  for (const byte of bytes) {
+    hash ^= BigInt(byte);
+    hash = (hash * 0x100000001b3n) & mask;
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+function mockScript(prompt: string): string {
+  const task = prompt.replace(/\s+/g, ' ').trim();
+  return [
+    '#!/usr/bin/env python3',
+    '# -*- coding: utf-8 -*-',
+    `# Requested task: ${task}`,
+    '',
+    'from selenium import webdriver',
+    'from selenium.webdriver.common.by import By',
+    'from selenium.webdriver.support.ui import WebDriverWait',
+    'from selenium.webdriver.support import expected_conditions as EC',
+    '',
+    '',
+    'def main():',
+    `    # Generated for task: ${task}`,
+    '    driver = webdriver.Chrome()',
+    '    try:',
+    '        driver.get("https://example.com")',
+    '        WebDriverWait(driver, 10).until(',
+    '            EC.presence_of_element_located((By.TAG_NAME, "body"))',
+    '        )',
+    '    finally:',
+    '        driver.quit()',
+    '',
+    '',
+    'if __name__ == "__main__":',
+    '    main()',
+  ].join('\n');
 }
 
 function seedTasks(): Task[] {
@@ -171,6 +219,8 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
   let recorder: RecorderSession = defaultRecorder();
   let activeRun: TaskRun | null = null;
   let setup: SetupState = seedSetup();
+  const configuredProviders = new Set<string>();
+  let approvalSeq = 0;
 
   const delay = (): Promise<void> =>
     latencyMs > 0
@@ -274,6 +324,25 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
       return clone(request);
     },
 
+    async createApproval(input: NewApprovalInput): Promise<ApprovalRequest> {
+      await delay();
+      approvalSeq += 1;
+      const request: PendingApproval = {
+        id: `req-mock-${approvalSeq}`,
+        taskId: input.taskId ?? '',
+        code: input.code,
+        explanation: input.explanation,
+        exceptionHandlers: input.exceptionHandlers,
+        safetyChecks: input.safetyChecks,
+        createdAt: Date.now(),
+        expiresAt: input.expiresAt,
+        riskLevel: input.riskLevel,
+        state: 'pending',
+      };
+      approvals.push(request);
+      return clone(request);
+    },
+
     async listHealingEvents(): Promise<HealingEvent[]> {
       await delay();
       return clone(healing);
@@ -344,7 +413,31 @@ export function createMockAdapter(options: { latencyMs?: number } = {}): Desktop
 
     async saveProviderKey(input: ProviderKeyInput): Promise<void> {
       await delay();
-      void input;
+      if (input.apiKey.trim().length > 0) {
+        configuredProviders.add(input.providerId);
+      }
+    },
+
+    async generateScript(input: AiGenerationInput): Promise<AiGenerationResult> {
+      await delay();
+      const model = input.model?.trim() ? input.model : MOCK_MODEL;
+      return clone({
+        script: mockScript(input.prompt),
+        language: 'python',
+        mocked: true,
+        model,
+        promptHash: promptHash(input.prompt),
+      });
+    },
+
+    async getAiProviderStatus(provider?: string): Promise<AiProviderStatus> {
+      await delay();
+      const providerId = provider?.trim() ? provider : DEFAULT_AI_PROVIDER;
+      return clone({
+        provider: providerId,
+        configured: configuredProviders.has(providerId),
+        mocked: true,
+      });
     },
 
     async completeSetup(): Promise<void> {

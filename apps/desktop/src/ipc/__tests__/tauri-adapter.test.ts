@@ -86,6 +86,22 @@ describe('createTauriAdapter', () => {
     expect(invokeFn).toHaveBeenCalledWith('decide_approval', { input });
   });
 
+  it('createApproval invokes create_approval with the input payload', async () => {
+    const { invokeFn, api } = setup();
+    const input = {
+      taskId: 'task-1',
+      code: 'print("hi")',
+      explanation: 'demo',
+      exceptionHandlers: [],
+      safetyChecks: [],
+      riskLevel: 'low' as const,
+    };
+    const sentinel = { id: 'req-1', state: 'pending' };
+    invokeFn.mockResolvedValue(sentinel);
+    await expect(api.createApproval(input)).resolves.toBe(sentinel);
+    expect(invokeFn).toHaveBeenCalledWith('create_approval', { input });
+  });
+
   it('listHealingEvents invokes list_healing_events', async () => {
     const { invokeFn, api } = setup();
     const sentinel = [{ id: 'heal-1' }];
@@ -162,6 +178,37 @@ describe('createTauriAdapter', () => {
     invokeFn.mockResolvedValue(undefined);
     await expect(api.saveProviderKey(input)).resolves.toBeUndefined();
     expect(invokeFn).toHaveBeenCalledWith('save_provider_key', { input });
+  });
+
+  it('generateScript invokes ai_generate_script with the request payload', async () => {
+    const { invokeFn, api } = setup();
+    const input = { prompt: 'Open the reports page', provider: 'ollama', model: 'llama3' };
+    const sentinel = {
+      script: 'print("hi")',
+      language: 'python',
+      mocked: false,
+      model: 'llama3',
+      promptHash: 'deadbeefdeadbeef',
+    };
+    invokeFn.mockResolvedValue(sentinel);
+    await expect(api.generateScript(input)).resolves.toBe(sentinel);
+    expect(invokeFn).toHaveBeenCalledWith('ai_generate_script', { request: input });
+  });
+
+  it('getAiProviderStatus invokes ai_provider_status with the provider', async () => {
+    const { invokeFn, api } = setup();
+    const sentinel = { provider: 'ollama', configured: true, mocked: false };
+    invokeFn.mockResolvedValue(sentinel);
+    await expect(api.getAiProviderStatus('ollama')).resolves.toBe(sentinel);
+    expect(invokeFn).toHaveBeenCalledWith('ai_provider_status', { provider: 'ollama' });
+  });
+
+  it('getAiProviderStatus omits the provider when none is given', async () => {
+    const { invokeFn, api } = setup();
+    const sentinel = { provider: 'openai', configured: false, mocked: false };
+    invokeFn.mockResolvedValue(sentinel);
+    await expect(api.getAiProviderStatus()).resolves.toBe(sentinel);
+    expect(invokeFn).toHaveBeenCalledWith('ai_provider_status', { provider: undefined });
   });
 
   it('completeSetup invokes complete_setup', async () => {

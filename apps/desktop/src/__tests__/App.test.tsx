@@ -207,6 +207,30 @@ describe('App integration', () => {
     expect(document.documentElement.lang).toBe('ja');
   });
 
+  it('generates a script from the review screen and queues it for review', async () => {
+    renderApp();
+    await completeSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: /Code Review/ }));
+    const description = await screen.findByLabelText('Task description');
+    fireEvent.change(description, { target: { value: 'Download the June invoice report' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate' }));
+
+    // The panel confirms the request was queued.
+    expect(
+      await screen.findByText('The generated script was added to the review queue below.'),
+    ).toBeInTheDocument();
+
+    // The generated request immediately becomes the pending request rendered
+    // by the existing review panel.
+    expect(await screen.findByText('from selenium import webdriver')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Requested task: Download the June invoice report/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Safety Report/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeInTheDocument();
+  });
+
   it('persists the theme choice across a remount', async () => {
     const first = renderApp();
     await completeSetup();
