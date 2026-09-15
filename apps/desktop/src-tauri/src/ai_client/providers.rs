@@ -204,6 +204,21 @@ pub struct PreparedRequest {
     pub body: Value,
 }
 
+/// Per-request options resolved by the caller ([`super::generate`]).
+///
+/// The model is always resolved before this point (ADR-009(a)): an empty
+/// model is an error, never a silent fallback to the registry suggestion.
+/// `disable_thinking` is the user-settable provider capability from
+/// ADR-009(d): when set, OpenAI-compatible chat bodies ask the model to skip
+/// its reasoning phase (`"reasoning_effort": "none"`).
+pub struct RequestOptions {
+    pub model: String,
+    pub disable_thinking: bool,
+    pub base_url: Option<String>,
+    pub region: Option<String>,
+    pub project_id: Option<String>,
+}
+
 impl PreparedRequest {
     #[allow(dead_code)]
     pub fn header(&self, name: &str) -> Option<&str> {
@@ -267,8 +282,8 @@ fn user_content(prompt: &str, context: Option<&str>) -> String {
     }
 }
 
-fn openai_body(model: &str, prompt: &str, context: Option<&str>) -> Value {
-    json!({
+fn openai_body(model: &str, prompt: &str, context: Option<&str>, disable_thinking: bool) -> Value {
+    let mut body = json!({
         "model": model,
         "messages": [
             { "role": "system", "content": SCRIPT_SYSTEM_PROMPT },
@@ -276,7 +291,13 @@ fn openai_body(model: &str, prompt: &str, context: Option<&str>) -> Value {
         ],
         "temperature": 0,
         "max_tokens": DEFAULT_MAX_TOKENS
-    })
+    });
+    // The key must stay absent when thinking is enabled so the body is
+    // byte-identical for every provider that never asked for the toggle.
+    if disable_thinking {
+        body["reasoning_effort"] = json!("none");
+    }
+    body
 }
 
 fn anthropic_body(model: &str, prompt: &str, context: Option<&str>) -> Value {
@@ -305,22 +326,28 @@ fn gemini_body(prompt: &str, context: Option<&str>) -> Value {
 
 /// Build the HTTP request for a provider. The credential never appears in the
 /// returned URL (Gemini uses `x-goog-api-key`, Vertex uses a bearer token).
+///
+/// ADR-009(a): a missing model is an error — the registry `default_model` is
+/// a UI suggestion and is never substituted here.
 pub fn prepare_request(
     spec: &ProviderSpec,
     api_key: Option<&str>,
-    model: &str,
     prompt: &str,
     context: Option<&str>,
-    base_url: Option<&str>,
-    region: Option<&str>,
-    project_id: Option<&str>,
+    options: &RequestOptions,
 ) -> Result<PreparedRequest, String> {
     let key = resolve_key(spec, api_key)?;
-    let model = if model.is_empty() {
-        spec.default_model
-    } else {
-        model
-    };
+    if options.model.trim().is_empty() {
+        return Err(format!(
+            "provider '{}' requires a model, but none was provided",
+            spec.id
+        ));
+    }
+    let model = options.model.as_str();
+    let base_url = options.base_url.as_deref();
+    let region = options.region.as_deref();
+    let project_id = options.project_id.as_deref();
+    let disable_thinking = options.disable_thinking;
 
     let mut headers: Vec<(String, String)> = Vec::new();
     let body;
@@ -329,7 +356,7 @@ pub fn prepare_request(
         (ApiStyle::OpenAiChat, "azure-foundry") => {
             let base = resolve_base_url(spec, base_url)?;
             headers.push(("api-key".to_string(), key));
-            body = openai_body(model, prompt, context);
+            body = openai_body(model, prompt, context, disable_thinking);
             format!("{base}/chat/completions?api-version={AZURE_API_VERSION}")
         }
         (ApiStyle::OpenAiChat, _) => {
@@ -337,7 +364,7 @@ pub fn prepare_request(
             if spec.auth_style == AuthStyle::Bearer {
                 headers.push(("Authorization".to_string(), format!("Bearer {key}")));
             }
-            body = openai_body(model, prompt, context);
+            body = openai_body(model, prompt, context, disable_thinking);
             format!("{base}/chat/completions")
         }
         (ApiStyle::AnthropicMessages, _) => {
@@ -507,6 +534,16 @@ mod tests {
         provider_spec(id).expect("provider spec")
     }
 
+    fn options(model: &str) -> RequestOptions {
+        RequestOptions {
+            model: model.to_string(),
+            disable_thinking: false,
+            base_url: None,
+            region: None,
+            project_id: None,
+        }
+    }
+
     #[test]
     fn registry_matches_the_typescript_provider_list() {
         let expected = [
@@ -531,12 +568,9 @@ mod tests {
         let request = prepare_request(
             spec("openai"),
             Some("test-key"),
-            "gpt-4o",
             "open the browser",
             None,
-            None,
-            None,
-            None,
+            &options("gpt-4o"),
         )
         .expect("request");
         assert_eq!(request.url, "https://api.openai.com/v1/chat/completions");
@@ -550,12 +584,9 @@ mod tests {
         let request = prepare_request(
             spec("anthropic"),
             Some("test-key"),
-            "claude-sonnet-4-20250514",
             "do the thing",
             None,
-            None,
-            None,
-            None,
+            &options("claude-sonnet-4-20250514"),
         )
         .expect("request");
         assert_eq!(request.url, "https://api.anthropic.com/v1/messages");
@@ -569,12 +600,9 @@ mod tests {
         let request = prepare_request(
             spec("google"),
             Some("test-key"),
-            "gemini-2.5-flash",
             "hello",
             None,
-            None,
-            None,
-            None,
+            &options("gemini-2.5-flash"),
         )
         .expect("request");
         assert_eq!(
@@ -587,17 +615,11 @@ mod tests {
 
     #[test]
     fn vertex_includes_project_and_region_and_uses_bearer() {
-        let request = prepare_request(
-            spec("gcp-vertexai"),
-            Some("token"),
-            "gemini-2.5-flash",
-            "hello",
-            None,
-            None,
-            Some("europe-west1"),
-            Some("demo-project"),
-        )
-        .expect("request");
+        let mut opts = options("gemini-2.5-flash");
+        opts.region = Some("europe-west1".to_string());
+        opts.project_id = Some("demo-project".to_string());
+        let request = prepare_request(spec("gcp-vertexai"), Some("token"), "hello", None, &opts)
+            .expect("request");
         assert!(request
             .url
             .contains("europe-west1-aiplatform.googleapis.com"));
@@ -613,12 +635,9 @@ mod tests {
         let error = prepare_request(
             spec("gcp-vertexai"),
             Some("token"),
-            "gemini-2.5-flash",
             "hello",
             None,
-            None,
-            None,
-            None,
+            &options("gemini-2.5-flash"),
         )
         .err()
         .expect("missing project must fail");
@@ -627,15 +646,15 @@ mod tests {
 
     #[test]
     fn azure_uses_api_key_header_and_api_version() {
+        let mut opts = options("gpt-4o");
+        opts.base_url =
+            Some("https://example.openai.azure.com/openai/deployments/gpt-4o".to_string());
         let request = prepare_request(
             spec("azure-foundry"),
             Some("azure-key"),
-            "gpt-4o",
             "hello",
             None,
-            Some("https://example.openai.azure.com/openai/deployments/gpt-4o"),
-            None,
-            None,
+            &opts,
         )
         .expect("request");
         assert!(request
@@ -650,12 +669,9 @@ mod tests {
         let error = prepare_request(
             spec("openai-compatible"),
             Some("key"),
-            "custom-model",
             "hello",
             None,
-            None,
-            None,
-            None,
+            &options("custom-model"),
         )
         .err()
         .expect("missing base url must fail");
@@ -664,31 +680,21 @@ mod tests {
 
     #[test]
     fn local_providers_accept_anonymous_access() {
-        let request = prepare_request(
-            spec("ollama"),
-            None,
-            "llama3.1",
-            "hello",
-            None,
-            None,
-            None,
-            None,
-        )
-        .expect("request");
+        let request = prepare_request(spec("ollama"), None, "hello", None, &options("llama3.1"))
+            .expect("request");
         assert_eq!(request.url, "http://localhost:11434/v1/chat/completions");
     }
 
     #[test]
     fn bedrock_targets_regional_runtime_endpoint() {
+        let mut opts = options("anthropic.claude-sonnet-4-20250514");
+        opts.region = Some("us-west-2".to_string());
         let request = prepare_request(
             spec("aws-bedrock"),
             Some("bedrock-key"),
-            "anthropic.claude-sonnet-4-20250514",
             "hello",
             None,
-            None,
-            Some("us-west-2"),
-            None,
+            &opts,
         )
         .expect("request");
         assert_eq!(
@@ -700,20 +706,109 @@ mod tests {
 
     #[test]
     fn missing_key_reports_not_configured_without_echoing_a_key() {
-        let error = prepare_request(
-            spec("openai"),
-            None,
-            "gpt-4o",
-            "hello",
-            None,
-            None,
-            None,
-            None,
-        )
-        .err()
-        .expect("missing key must fail");
+        let error = prepare_request(spec("openai"), None, "hello", None, &options("gpt-4o"))
+            .err()
+            .expect("missing key must fail");
         assert!(error.contains("not configured"));
         assert!(!error.contains("Bearer"));
+    }
+
+    #[test]
+    fn missing_model_is_an_error_not_a_registry_fallback() {
+        for missing in ["", "   "] {
+            let error = prepare_request(spec("ollama"), None, "hello", None, &options(missing))
+                .err()
+                .expect("missing model must fail");
+            assert!(error.contains("requires a model"));
+            assert!(!error.contains("default"));
+        }
+    }
+
+    #[test]
+    fn disable_thinking_adds_reasoning_effort_none_to_openai_chat_bodies() {
+        for id in [
+            "openai",
+            "azure-foundry",
+            "ollama",
+            "lm-studio",
+            "openai-compatible",
+        ] {
+            let mut opts = options("my-local-model");
+            opts.disable_thinking = true;
+            if matches!(id, "azure-foundry" | "openai-compatible") {
+                opts.base_url = Some("https://example.test/v1".to_string());
+            }
+            let request =
+                prepare_request(spec(id), Some("key"), "hello", None, &opts).expect("request");
+            assert_eq!(
+                request.body["reasoning_effort"], "none",
+                "provider {id} must request disabled thinking"
+            );
+        }
+    }
+
+    #[test]
+    fn thinking_enabled_omits_reasoning_effort_from_openai_chat_bodies() {
+        for id in [
+            "openai",
+            "azure-foundry",
+            "ollama",
+            "lm-studio",
+            "openai-compatible",
+        ] {
+            let mut opts = options("my-local-model");
+            if matches!(id, "azure-foundry" | "openai-compatible") {
+                opts.base_url = Some("https://example.test/v1".to_string());
+            }
+            let request =
+                prepare_request(spec(id), Some("key"), "hello", None, &opts).expect("request");
+            assert!(
+                request.body.get("reasoning_effort").is_none(),
+                "provider {id} must not carry the key when thinking is enabled"
+            );
+        }
+    }
+
+    #[test]
+    fn thinking_enabled_body_is_byte_identical_to_the_pre_toggle_shape() {
+        let request = prepare_request(
+            spec("ollama"),
+            None,
+            "hello",
+            None,
+            &options("my-local-model"),
+        )
+        .expect("request");
+        let expected = json!({
+            "model": "my-local-model",
+            "messages": [
+                { "role": "system", "content": SCRIPT_SYSTEM_PROMPT },
+                { "role": "user", "content": "hello" }
+            ],
+            "temperature": 0,
+            "max_tokens": DEFAULT_MAX_TOKENS
+        });
+        assert_eq!(
+            serde_json::to_string(&request.body).expect("serialize body"),
+            serde_json::to_string(&expected).expect("serialize expected")
+        );
+    }
+
+    #[test]
+    fn disable_thinking_leaves_non_openai_wire_formats_untouched() {
+        for id in ["anthropic", "google", "aws-bedrock", "gcp-vertexai"] {
+            let mut opts = options("my-local-model");
+            opts.disable_thinking = true;
+            if id == "gcp-vertexai" {
+                opts.project_id = Some("demo-project".to_string());
+            }
+            let request =
+                prepare_request(spec(id), Some("key"), "hello", None, &opts).expect("request");
+            assert!(
+                request.body.get("reasoning_effort").is_none(),
+                "provider {id} speaks a non-OpenAI wire format"
+            );
+        }
     }
 
     #[test]

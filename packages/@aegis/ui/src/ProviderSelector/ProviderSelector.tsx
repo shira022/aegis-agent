@@ -58,6 +58,14 @@ export function ProviderSelector({
     [selectedProvider, onSettingsChange, buildSettings],
   );
 
+  const handleDisableThinkingChange = useCallback(
+    (checked: boolean) => {
+      if (!selectedProvider) return;
+      onSettingsChange(buildSettings({ disableThinking: checked }));
+    },
+    [selectedProvider, onSettingsChange, buildSettings],
+  );
+
   const handleRegionChange = useCallback(
     (region: string) => {
       if (!selectedProvider) return;
@@ -165,6 +173,25 @@ export function ProviderSelector({
               ))}
             </select>
           </div>
+
+          {selectedConfig.supportsThinkingToggle && (
+            <div>
+              <label
+                className="flex items-center gap-2 text-sm font-medium text-fg"
+                htmlFor="disable-thinking-checkbox"
+              >
+                <input
+                  id="disable-thinking-checkbox"
+                  data-testid="disable-thinking-checkbox"
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={settings?.disableThinking === true}
+                  onChange={(e) => handleDisableThinkingChange(e.target.checked)}
+                />
+                {t('settings.provider.disableThinking')}
+              </label>
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-sm font-medium text-fg" htmlFor="api-key-input">

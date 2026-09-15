@@ -201,4 +201,55 @@ describe('ProviderSelector', () => {
       expect(screen.getByText(config.displayName)).toBeTruthy();
     }
   });
+
+  it('thinking toggle appears only for providers that support it', () => {
+    const { rerender } = render(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="ollama"
+      />,
+    );
+    expect(screen.getByTestId('disable-thinking-checkbox')).toBeTruthy();
+
+    rerender(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="openai"
+      />,
+    );
+    expect(screen.queryByTestId('disable-thinking-checkbox')).toBeNull();
+  });
+
+  it('checking the thinking toggle propagates disableThinking: true', () => {
+    render(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="ollama"
+      />,
+    );
+    const checkbox = screen.getByTestId('disable-thinking-checkbox') as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+
+    fireEvent.click(checkbox);
+    expect(defaultProps.onSettingsChange).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'ollama', disableThinking: true }),
+    );
+  });
+
+  it('renders checked from configured disableThinking and clears it when unchecked', () => {
+    render(
+      <ProviderSelector
+        {...defaultProps}
+        selectedProvider="ollama"
+        settings={{ providerId: 'ollama', apiKey: '', disableThinking: true }}
+      />,
+    );
+    const checkbox = screen.getByTestId('disable-thinking-checkbox') as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+
+    fireEvent.click(checkbox);
+    expect(defaultProps.onSettingsChange).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'ollama', disableThinking: false }),
+    );
+  });
 });

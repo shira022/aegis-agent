@@ -23,6 +23,13 @@ export interface ProviderConfig {
   requiresProjectId: boolean;
   defaultModel: string;
   availableModels: string[];
+  /**
+   * Whether the provider's OpenAI-compatible endpoint accepts a verified
+   * "disable thinking" request option (ADR-009(d)). Verified only for
+   * local/compatible servers; cloud providers are false because the
+   * behaviour is unverified for them, not because it is impossible.
+   */
+  supportsThinkingToggle: boolean;
 }
 
 // ─── Provider Settings (user config) ────────────────────────────────
@@ -34,6 +41,8 @@ export interface ProviderSettings {
   region?: string;
   projectId?: string;
   baseUrl?: string; // for ollama, lm-studio, openai-compatible
+  /** User setting: suppress the reasoning/thinking phase (ADR-009(d)). */
+  disableThinking?: boolean;
 }
 
 // ─── Provider Registry ──────────────────────────────────────────────
@@ -47,6 +56,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'gpt-4o',
     availableModels: ['gpt-4o', 'gpt-4o-mini', 'o3', 'o4-mini'],
+    supportsThinkingToggle: false,
   },
   anthropic: {
     id: 'anthropic',
@@ -60,6 +70,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
       'claude-3-5-sonnet-20241022',
       'claude-3-5-haiku-20241022',
     ],
+    supportsThinkingToggle: false,
   },
   google: {
     id: 'google',
@@ -69,6 +80,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'gemini-2.5-flash',
     availableModels: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
+    supportsThinkingToggle: false,
   },
   'aws-bedrock': {
     id: 'aws-bedrock',
@@ -82,6 +94,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
       'anthropic.claude-3-5-sonnet-20241022',
       'meta.llama3-1-40b-instruct',
     ],
+    supportsThinkingToggle: false,
   },
   'azure-foundry': {
     id: 'azure-foundry',
@@ -91,6 +104,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'gpt-4o',
     availableModels: ['gpt-4o', 'gpt-4o-mini', 'o3', 'o4-mini'],
+    supportsThinkingToggle: false,
   },
   'gcp-vertexai': {
     id: 'gcp-vertexai',
@@ -100,6 +114,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: true,
     defaultModel: 'gemini-2.5-flash',
     availableModels: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
+    supportsThinkingToggle: false,
   },
   ollama: {
     id: 'ollama',
@@ -109,6 +124,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'llama3.1',
     availableModels: ['llama3.1', 'mistral', 'codellama', 'qwen2.5', 'gemma2'],
+    supportsThinkingToggle: true,
   },
   'lm-studio': {
     id: 'lm-studio',
@@ -118,6 +134,7 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'local-model',
     availableModels: ['local-model'],
+    supportsThinkingToggle: true,
   },
   'openai-compatible': {
     id: 'openai-compatible',
@@ -127,5 +144,6 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderConfig> = {
     requiresProjectId: false,
     defaultModel: 'custom-model',
     availableModels: ['custom-model'],
+    supportsThinkingToggle: true,
   },
 };

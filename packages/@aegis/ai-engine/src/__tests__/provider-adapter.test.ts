@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Mock Vercel AI SDK ─────────────────────────────────────────
 
-const { mockGenerateText } = vi.hoisted(() => ({
+const { mockGenerateText, mockWrapLanguageModel, mockDefaultSettingsMiddleware } = vi.hoisted(() => ({
   mockGenerateText: vi.fn().mockResolvedValue({
     text: JSON.stringify({
       code: 'print("hello")',
@@ -12,19 +12,51 @@ const { mockGenerateText } = vi.hoisted(() => ({
     }),
     usage: { inputTokens: 10, outputTokens: 20 },
   }),
+  // Identity pass-through: the wrapper returns the model it was given.
+  mockWrapLanguageModel: vi.fn(({ model }: { model: unknown }) => model),
+  mockDefaultSettingsMiddleware: vi.fn(
+    ({ settings }: { settings: unknown }) => ({ settings }),
+  ),
 }));
 
-vi.mock('ai', () => ({ generateText: mockGenerateText }));
+vi.mock('ai', () => ({
+  generateText: mockGenerateText,
+  wrapLanguageModel: mockWrapLanguageModel,
+  defaultSettingsMiddleware: mockDefaultSettingsMiddleware,
+}));
 
 // Mock SDK provider packages — each returns a factory function
-vi.mock('@ai-sdk/openai', () => ({
-  createOpenAI: vi.fn(() => (model: string) => ({
-    modelId: model,
-    provider: 'openai',
-    doGenerate: vi.fn(),
-    doStream: vi.fn(),
-  })),
-}));
+vi.mock('@ai-sdk/openai', () => {
+  type MockModel = {
+    modelId: string;
+    provider: string;
+    doGenerate: ReturnType<typeof vi.fn>;
+    doStream: ReturnType<typeof vi.fn>;
+  };
+  type MockOpenAIProvider = ((model: string) => MockModel) & {
+    chat: (model: string) => MockModel;
+  };
+
+  // The bare call defaults to the Responses API; `.chat(model)` selects
+  // the Chat Completions model the local/compatible providers use.
+  const createOpenAIMock = vi.fn((): MockOpenAIProvider => {
+    const responses = (model: string): MockModel => ({
+      modelId: model,
+      provider: 'openai.responses',
+      doGenerate: vi.fn(),
+      doStream: vi.fn(),
+    });
+    responses.chat = (model: string): MockModel => ({
+      modelId: model,
+      provider: 'openai.chat',
+      doGenerate: vi.fn(),
+      doStream: vi.fn(),
+    });
+    return responses;
+  });
+
+  return { createOpenAI: createOpenAIMock };
+});
 
 vi.mock('@ai-sdk/anthropic', () => ({
   createAnthropic: vi.fn(() => (model: string) => ({
@@ -57,6 +89,7 @@ vi.mock('@ai-sdk/amazon-bedrock', () => ({
 
 import { createProviderModel, requiresApiKey } from '../provider-adapter';
 import { AiEngine } from '../generator';
+import { PROVIDER_REGISTRY } from '@aegis/shared';
 import type { ProviderId } from '@aegis/shared';
 
 const TEST_MODEL = 'test-model';
@@ -104,6 +137,64 @@ describe('Provider Adapter — 9 providers', () => {
       expect(() =>
         createProviderModel('openai', DUMMY_CREDENTIALS, '   '),
       ).toThrow('model is required');
+    });
+  });
+
+  describe('createProviderModel — disable thinking (ADR-009(d))', () => {
+    const registryIds = Object.keys(PROVIDER_REGISTRY) as ProviderId[];
+    const thinkingCapable = registryIds
+      .filter((id) => PROVIDER_REGISTRY[id].supportsThinkingToggle)
+      .map((id) => ({ id }));
+    const thinkingIncapable = registryIds
+      .filter((id) => !PROVIDER_REGISTRY[id].supportsThinkingToggle)
+      .map((id) => ({ id }));
+    const localCreds = { ...DUMMY_CREDENTIALS, baseUrl: 'http://localhost:11434/v1' };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('targets exactly the providers whose registry entry has the capability', () => {
+      expect(thinkingCapable.map((entry) => entry.id)).toEqual([
+        'ollama',
+        'lm-studio',
+        'openai-compatible',
+      ]);
+      expect(thinkingIncapable).toHaveLength(6);
+    });
+
+    it.each(thinkingCapable)(
+      'wraps $id with a reasoningEffort none default when disableThinking is set',
+      ({ id }) => {
+        const model = createProviderModel(id, localCreds, TEST_MODEL, {
+          disableThinking: true,
+        });
+        expect(mockDefaultSettingsMiddleware).toHaveBeenCalledTimes(1);
+        expect(mockDefaultSettingsMiddleware).toHaveBeenCalledWith({
+          settings: { providerOptions: { openai: { reasoningEffort: 'none' } } },
+        });
+        expect(mockWrapLanguageModel).toHaveBeenCalledTimes(1);
+        expect(model).toBeDefined();
+      },
+    );
+
+    it.each(thinkingIncapable)(
+      'returns the raw model for $id even when disableThinking is set',
+      ({ id }) => {
+        const model = createProviderModel(id, localCreds, TEST_MODEL, {
+          disableThinking: true,
+        });
+        expect(mockDefaultSettingsMiddleware).not.toHaveBeenCalled();
+        expect(mockWrapLanguageModel).not.toHaveBeenCalled();
+        expect(model).toHaveProperty('modelId', TEST_MODEL);
+      },
+    );
+
+    it('returns the raw model when disableThinking is not set', () => {
+      const model = createProviderModel('ollama', localCreds, TEST_MODEL);
+      expect(mockDefaultSettingsMiddleware).not.toHaveBeenCalled();
+      expect(mockWrapLanguageModel).not.toHaveBeenCalled();
+      expect(model).toHaveProperty('modelId', TEST_MODEL);
     });
   });
 
