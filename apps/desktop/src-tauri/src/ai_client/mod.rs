@@ -39,6 +39,9 @@ pub struct AiGenerationRequest {
     pub region: Option<String>,
     /// Required for `gcp-vertexai`.
     pub project_id: Option<String>,
+    /// User-settable capability (ADR-009(d)): skip the model's reasoning
+    /// phase on providers that support it.
+    pub disable_thinking: Option<bool>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq)]
@@ -140,6 +143,28 @@ fn is_configured(spec: &providers::ProviderSpec, api_key: Option<&str>) -> bool 
     spec.accepts_anonymous || api_key.map(|key| !key.is_empty()).unwrap_or(false)
 }
 
+/// Resolve the model for a request (ADR-009(a)).
+///
+/// The registry's `default_model` is only a UI suggestion: a request that
+/// carries no resolvable model is an actionable error, never silently served
+/// by the suggestion.
+fn resolve_model(
+    request_model: Option<&str>,
+    spec: &providers::ProviderSpec,
+) -> Result<String, String> {
+    request_model
+        .map(str::trim)
+        .filter(|model| !model.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| {
+            format!(
+                "no model specified for provider '{}': set a model in AI settings \
+                 (registry suggestion: {})",
+                spec.id, spec.default_model
+            )
+        })
+}
+
 /// Run a real generation request against the configured provider.
 pub async fn generate(
     request: AiGenerationRequest,
@@ -149,12 +174,7 @@ pub async fn generate(
     let spec = providers::provider_spec(&provider_id)
         .ok_or_else(|| format!("unsupported AI provider: {provider_id}"))?;
 
-    let model = request
-        .model
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or(spec.default_model)
-        .to_string();
+    let model = resolve_model(request.model.as_deref(), spec)?;
 
     let api_key = security::load_secret(state, &provider_id)?;
     if !is_configured(spec, api_key.as_deref()) {
@@ -166,16 +186,21 @@ pub async fn generate(
     let prepared = providers::prepare_request(
         spec,
         api_key.as_deref(),
-        &model,
         &request.prompt,
         request.context.as_deref(),
-        request.base_url.as_deref(),
-        request.region.as_deref(),
-        request.project_id.as_deref(),
+        &providers::RequestOptions {
+            model: model.clone(),
+            disable_thinking: request.disable_thinking.unwrap_or(false),
+            base_url: request.base_url.clone(),
+            region: request.region.clone(),
+            project_id: request.project_id.clone(),
+        },
     )?;
 
     let body = send_prepared(prepared).await?;
-    let script = providers::strip_code_fences(&providers::extract_text(spec.api_style, &body)?);
+    let script = providers::strip_code_fences(
+        &providers::extract_text(spec.api_style, &body).map_err(|e| e.to_string())?,
+    );
 
     Ok(AiGenerationResponse {
         script,
@@ -229,6 +254,7 @@ mod tests {
             base_url: None,
             region: None,
             project_id: None,
+            disable_thinking: None,
         }
     }
 
@@ -273,6 +299,25 @@ mod tests {
         let request: AiGenerationRequest = serde_json::from_value(value).expect("deserialize");
         assert_eq!(request.base_url.as_deref(), Some("https://example.test/v1"));
         assert_eq!(request.provider.as_deref(), Some("openai-compatible"));
+        assert_eq!(request.disable_thinking, None);
+    }
+
+    #[test]
+    fn request_deserializes_the_disable_thinking_capability_flag() {
+        let value = serde_json::json!({
+            "prompt": "hello",
+            "provider": "ollama",
+            "disableThinking": true
+        });
+        let request: AiGenerationRequest = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(request.disable_thinking, Some(true));
+
+        let off: AiGenerationRequest = serde_json::from_value(serde_json::json!({
+            "prompt": "hello",
+            "disableThinking": false
+        }))
+        .expect("deserialize");
+        assert_eq!(off.disable_thinking, Some(false));
     }
 
     #[test]
@@ -286,6 +331,30 @@ mod tests {
     }
 
     #[test]
+    fn resolve_model_uses_the_requested_model() {
+        let spec = providers::provider_spec("openai").expect("openai");
+        assert_eq!(
+            resolve_model(Some("my-local-model"), spec).expect("model"),
+            "my-local-model"
+        );
+        assert_eq!(
+            resolve_model(Some("  my-local-model  "), spec).expect("model"),
+            "my-local-model"
+        );
+    }
+
+    #[test]
+    fn resolve_model_rejects_requests_without_a_usable_model() {
+        let spec = providers::provider_spec("openai").expect("openai");
+        for missing in [None, Some(""), Some("   ")] {
+            let error = resolve_model(missing, spec).expect_err("must fail");
+            assert!(error.contains("no model specified for provider 'openai'"));
+            assert!(error.contains("set a model in AI settings"));
+            assert!(error.contains(spec.default_model));
+        }
+    }
+
+    #[test]
     fn real_provider_errors_never_contain_mock_data() {
         // A missing provider is reported explicitly, never mocked.
         let sample = request("x");
@@ -294,12 +363,15 @@ mod tests {
         let error = providers::prepare_request(
             providers::provider_spec("anthropic").expect("anthropic"),
             None,
-            "claude-sonnet-4-20250514",
             "hello",
             None,
-            None,
-            None,
-            None,
+            &providers::RequestOptions {
+                model: "claude-sonnet-4-20250514".to_string(),
+                disable_thinking: false,
+                base_url: None,
+                region: None,
+                project_id: None,
+            },
         )
         .err()
         .expect("not configured");

@@ -13,3 +13,4 @@ __pycache__/
 *.tsbuildinfo
 coverage/
 test-results/
+e2e/.artifacts/

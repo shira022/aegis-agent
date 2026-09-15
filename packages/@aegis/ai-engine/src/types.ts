@@ -11,6 +11,10 @@ export interface AIConfig {
   projectId?: string;
   maxTokens?: number;
   temperature?: number;
+  /** User-settable provider capability (ADR-009(d)): skip the model's
+   *  reasoning/thinking phase. Only honoured for providers whose registry
+   *  entry has `supportsThinkingToggle: true`. */
+  disableThinking?: boolean;
 }
 
 // ─── Code Generation ───────────────────────────────────────────────

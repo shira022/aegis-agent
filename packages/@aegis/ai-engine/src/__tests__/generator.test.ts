@@ -1,22 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AiEngine } from '../generator';
+import { TextExtractionError } from '../text-extraction-error';
 import type { AIConfig } from '../types';
 import type { OperationLog } from '@aegis/shared';
 
 // ─── Mock Vercel AI SDK ─────────────────────────────────────────
 
-const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
+const { mockGenerateText, mockCreateProviderModel } = vi.hoisted(() => ({
+  mockGenerateText: vi.fn(),
+  mockCreateProviderModel: vi.fn(() => ({ modelId: 'mock', provider: 'mock' })),
+}));
+
 vi.mock('ai', () => ({ generateText: mockGenerateText }));
 vi.mock('../provider-adapter', () => ({
-  createProviderModel: vi.fn(() => ({ modelId: 'mock', provider: 'mock' })),
+  createProviderModel: mockCreateProviderModel,
 }));
 
 // ─── Fixtures ───────────────────────────────────────────────────
 
+const TEST_MODEL = 'test-model';
+
 const sampleConfig: AIConfig = {
   providerId: 'openai',
   apiKey: 'test-key',
-  model: 'gpt-4o',
+  model: TEST_MODEL,
   maxTokens: 1000,
   temperature: 0,
 };
@@ -83,8 +90,56 @@ describe('AiEngine.generateCode', () => {
     expect(response.code).toContain('selenium');
     expect(response.explanation).toContain('example.com');
     expect(response.exceptionHandlers).toHaveLength(1);
-    expect(response.metadata.model).toBe('gpt-4o');
+    expect(response.metadata.model).toBe(TEST_MODEL);
     expect(response.metadata.tokensUsed).toBe(150);
+  });
+
+  it('forwards the configured model to the provider adapter', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: 'print(1)',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    await engine.generateCode({ operationLog: sampleOperationLog });
+
+    expect(mockCreateProviderModel).toHaveBeenCalledWith(
+      sampleConfig.providerId,
+      {
+        apiKey: sampleConfig.apiKey,
+        baseUrl: sampleConfig.baseUrl,
+        region: sampleConfig.region,
+      },
+      sampleConfig.model,
+      { disableThinking: sampleConfig.disableThinking },
+    );
+  });
+
+  it('forwards disableThinking to the provider adapter', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: 'print(1)',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    const config: AIConfig = {
+      ...sampleConfig,
+      providerId: 'ollama',
+      baseUrl: 'http://localhost:11434/v1',
+      disableThinking: true,
+    };
+    const engine = new AiEngine(config);
+    await engine.generateCode({ operationLog: sampleOperationLog });
+
+    expect(mockCreateProviderModel).toHaveBeenCalledWith(
+      config.providerId,
+      {
+        apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
+        region: config.region,
+      },
+      config.model,
+      { disableThinking: true },
+    );
   });
 
   it('handles non-JSON response gracefully', async () => {
@@ -107,6 +162,67 @@ describe('AiEngine.generateCode', () => {
     await expect(
       engine.generateCode({ operationLog: sampleOperationLog }),
     ).rejects.toThrow('API key invalid');
+  });
+});
+
+// ─── Text extraction failures (ADR-009(d)) ─────────────────────
+
+describe('AiEngine.generateCode text extraction failures', () => {
+  it('throws TextExtractionError with kind "reasoning-only" when only reasoning text was returned', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '',
+      reasoningText: 'I should click the submit button first, then type into the search box',
+      usage: { inputTokens: 500, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('reasoning-only');
+    expect(extractionError.reasoning).toBe(
+      'I should click the submit button first, then type into the search box',
+    );
+    expect(extractionError.message).toContain('disable thinking');
+  });
+
+  it('throws TextExtractionError with kind "missing" when no text and no reasoning were returned', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '   \n\t',
+      usage: { inputTokens: 5, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('missing');
+    expect(extractionError.reasoning).toBeUndefined();
+    expect(extractionError.message).toContain('did not contain generated text');
+  });
+
+  it('treats whitespace-only reasoning as missing, never as generated code', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '',
+      reasoningText: '   ',
+      usage: { inputTokens: 5, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('missing');
+    expect(extractionError.reasoning).toBeUndefined();
   });
 });
 
