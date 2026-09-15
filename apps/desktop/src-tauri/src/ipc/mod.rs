@@ -424,6 +424,18 @@ pub struct ApprovalDecisionInput {
     pub reason: Option<String>,
 }
 
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct NewApprovalInput {
+    pub task_id: Option<String>,
+    pub code: String,
+    pub explanation: String,
+    pub exception_handlers: Vec<ExceptionHandler>,
+    pub safety_checks: Vec<SafetyCheck>,
+    pub risk_level: RiskLevel,
+    pub expires_at: Option<u64>,
+}
+
 /// In-memory source of truth for the task/approval/healing/activity domain.
 ///
 /// `tasks`, `activity`, `completed_setup` and `provider_models` are persisted
@@ -604,5 +616,35 @@ mod tests {
         assert_eq!(json["safetyChecks"][0]["passed"], true);
         assert_eq!(json["riskLevel"], "low");
         assert_eq!(json["state"], "reviewing");
+    }
+
+    #[test]
+    fn new_approval_input_deserializes_from_camel_case_json() {
+        let value = serde_json::json!({
+            "taskId": "task-1",
+            "code": "print('hi')",
+            "explanation": "demo",
+            "exceptionHandlers": [],
+            "safetyChecks": [],
+            "riskLevel": "medium",
+            "expiresAt": 1_700_000_000_000_u64
+        });
+        let input: NewApprovalInput = serde_json::from_value(value).unwrap();
+        assert_eq!(input.task_id.as_deref(), Some("task-1"));
+        assert_eq!(input.risk_level, RiskLevel::Medium);
+        assert_eq!(input.expires_at, Some(1_700_000_000_000));
+        assert!(input.exception_handlers.is_empty());
+        assert!(input.safety_checks.is_empty());
+
+        let minimal: NewApprovalInput = serde_json::from_value(serde_json::json!({
+            "code": "print('hi')",
+            "explanation": "demo",
+            "exceptionHandlers": [],
+            "safetyChecks": [],
+            "riskLevel": "low"
+        }))
+        .unwrap();
+        assert_eq!(minimal.task_id, None);
+        assert_eq!(minimal.expires_at, None);
     }
 }
