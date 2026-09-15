@@ -59,6 +59,10 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libpipewire-0.3-dev \
+            libgbm-dev \
+            libegl1-mesa-dev \
+            libwayland-dev \
+            libxkbcommon-dev \
             patchelf
 
       - name: Setup Rust toolchain
