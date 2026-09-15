@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AiEngine } from '../generator';
+import { TextExtractionError } from '../text-extraction-error';
 import type { AIConfig } from '../types';
 import type { OperationLog } from '@aegis/shared';
 
@@ -161,6 +162,67 @@ describe('AiEngine.generateCode', () => {
     await expect(
       engine.generateCode({ operationLog: sampleOperationLog }),
     ).rejects.toThrow('API key invalid');
+  });
+});
+
+// ─── Text extraction failures (ADR-009(d)) ─────────────────────
+
+describe('AiEngine.generateCode text extraction failures', () => {
+  it('throws TextExtractionError with kind "reasoning-only" when only reasoning text was returned', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '',
+      reasoningText: 'I should click the submit button first, then type into the search box',
+      usage: { inputTokens: 500, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('reasoning-only');
+    expect(extractionError.reasoning).toBe(
+      'I should click the submit button first, then type into the search box',
+    );
+    expect(extractionError.message).toContain('disable thinking');
+  });
+
+  it('throws TextExtractionError with kind "missing" when no text and no reasoning were returned', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '   \n\t',
+      usage: { inputTokens: 5, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('missing');
+    expect(extractionError.reasoning).toBeUndefined();
+    expect(extractionError.message).toContain('did not contain generated text');
+  });
+
+  it('treats whitespace-only reasoning as missing, never as generated code', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '',
+      reasoningText: '   ',
+      usage: { inputTokens: 5, outputTokens: 0 },
+    });
+
+    const engine = new AiEngine(sampleConfig);
+    const error: unknown = await engine
+      .generateCode({ operationLog: sampleOperationLog })
+      .then(() => undefined, (e: unknown) => e);
+
+    expect(error).toBeInstanceOf(TextExtractionError);
+    const extractionError = error as TextExtractionError;
+    expect(extractionError.kind).toBe('missing');
+    expect(extractionError.reasoning).toBeUndefined();
   });
 });
 

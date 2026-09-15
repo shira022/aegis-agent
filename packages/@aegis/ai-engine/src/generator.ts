@@ -4,6 +4,8 @@ import type { OperationLog } from '@aegis/shared';
 import { buildCodeGenerationPrompt, buildExceptionPrompt, buildHealingPrompt } from './prompt-builder';
 import { validateSyntax, validateNoDangerousOps, BLOCKED_PATTERNS } from './validators';
 import { createProviderModel } from './provider-adapter';
+import { TextExtractionError } from './text-extraction-error';
+import { extractJsonPayload, stripOuterCodeFence } from './response-parser';
 
 // ─── AI Engine ─────────────────────────────────────────────────────
 
@@ -26,10 +28,14 @@ export class AiEngine {
       temperature: this.config.temperature ?? 0,
     });
 
-    return this.parseCodeResponse(result.text, {
-      input_tokens: result.usage.inputTokens,
-      output_tokens: result.usage.outputTokens,
-    });
+    return this.parseCodeResponse(
+      result.text,
+      {
+        input_tokens: result.usage.inputTokens,
+        output_tokens: result.usage.outputTokens,
+      },
+      result.reasoningText,
+    );
   }
 
   async generateExceptions(operationLog: OperationLog): Promise<ExceptionHandler[]> {
@@ -94,37 +100,65 @@ export class AiEngine {
   private parseCodeResponse(
     response: string,
     usage?: { input_tokens?: number; output_tokens?: number },
+    reasoning?: string,
   ): CodeGenerationResponse {
+    // ADR-009(d): generated code is extracted only from the provider's
+    // text output. An empty response is a typed failure — reasoning text
+    // is kept on the error for diagnostics but is never promoted to
+    // generated code.
+    if (response.trim().length === 0) {
+      const hasReasoning = typeof reasoning === 'string' && reasoning.trim().length > 0;
+      throw new TextExtractionError(
+        hasReasoning ? 'reasoning-only' : 'missing',
+        hasReasoning ? reasoning : undefined,
+      );
+    }
+
     const tokensUsed = (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0);
 
-    try {
-      const parsed = JSON.parse(response);
-      return {
-        code: parsed.code || '',
-        explanation: parsed.explanation || '',
-        exceptionHandlers: parsed.exceptionHandlers || [],
-        warnings: parsed.warnings || [],
-        metadata: {
-          model: this.config.model,
-          tokensUsed,
-          generatedAt: Date.now(),
-          latencyMs: 0,
-        },
-      };
-    } catch {
-      return {
-        code: response,
-        explanation: '',
-        exceptionHandlers: [],
-        warnings: ['Response was not valid JSON, returned as raw code'],
-        metadata: {
-          model: this.config.model,
-          tokensUsed,
-          generatedAt: Date.now(),
-          latencyMs: 0,
-        },
-      };
+    // Fence-tolerant extraction (ADR-010 E2E): models often wrap the
+    // JSON reply in a markdown fence and/or prose. `extractJsonPayload`
+    // returns `null` only when no JSON payload can be recovered.
+    const payload = extractJsonPayload(response);
+
+    if (payload !== null) {
+      try {
+        const parsed = JSON.parse(payload) as {
+          code?: string;
+          explanation?: string;
+          exceptionHandlers?: ExceptionHandler[];
+          warnings?: string[];
+        };
+        return {
+          code: stripOuterCodeFence(parsed.code || ''),
+          explanation: parsed.explanation || '',
+          exceptionHandlers: parsed.exceptionHandlers || [],
+          warnings: parsed.warnings || [],
+          metadata: {
+            model: this.config.model,
+            tokensUsed,
+            generatedAt: Date.now(),
+            latencyMs: 0,
+          },
+        };
+      } catch {
+        // A payload that parses to a non-object (e.g. `null`) keeps the
+        // raw-text fallback below.
+      }
     }
+
+    return {
+      code: response,
+      explanation: '',
+      exceptionHandlers: [],
+      warnings: ['Response was not valid JSON, returned as raw code'],
+      metadata: {
+        model: this.config.model,
+        tokensUsed,
+        generatedAt: Date.now(),
+        latencyMs: 0,
+      },
+    };
   }
 
   private parseExceptionsResponse(response: string): ExceptionHandler[] {
