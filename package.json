@@ -8,6 +8,7 @@
     "build": "turbo build",
     "test": "turbo test",
     "test:coverage": "turbo test:coverage",
+    "test:e2e": "pnpm --filter @aegis/e2e test:e2e",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "prepare": "bash scripts/setup-hooks.sh"
