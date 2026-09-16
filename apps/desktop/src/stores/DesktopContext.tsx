@@ -13,6 +13,7 @@ import { createApprovalsStore, type ApprovalsStore } from './approvalsStore';
 import { createHealingStore, type HealingStore } from './healingStore';
 import { createRecorderStore, type RecorderStore } from './recorderStore';
 import { createSetupStore, type SetupStore } from './setupStore';
+import { createGenerationStore, type GenerationStore } from './generationStore';
 
 export interface DesktopStores {
   tasks: TasksStore;
@@ -21,6 +22,7 @@ export interface DesktopStores {
   healing: HealingStore;
   recorder: RecorderStore;
   setup: SetupStore;
+  generation: GenerationStore;
 }
 
 export interface DesktopContextValue {
@@ -38,17 +40,18 @@ export interface DesktopProviderProps {
 export function DesktopProvider({ api, children }: DesktopProviderProps) {
   const resolvedApi = api ?? getAdapter();
 
-  const stores = useMemo<DesktopStores>(
-    () => ({
+  const stores = useMemo<DesktopStores>(() => {
+    const approvals = createApprovalsStore(resolvedApi);
+    return {
       tasks: createTasksStore(resolvedApi),
       run: createRunStore(resolvedApi),
-      approvals: createApprovalsStore(resolvedApi),
+      approvals,
       healing: createHealingStore(resolvedApi),
       recorder: createRecorderStore(resolvedApi),
       setup: createSetupStore(resolvedApi),
-    }),
-    [resolvedApi],
-  );
+      generation: createGenerationStore(resolvedApi, approvals),
+    };
+  }, [resolvedApi]);
 
   useEffect(() => {
     let active = true;

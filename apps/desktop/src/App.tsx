@@ -19,12 +19,14 @@ import { Dashboard } from './components/Dashboard/Dashboard';
 import { ActionFlowView } from './components/ActionFlow/ActionFlowView';
 import { TaskList } from './components/TaskList/TaskList';
 import { CodeReviewPanel } from './components/CodeReviewPanel/CodeReviewPanel';
+import { GeneratePanel } from './components/GeneratePanel/GeneratePanel';
 import { ApprovalDialog } from './components/ApprovalDialog/ApprovalDialog';
 import { HealingNotifier } from './components/HealingNotifier/HealingNotifier';
 import { Recorder } from './components/Recorder/Recorder';
 import { useTasks } from './hooks/useTasks';
 import { useRun } from './hooks/useRun';
 import { useApprovals } from './hooks/useApprovals';
+import { useAiGeneration } from './hooks/useAiGeneration';
 import { useHealing } from './hooks/useHealing';
 import { useRecorder } from './hooks/useRecorder';
 import { useSetup } from './hooks/useSetup';
@@ -161,6 +163,7 @@ export default function App() {
   const run = useRun();
   const approvals = useApprovals();
   const healing = useHealing();
+  const generation = useAiGeneration();
   const recorder = useRecorder();
   const setup = useSetup();
 
@@ -395,6 +398,11 @@ export default function App() {
 
           {view === 'review' && (
             <div className="space-y-4">
+              <GeneratePanel
+                tasks={tasks.state.tasks}
+                state={generation.state}
+                actions={generation.actions}
+              />
               {approvals.state.loading && approvals.state.requests.length === 0 ? (
                 <LoadingState label={t('review.loading')} />
               ) : pendingRequest ? (

@@ -112,6 +112,65 @@ describe('createMockAdapter', () => {
     });
   });
 
+  describe('ai generation', () => {
+    it('generates a mocked python script that mentions the requested task', async () => {
+      const api = createMockAdapter();
+      const result = await api.generateScript({ prompt: 'Download the invoice' });
+      expect(result.mocked).toBe(true);
+      expect(result.language).toBe('python');
+      expect(result.model).toBe('mock-model');
+      expect(result.promptHash).toMatch(/^[0-9a-f]{16}$/);
+      expect(result.script).toContain('Download the invoice');
+      expect(result.script).toContain('from selenium import webdriver');
+    });
+
+    it('derives a deterministic prompt hash from the prompt', async () => {
+      const api = createMockAdapter();
+      const first = await api.generateScript({ prompt: 'same prompt' });
+      const second = await api.generateScript({ prompt: 'same prompt' });
+      expect(first.promptHash).toBe(second.promptHash);
+
+      const other = await api.generateScript({ prompt: 'different prompt' });
+      expect(other.promptHash).not.toBe(first.promptHash);
+    });
+
+    it('reports the provider status with mocked set to true', async () => {
+      const api = createMockAdapter();
+      const before = await api.getAiProviderStatus('openai');
+      expect(before).toEqual({ provider: 'openai', configured: false, mocked: true });
+
+      await api.saveProviderKey({ providerId: 'openai', apiKey: 'sk-test' });
+      const after = await api.getAiProviderStatus('openai');
+      expect(after).toEqual({ provider: 'openai', configured: true, mocked: true });
+
+      expect((await api.getAiProviderStatus()).provider).toBe('openai');
+    });
+  });
+
+  describe('createApproval', () => {
+    it('appends a pending request that listApprovals returns and decideApproval can decide', async () => {
+      const api = createMockAdapter();
+      const created = await api.createApproval({
+        taskId: 'task-1',
+        code: 'print("hi")',
+        explanation: 'demo',
+        exceptionHandlers: [],
+        safetyChecks: [],
+        riskLevel: 'medium',
+      });
+      expect(created.id).toMatch(/^req-mock-\d+$/);
+      expect(created.state).toBe('pending');
+      expect(created.riskLevel).toBe('medium');
+      expect(created.createdAt).toBeGreaterThan(0);
+
+      const listed = await api.listApprovals();
+      expect(listed.map((request) => request.id)).toContain(created.id);
+
+      const decided = await api.decideApproval({ requestId: created.id, decision: 'approved' });
+      expect(decided.state).toBe('approved');
+    });
+  });
+
   describe('recorder', () => {
     it('follows the transition chain', async () => {
       const api = createMockAdapter();

@@ -40,10 +40,14 @@ use tauri::{AppHandle, Manager};
 
 use crate::ipc::{
     now_ms, AppState, ApprovalDecisionInput, ApprovalRequest, DomainStore, HealingEvent,
-    NewTaskInput, OperationLog, ProviderKeyInput, SetupState, Task, TaskRun, UpdateTaskInput,
+    NewApprovalInput, NewTaskInput, OperationLog, ProviderKeyInput, SetupState, Task, TaskRun,
+    UpdateTaskInput,
 };
 use crate::security;
-use state::{create_task_in, decide_approval_in, delete_task_in, start_run_in, update_task_in};
+use state::{
+    create_approval_in, create_task_in, decide_approval_in, delete_task_in, start_run_in,
+    update_task_in,
+};
 
 pub use state::{detect_dependencies, load_from_dir, save_to_dir, slugify};
 
@@ -130,6 +134,17 @@ pub fn list_activity(state: tauri::State<'_, AppState>) -> Result<Vec<OperationL
 #[tauri::command]
 pub fn list_approvals(state: tauri::State<'_, AppState>) -> Result<Vec<ApprovalRequest>, String> {
     Ok(lock_domain(&state)?.approvals.clone())
+}
+
+/// Queue a generated script as a pending, session-scoped approval request.
+/// Approvals are never persisted (see [`DomainStore`]), so no `persist` call.
+#[tauri::command]
+pub fn create_approval(
+    input: NewApprovalInput,
+    state: tauri::State<'_, AppState>,
+) -> Result<ApprovalRequest, String> {
+    let mut store = lock_domain(&state)?;
+    create_approval_in(&mut store, &input, now_ms())
 }
 
 #[tauri::command]

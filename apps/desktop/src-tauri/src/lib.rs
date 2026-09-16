@@ -62,6 +62,7 @@ pub fn run() {
             tasks::get_active_run,
             tasks::list_activity,
             tasks::list_approvals,
+            tasks::create_approval,
             tasks::decide_approval,
             tasks::list_healing_events,
             tasks::save_provider_key,

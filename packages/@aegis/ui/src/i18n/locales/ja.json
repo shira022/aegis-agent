@@ -146,6 +146,24 @@
       "critical": "重大"
     }
   },
+  "generate": {
+    "title": "AIで生成",
+    "task": "タスク",
+    "noTask": "タスクなし（下書き）",
+    "provider": "プロバイダー",
+    "model": "モデル",
+    "modelPlaceholder": "デフォルト: {{model}}",
+    "context": "コンテキスト / メモ",
+    "contextPlaceholder": "モデルに渡す補足情報（任意）",
+    "description": "タスク説明",
+    "descriptionPlaceholder": "必要な自動化処理を順を追って説明してください",
+    "generate": "生成",
+    "generating": "生成中...",
+    "running": "{{model}}でスクリプトを生成しています — 経過時間 {{elapsed}}。ローカルモデルでは数分かかることがあります。",
+    "success": "生成されたスクリプトは下のレビューキューに追加されました。",
+    "retry": "再試行",
+    "startOver": "最初からやり直す"
+  },
   "recorder": {
     "title": "レコーダー",
     "start": "開始",

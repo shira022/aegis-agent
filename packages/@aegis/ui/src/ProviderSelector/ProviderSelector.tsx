@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
-import type { ProviderId, ProviderSettings, ProviderCategory } from '@aegis/shared';
+import type { ProviderId, ProviderSettings } from '@aegis/shared';
 import { PROVIDER_REGISTRY } from '@aegis/shared';
 import { useAppTranslation } from '../i18n';
+import { PROVIDER_CATEGORY_LABEL_KEYS, groupProvidersByCategory } from './providerGroups';
 
 export interface ProviderSelectorProps {
   selectedProvider?: ProviderId;
@@ -9,14 +10,6 @@ export interface ProviderSelectorProps {
   onProviderChange: (providerId: ProviderId) => void;
   onSettingsChange: (settings: ProviderSettings) => void;
 }
-
-const CATEGORY_ORDER: ProviderCategory[] = ['cloud', 'local', 'compatible'];
-
-const CATEGORY_LABEL_KEYS = {
-  cloud: 'settings.provider.categories.cloud',
-  local: 'settings.provider.categories.local',
-  compatible: 'settings.provider.categories.compatible',
-} as const;
 
 const inputClassName =
   'w-full rounded-md border border-border bg-surface-raised px-3 py-2 text-sm text-fg outline-none focus:ring-2 focus:ring-primary';
@@ -91,13 +84,11 @@ export function ProviderSelector({
 
   const selectedConfig = selectedProvider ? PROVIDER_REGISTRY[selectedProvider] : null;
 
-  const grouped = CATEGORY_ORDER.map((category) => ({
+  const grouped = groupProvidersByCategory().map(({ category, providers }) => ({
     category,
-    label: t(CATEGORY_LABEL_KEYS[category]),
-    providers: (Object.keys(PROVIDER_REGISTRY) as ProviderId[]).filter(
-      (id) => PROVIDER_REGISTRY[id].category === category,
-    ),
-  })).filter((group) => group.providers.length > 0);
+    label: t(PROVIDER_CATEGORY_LABEL_KEYS[category]),
+    providers,
+  }));
 
   return (
     <div className="flex flex-col gap-5">

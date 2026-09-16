@@ -23,10 +23,12 @@ export interface ApprovalsStore {
   actions: ApprovalsActions;
 }
 
+// Newest first: a freshly generated request immediately becomes the request
+// under review in the Code Review view.
 function computePending(requests: ApprovalRequest[]): ApprovalRequest[] {
-  return requests.filter(
-    (request) => request.state === 'pending' || request.state === 'reviewing',
-  );
+  return requests
+    .filter((request) => request.state === 'pending' || request.state === 'reviewing')
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function createApprovalsStore(api: DesktopApi): ApprovalsStore {
