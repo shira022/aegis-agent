@@ -29,6 +29,7 @@ describe('ApprovalDialog', () => {
 
   it('renders the review content when open', () => {
     render(<ApprovalDialog request={makeRequest()} open {...defaultProps} />);
+    expect(screen.getByRole('dialog', { name: 'Approve or Reject' })).toBeInTheDocument();
     expect(screen.getByText('Approve or Reject')).toBeInTheDocument();
     expect(screen.getByText('Code Review')).toBeInTheDocument();
     expect(screen.getByText('Test Script')).toBeInTheDocument();
