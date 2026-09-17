@@ -55,6 +55,7 @@
       "projectIdRequired": "プロジェクトIDが必要です",
       "customEndpoint": "カスタムエンドポイント",
       "model": "モデル",
+      "disableThinking": "思考モードを無効化",
       "apiKey": "APIキー",
       "apiKeyPlaceholder": "APIキーを入力",
       "show": "表示",

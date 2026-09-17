@@ -1,6 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/@aegis/*'
+  - 'e2e'
 allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:

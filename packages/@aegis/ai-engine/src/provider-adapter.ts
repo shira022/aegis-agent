@@ -1,5 +1,7 @@
 import type { ProviderId } from '@aegis/shared';
+import { PROVIDER_REGISTRY } from '@aegis/shared';
 import type { LanguageModel } from 'ai';
+import { wrapLanguageModel, defaultSettingsMiddleware } from 'ai';
 
 // ─── SDK Provider Factories ──────────────────────────────────────
 
@@ -16,47 +18,59 @@ export interface ProviderCredentials {
   region?: string;
 }
 
-export type ProviderFactory = (credentials: ProviderCredentials) => LanguageModel;
+/** Per-model options resolved from user settings (ADR-009(d)). */
+export interface ProviderModelOptions {
+  /** Ask the provider to skip the model's reasoning/thinking phase. */
+  disableThinking?: boolean;
+}
+
+/** The concrete model interface `wrapLanguageModel` accepts. The `ai`
+ * package re-exports only the version union `LanguageModel`, not the V3
+ * interface itself, so it is extracted from the wrapper's signature. */
+type SdkLanguageModel = Parameters<typeof wrapLanguageModel>[0]['model'];
+
+export type ProviderFactory = (credentials: ProviderCredentials, model: string) => LanguageModel;
 
 // ─── Registry ────────────────────────────────────────────────────
 
 const SDK_FACTORIES: Partial<Record<ProviderId, ProviderFactory>> = {
-  openai: (c) =>
-    createOpenAI({ apiKey: c.apiKey, baseURL: c.baseUrl })(
-      'gpt-4o',
-    ),
-  'azure-foundry': (c) =>
+  openai: (c, model) =>
+    createOpenAI({ apiKey: c.apiKey, baseURL: c.baseUrl })(model),
+  'azure-foundry': (c, model) =>
     createOpenAI({
       apiKey: c.apiKey,
       baseURL: c.baseUrl ?? 'https://your-resource.openai.azure.com/openai/deployments/your-deployment',
-    })('gpt-4o'),
-  ollama: (c) =>
+    })(model),
+  // Local/compatible servers speak the Chat Completions contract
+  // (`POST {base}/chat/completions`), not OpenAI's Responses API, which a
+  // bare `createOpenAI(...)(model)` call defaults to in this SDK version.
+  // `.chat(model)` is also what makes the verified `reasoning_effort:
+  // "none"` toggle reachable for these providers (ADR-009(d)).
+  ollama: (c, model) =>
     createOpenAI({
       apiKey: c.apiKey || 'ollama',
       baseURL: c.baseUrl ?? 'http://localhost:11434/v1',
-    })('llama3.1'),
-  'lm-studio': (c) =>
+    }).chat(model),
+  'lm-studio': (c, model) =>
     createOpenAI({
       apiKey: c.apiKey || 'lm-studio',
       baseURL: c.baseUrl ?? 'http://localhost:1234/v1',
-    })('default'),
-  'openai-compatible': (c) => {
+    }).chat(model),
+  'openai-compatible': (c, model) => {
     if (!c.baseUrl) throw new Error('baseUrl is required for openai-compatible provider');
-    return createOpenAI({ apiKey: c.apiKey, baseURL: c.baseUrl })('gpt-4o');
+    return createOpenAI({ apiKey: c.apiKey, baseURL: c.baseUrl }).chat(model);
   },
-  anthropic: (c) =>
-    createAnthropic({ apiKey: c.apiKey })('claude-sonnet-4-20250514'),
-  google: (c) =>
-    createGoogleGenerativeAI({ apiKey: c.apiKey })('gemini-2.5-flash'),
-  'gcp-vertexai': (c) =>
+  anthropic: (c, model) => createAnthropic({ apiKey: c.apiKey })(model),
+  google: (c, model) => createGoogleGenerativeAI({ apiKey: c.apiKey })(model),
+  'gcp-vertexai': (c, model) =>
     createGoogleGenerativeAI({
       apiKey: c.apiKey,
       ...(c.region ? { baseURL: `https://${c.region}-aiplatform.googleapis.com/v1beta` } : {}),
-    })('gemini-2.5-flash'),
-  'aws-bedrock': (c) =>
+    })(model),
+  'aws-bedrock': (c, model) =>
     createAmazonBedrock({
       region: c.region ?? 'us-east-1',
-    })('anthropic.claude-sonnet-4-20250514-v1:0'),
+    })(model),
 };
 
 // ─── Main Adapter ────────────────────────────────────────────────
@@ -68,12 +82,34 @@ const SDK_FACTORIES: Partial<Record<ProviderId, ProviderFactory>> = {
 export function createProviderModel(
   providerId: ProviderId,
   credentials: ProviderCredentials,
+  model: string,
+  options: ProviderModelOptions = {},
 ): LanguageModel {
   const factory = SDK_FACTORIES[providerId];
   if (!factory) {
     throw new Error(`Unsupported provider: ${providerId}`);
   }
-  return factory(credentials);
+  if (!model.trim()) {
+    throw new Error(`model is required for ${providerId} provider`);
+  }
+  const languageModel = factory(credentials, model);
+  if (options.disableThinking && PROVIDER_REGISTRY[providerId].supportsThinkingToggle) {
+    return wrapLanguageModel({
+      // The capability flag is only true for the createOpenAI-based
+      // providers, whose models are LanguageModelV3 (Bedrock still
+      // speaks V2 and never reaches this branch).
+      model: languageModel as SdkLanguageModel,
+      middleware: defaultSettingsMiddleware({
+        settings: {
+          // Verified against an OpenAI-compatible Ollama endpoint
+          // (2026-09-15): `reasoning_effort: "none"` is the switch that
+          // moves the answer into `content` instead of a reasoning field.
+          providerOptions: { openai: { reasoningEffort: 'none' } },
+        },
+      }),
+    });
+  }
+  return languageModel;
 }
 
 /**

@@ -136,28 +136,63 @@ App launch → theme-init.js applies stored theme → ThemeProvider + I18nProvid
         Approve / Reject → Execution result display
 ```
 
-Header controls: `LanguageSwitcher` (UI-10) and `ThemeToggle` (UI-11).
+Shell controls live in the **left navigation sidebar**, not in a header: the
+`LanguageSwitcher` (UI-10) and `ThemeToggle` (UI-11) are pinned to the bottom of
+the `<nav>` element (`apps/desktop/src/App.tsx:325-328`, sidebar at `:298-329`).
+There is no top header bar in the current shell.
+
+Provider configuration (`ProviderSelector` + "Save key") is rendered **only**
+inside the setup gate: when `setup.state.completed` is false the app returns the
+setup screen instead of the shell (`App.tsx:277-285`, provider card at
+`App.tsx:120-155`). After setup completes there is no route back to provider
+settings, so a provider or model cannot currently be changed without clearing the
+app state.
 
 ## Implementation Status
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `Dashboard` | ✅ Complete | Task status display |
-| `TaskList` | ✅ Complete | Task list |
-| `CodeReviewPanel` | ✅ Complete | Code review |
-| `ActionFlowView` | ✅ Complete | Operation flow display |
-| `Recorder` / `ApprovalDialog` / `HealingNotifier` | ✅ Complete | Recorder, approvals, healing |
-| `SetupWizard` | ✅ Complete | Initial setup |
+| `Dashboard` | ✅ Complete | Task status display; success-rate and last-run figures are placeholders (see below) |
+| `TaskList` | ✅ Complete | Task list; create / run / delete wired, edit raises a toast |
+| `CodeReviewPanel` | ✅ Complete | Renders an `ApprovalRequest`; no request is ever produced, so only the empty state is reachable |
+| `ActionFlowView` | ✅ Complete | Operation flow display; renders an `OperationLog`, which the recorder never fills |
+| `Recorder` / `ApprovalDialog` / `HealingNotifier` | ✅ Complete | Components exist; approvals and healing events are never generated, so those two render nothing |
+| `SetupWizard` | ✅ Complete | Initial setup; dependency list is driven by `detect_dependencies` (Python only) |
 | UI foundation components | ✅ Complete | Button, Card, Modal, Badge, Toast, TaskCards, Timeline, ProviderSelector |
 | Icon library | ✅ Complete | lucide-react + semantic icon maps (ADR-008) |
 | Localization | ✅ Complete | ja + en, registry-driven (ADR-008) |
 | Theme switching | ✅ Complete | dark / light / system + no-flash bootstrap (ADR-008) |
+
+### Per-screen and per-interaction status
+
+What a user can actually accomplish in each screen today:
+
+| Screen / interaction | Status | Actual behaviour |
+|----------------------|--------|------------------|
+| Setup wizard: dependency check | ⚠️ Partial | The list is driven by `detect_dependencies`, which reports only the Python runtime (`apps/desktop/src-tauri/src/tasks/state.rs:242-258`); Node, pnpm and Rust rows only appear in the mock adapter and tests |
+| Setup wizard: install dependency | ⚠️ Partial | The action exists in the UI; no install command is registered in the Rust backend (`lib.rs:37-68` exposes no install command) |
+| Setup wizard: provider + API key | ⚠️ Partial | Provider and model persist, but the key is reduced to a non-recoverable mask (`tasks/mod.rs:171-193`), so a key entered here cannot be used for generation after a restart (see `security.md`) |
+| Setup wizard: model choice | ⚠️ Partial | Fixed `<select>` over `ProviderConfig.availableModels` (`packages/@aegis/ui/src/ProviderSelector/ProviderSelector.tsx:163-175`); arbitrary model IDs cannot be entered (ADR-009) |
+| Reaching provider settings after setup | ❌ Not implemented | The provider card lives inside the setup gate (`App.tsx:277-285`); there is no settings route in the shell |
+| Create task | ⚠️ Partial | The name is generated locally as `New Task <n>` (`App.tsx:198-199`); there is no AI-assisted naming or description input |
+| Edit task | ❌ Not implemented | The edit action only shows the `toast.editUnavailable` message (`App.tsx:230-232`, `i18n/locales/en.json:198`) although the adapter can rename via `update_task` (`tauri-adapter.ts:33`) |
+| Delete task | ✅ Implemented | `deleteTask` → `delete_task` (`tauri-adapter.ts:35`) |
+| Run task | ⚠️ Partial | `run_task` records a run lifecycle only and explicitly does not execute the script (`tasks/mod.rs:17-33`) |
+| Dashboard success rate | ❌ Not implemented | Computed from finished tasks, of which there are none, so the value is always `—` (`Dashboard.tsx:34-39`) |
+| Review screen (approve / reject) | ❌ Not implemented | `pendingRequest` is always `null` (`App.tsx:288`), so the panel always renders "No pending approvals" |
+| Recorder: start / pause / resume / stop | ✅ Implemented | Real state machine (`recorder/mod.rs`) |
+| Recorder: take screenshot | ✅ Implemented | Real capture (`recorder/mod.rs:268-285`) |
+| Recorder: recorded action list | ❌ Not implemented | The session reports `actions: Vec::new()` (`recorder/mod.rs:214`), so the flow view stays empty |
+| Healing notification | ❌ Not implemented | `healingEvents` is always empty, so the notifier renders nothing (`App.tsx:261-267`) |
+| Toast / modal feedback | ✅ Implemented | `Toast`, `Modal` (ADR-008) |
 
 ### Not Yet Implemented
 
 - Real-time updates
 - Drag-and-drop operations
 - Locales beyond `en` / `ja` (structure ready — registry entry only)
+- An in-app settings route for provider / model / API key changes after setup
+- Surfacing execution results (stdout, stderr, duration, exit code) in the run view
 
 ## Test Coverage
 

@@ -35,8 +35,13 @@ export {
 // ─── Provider Adapter ──────────────────────────────────────────────
 
 export { createProviderModel, requiresApiKey } from './provider-adapter';
-export type { ProviderCredentials } from './provider-adapter';
+export type { ProviderCredentials, ProviderModelOptions } from './provider-adapter';
 
 // ─── Generator ─────────────────────────────────────────────────────
 
 export { AiEngine } from './generator';
+
+// ─── Text Extraction Errors (ADR-009(d)) ───────────────────────────
+
+export { TextExtractionError } from './text-extraction-error';
+export type { TextExtractionFailureKind } from './text-extraction-error';

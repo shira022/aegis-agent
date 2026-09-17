@@ -5,6 +5,8 @@ import {
   type ProviderSettings,
 } from '../provider';
 
+const TEST_MODEL = 'test-model';
+
 describe('PROVIDER_REGISTRY', () => {
   const providerIds: ProviderId[] = [
     'openai', 'anthropic', 'google', 'aws-bedrock', 'azure-foundry',
@@ -71,14 +73,12 @@ describe('PROVIDER_REGISTRY', () => {
     expect(PROVIDER_REGISTRY['openai-compatible'].requiresProjectId).toBe(false);
   });
 
-  it('has correct default models', () => {
-    expect(PROVIDER_REGISTRY.openai.defaultModel).toBe('gpt-4o');
-    expect(PROVIDER_REGISTRY.anthropic.defaultModel).toBe('claude-sonnet-4-20250514');
-    expect(PROVIDER_REGISTRY.google.defaultModel).toBe('gemini-2.5-flash');
-    expect(PROVIDER_REGISTRY['aws-bedrock'].defaultModel).toBe('anthropic.claude-sonnet-4-20250514');
-    expect(PROVIDER_REGISTRY['azure-foundry'].defaultModel).toBe('gpt-4o');
-    expect(PROVIDER_REGISTRY['gcp-vertexai'].defaultModel).toBe('gemini-2.5-flash');
-    expect(PROVIDER_REGISTRY.ollama.defaultModel).toBe('llama3.1');
+  it('suggests a non-empty default model drawn from availableModels', () => {
+    for (const id of providerIds) {
+      const config = PROVIDER_REGISTRY[id];
+      expect(config.defaultModel.length).toBeGreaterThan(0);
+      expect(config.availableModels).toContain(config.defaultModel);
+    }
   });
 
   it('each provider has at least one available model', () => {
@@ -87,12 +87,29 @@ describe('PROVIDER_REGISTRY', () => {
       expect(config.availableModels).toBeDefined();
       expect(Array.isArray(config.availableModels)).toBe(true);
       expect(config.availableModels.length).toBeGreaterThanOrEqual(1);
+      for (const model of config.availableModels) {
+        expect(model.length).toBeGreaterThan(0);
+      }
     }
   });
 
   it('each provider config id matches its registry key', () => {
     for (const id of providerIds) {
       expect(PROVIDER_REGISTRY[id].id).toBe(id);
+    }
+  });
+
+  it('supports thinking toggle only for verified local/compatible providers', () => {
+    const thinkingCapable: ProviderId[] = ['ollama', 'lm-studio', 'openai-compatible'];
+    const thinkingIncapable: ProviderId[] = [
+      'openai', 'anthropic', 'google', 'aws-bedrock', 'azure-foundry', 'gcp-vertexai',
+    ];
+
+    for (const id of thinkingCapable) {
+      expect(PROVIDER_REGISTRY[id].supportsThinkingToggle).toBe(true);
+    }
+    for (const id of thinkingIncapable) {
+      expect(PROVIDER_REGISTRY[id].supportsThinkingToggle).toBe(false);
     }
   });
 });
@@ -108,16 +125,18 @@ describe('ProviderSettings type', () => {
     expect(settings.region).toBeUndefined();
     expect(settings.projectId).toBeUndefined();
     expect(settings.baseUrl).toBeUndefined();
+    expect(settings.disableThinking).toBeUndefined();
   });
 
   it('can be constructed with all optional fields', () => {
     const settings: ProviderSettings = {
       providerId: 'gcp-vertexai',
       apiKey: 'test-key',
-      model: 'gemini-2.5-pro',
+      model: TEST_MODEL,
       region: 'us-central1',
       projectId: 'my-project',
     };
+    expect(settings.model).toBe(TEST_MODEL);
     expect(settings.region).toBe('us-central1');
     expect(settings.projectId).toBe('my-project');
   });
@@ -129,5 +148,14 @@ describe('ProviderSettings type', () => {
       baseUrl: 'http://localhost:11434/v1',
     };
     expect(settings.baseUrl).toBe('http://localhost:11434/v1');
+  });
+
+  it('can disable thinking for a reasoning-capable provider', () => {
+    const settings: ProviderSettings = {
+      providerId: 'ollama',
+      apiKey: '',
+      disableThinking: true,
+    };
+    expect(settings.disableThinking).toBe(true);
   });
 });
